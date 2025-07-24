@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Cadastro de Prescritores - Ponza Health</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f9f9f9;
+    }
+
+    .top-menu {
+      background-color: white;
+      padding: 10px 0;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .top-menu a {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 500;
+      font-size: 14px;
+      color: #333;
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      transition: 0.3s;
+    }
+
+    .top-menu a:hover {
+      background-color: #133a5c;
+      color: white;
+    }
+
+    .content {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+
+    .menu-button {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      border: 2px solid #133a5c;
+      background-color: white;
+      padding: 10px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: 0.3s ease;
+      cursor: pointer;
+    }
+
+    .menu-button:hover {
+      background-color: #133a5c;
+      color: white;
+    }
+
+    .catalog-table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      margin-top: 20px;
+    }
+
+    .catalog-table th,
+    .catalog-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
+    }
+
+    .catalog-table th {
+      background-color: #f5f5f5;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .options-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    .options-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    .options-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 30px;
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      min-width: 160px;
+      z-index: 100;
+    }
+
+    .options-menu a {
+      display: block;
+      padding: 10px 12px;
+      text-decoration: none;
+      color: #333;
+      font-size: 14px;
+      transition: background 0.3s ease;
+    }
+
+    .options-menu button:hover {
+      background-color: #133a5c;
+      color: white;
+    }
+
+
+    .delete-button {
+      background: none;
+      border: none;
+      padding: 10px 12px;
+      width: 100%;
+      text-align: left;
+      font-size: 14px;
+      color: #333;
+      font-family: 'Montserrat', sans-serif;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .delete-button:hover {
+      background-color: #133a5c;
+      color: white;
+    }
+
+    .top-menu {
+      background-color: white;
+      padding: 10px 0;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      border-bottom: 1px solid #eee;
+      position: relative;
+    }
+
+
+    .logo-container img {
+      width: 240px;
+      height: auto;
+    }
+
+    .menu-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .menu-links a {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 500;
+      font-size: 14px;
+      color: #333;
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      transition: 0.3s;
+    }
+
+    .menu-links a:hover {
+      background-color: #133a5c;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Top Menu -->
+  <div class="top-menu">
+    <div style="position: absolute; left: 20px;">
+      <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" style="height: 40px;">
+    </div>
+    <a href="{{ url_for('index') }}">Início</a>
+    <a href="{{ url_for('upload') }}">Ponza Lab</a>
+    <a href="{{ url_for('quote_index') }}">Cotações</a>
+    <a href="{{ url_for('catalog') }}">Pacientes</a>
+    <a href="{{ url_for('products') }}">Estoque</a>
+    <a href="{{ url_for('agenda') }}">Agenda</a>
+    <a href="{{ url_for('logout') }}">Sair</a>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    <h2>Cadastro de Prescritores</h2>
+    <a href="#" class="menu-button" onclick="openModal()">Cadastrar Prescritor</a>
+
+    <table class="catalog-table">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Telefone</th>
+          <th>Opções</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for doctor in doctors %}
+        <tr class="{% if loop.revindex <= 2 %}menu-up{% endif %}">
+          <td>{{ doctor.name }}</td>
+          <td>{{ doctor.phone }}</td>
+          <td>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <div class="options-container">
+                <button class="options-button" onclick="toggleMenu(this)">⋮</button>
+                <div class="options-menu">
+                  <a href="#" class="edit-button" data-id="{{ doctor.id }}" data-name="{{ doctor.name }}"
+                    data-phone="{{ doctor.phone }}"
+                    onclick="event.stopPropagation(); openEditModalFromButton(this); return false;">
+                    Editar
+                  </a>
+                </div>
+              </div>
+
+              <form method="post" action="{{ url_for('delete_doctor', doctor_id=doctor.id) }}"
+                onsubmit="return confirm('Deseja realmente excluir este médico?')" style="margin: 0;">
+                <button type="submit" title="Excluir Médico"
+                  style="background: none; border: none; font-size: 18px; font-weight: bold; color: #999; cursor: pointer; line-height: 1;">
+                  ×
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- MODAL para cadastrar prescritor -->
+  <div id="addDoctorModal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000;">
+    <div style="background:white; padding:20px; border-radius:10px; width:90%; max-width:300px; position:relative;">
+      <!-- Botão X no topo -->
+      <button onclick="closeModal()" style="
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 22px;
+      font-weight: bold;
+      color: #333;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    " onmouseover="this.style.color='#133a5c';" onmouseout="this.style.color='#333';">
+        ×
+      </button>
+
+      <h2 style="text-align:center; margin-top: 10px;">Cadastrar Prescritor</h2>
+      <form method="post" action="{{ url_for('add_doctor_route') }}">
+        <input type="text" name="name" placeholder="Nome do Médico" required
+          style="width:93%; padding:10px; border:1px solid #ccc; border-radius:6px; margin-bottom:10px; font-size: 14px; font-family: 'Montserrat', sans-serif;">
+        <input type="text" name="phone" placeholder="Telefone" required
+          style="width:93%; padding:10px; border:1px solid #ccc; border-radius:6px; margin-bottom:10px; font-size: 14px; font-family: 'Montserrat', sans-serif;">
+        <div style="display:flex; justify-content:center;">
+          <button type="submit" class="menu-button" style="width: 100%;">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL para editar médico -->
+  <div id="editDoctorModal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000;">
+    <div style="background:white; padding:20px; border-radius:10px; width:90%; max-width:300px; position:relative;">
+      <!-- Botão X no topo -->
+      <button onclick="closeEditModal()" style="
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+  transition: color 0.3s ease;
+" onmouseover="this.style.color='#133a5c';" onmouseout="this.style.color='#333';">
+        ×
+      </button>
+
+      <h2 style="text-align:center; margin-top: 10px;">Editar Médico</h2>
+      <form method="post" id="editDoctorForm">
+        <input type="text" name="name" id="editDoctorName" placeholder="Nome do Médico" required
+          style="width:93%; padding:10px; border:1px solid #ccc; border-radius:6px; margin-bottom:10px; font-size: 14px; font-family: 'Montserrat', sans-serif;">
+        <input type="text" name="phone" id="editDoctorPhone" placeholder="Telefone" required
+          style="width:93%; padding:10px; border:1px solid #ccc; border-radius:6px; margin-bottom:10px; font-size: 14px; font-family: 'Montserrat', sans-serif;">
+        <div style="display:flex; justify-content:center;">
+          <button type="submit" class="menu-button" style="width: 100%;">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    function openEditModalFromButton(button) {
+      const doctorId = button.getAttribute('data-id');
+      const doctorName = button.getAttribute('data-name');
+      const doctorPhone = button.getAttribute('data-phone');
+
+      openEditModal(doctorId, doctorName, doctorPhone);
+    }
+
+    function closeEditModal() {
+      document.getElementById('editDoctorModal').style.display = 'none';
+    }
+
+    function closeAllMenus(except) {
+      document.querySelectorAll('.options-menu').forEach(menu => {
+        if (menu !== except) menu.style.display = 'none';
+      });
+    }
+
+    function toggleMenu(button) {
+      const menu = button.nextElementSibling;
+      if (!menu) return;
+
+      closeAllMenus(menu);
+
+      const isMenuUp = button.closest('tr').classList.contains('menu-up');
+
+      if (isMenuUp) {
+        menu.style.top = 'auto';
+        menu.style.bottom = '100%';
+      } else {
+        menu.style.top = '30px';
+        menu.style.bottom = 'auto';
+      }
+
+      menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function openModal() {
+      const modal = document.getElementById('addDoctorModal');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('addDoctorModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function openEditModal(doctorId, doctorName, doctorPhone) {
+      document.querySelectorAll('.options-menu').forEach(menu => menu.style.display = 'none');
+
+      const form = document.getElementById('editDoctorForm');
+      form.action = `/update_doctor/${doctorId}`;
+      document.getElementById('editDoctorName').value = doctorName;
+      document.getElementById('editDoctorPhone').value = doctorPhone;
+
+      document.getElementById('editDoctorModal').style.display = 'flex';
+    }
+
+    window.addEventListener('click', function (e) {
+      document.querySelectorAll('.options-container').forEach(container => {
+        if (!container.contains(e.target)) {
+          const menu = container.querySelector('.options-menu');
+          if (menu) menu.style.display = 'none';
+        }
+      });
+    });
+
+  </script>
+</body>
+
+</html>

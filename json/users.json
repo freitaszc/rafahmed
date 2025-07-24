@@ -1,0 +1,21 @@
+[
+    {
+        "id": 0,
+        "username": "admin",
+        "password": "scrypt:32768:8:1$XPyvLv5ez0oo2c3u$aa60664d52e81b9cced5df2cca7fa9c1edf815f4bcd0b749da0f0da8afec79f4c3907463d9dd7a909d8851190e3040ff0d9537524f6ae187fd7baae60881b504",
+        "name": "Gabriel Freitas",
+        "email": "gabrielfreitaszc@gmail.com",
+        "birthdate": "",
+        "profile_image": "profile_images/admin_profile.png"
+    },
+    {
+        "id": 1,
+        "username": "Christiany",
+        "password": "scrypt:32768:8:1$ualfU1JYrWHnc6np$ded51ada400a26e48d7213a9a1e468f71f0cee430eff7aca0027b1b606923e5b9bcfe7b1500ae3bff7e3cfd54243332ccb228d11e52c67bf5aa385e1f6706591"
+    },
+    {
+        "id": 2,
+        "username": "anapaula",
+        "password": "scrypt:32768:8:1$1pas3Uh54CG1iI9c$2c04bf87cafc1b82dd9f187d93e44f53d18d5fe8aec40c878cbd30c4100be7788c370659301b3b31c84cf982fdb8dd51ab62f72ad0e622b51caa35d2e720e441"
+    }
+]

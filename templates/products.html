@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Estoque - Ponza Health</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f9f9f9;
+    }
+
+    .logo-img {
+      width: 100px;
+      display: block;
+      margin: 0 auto 20px auto;
+    }
+
+    .top-menu {
+      background-color: white;
+      padding: 10px 0;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .top-menu a {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 500;
+      font-size: 14px;
+      color: #333;
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      transition: 0.3s;
+    }
+
+    .top-menu a:hover {
+      background-color: #133a5c;
+      color: white;
+    }
+
+    .content {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+
+    .menu-button {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      border: 2px solid #133a5c;
+      background-color: white;
+      padding: 10px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: 0.3s ease;
+      cursor: pointer;
+    }
+
+    .menu-button:hover {
+      background-color: #133a5c;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="top-menu">
+    <div style="position: absolute; left: 20px;">
+        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" style="height: 40px;">
+    </div>
+    <a href="{{ url_for('index') }}">Início</a>
+    <a href="{{ url_for('upload') }}">Ponza Lab</a>
+    <a href="{{ url_for('quote_index') }}">Cotações</a>
+    <a href="{{ url_for('catalog') }}">Pacientes</a>
+    <a href="{{ url_for('products') }}">Estoque</a>
+    <a href="{{ url_for('agenda') }}">Agenda</a>
+    <a href="{{ url_for('logout') }}">Sair</a>
+  </div>
+  <div class="content">
+    <h2>Estoque</h2>
+    <a href="#" class="menu-button" onclick="openModal()">Cadastrar Produto</a>
+  </div>
+  <form method="get" action="{{ url_for('products') }}" class="filter-form">
+    <input type="search" name="search" placeholder="Pesquisar produto..." value="{{ request.args.get('search', '') }}">
+    <select name="status">
+      <option value="">Todos</option>
+      <option value="Ativo" {% if request.args.get('status')=='Ativo' %}selected{% endif %}>Ativo</option>
+      <option value="Inativo" {% if request.args.get('status')=='Inativo' %}selected{% endif %}>Inativo</option>
+    </select>
+    <button type="submit" class="menu-button">Filtrar</button>
+  </form>
+
+  <table class="catalog-table">
+    <thead>
+      <tr>
+        <th>Produto</th>
+        <th>Quantidade</th>
+        <th>Compra</th>
+        <th>Venda</th>
+        <th>Status</th>
+        <th style="text-align: center;">Opções</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for prod in products %}
+      <tr>
+        <td>{{ prod.name }}</td>
+        <td>{{ prod.quantity }}</td>
+        <td>R$ {{ "%.2f"|format(prod.purchase_price) }}</td>
+        <td>R$ {{ "%.2f"|format(prod.sale_price) }}</td>
+        <td>
+          <div class="options-container">
+            <span class="status-badge status-{{ prod.status|lower }}" onclick="toggleStatusMenu(this)">
+              {{ prod.status }} ▾
+            </span>
+            <div class="options-menu">
+              {% if prod.status != 'Ativo' %}
+              <a href="{{ url_for('toggle_product_status', product_id=prod.id, new_status='Ativo') }}">Ativo</a>
+              {% endif %}
+              {% if prod.status != 'Inativo' %}
+              <a href="{{ url_for('toggle_product_status', product_id=prod.id, new_status='Inativo') }}">Inativo</a>
+              {% endif %}
+            </div>
+          </div>
+        </td>
+        <td>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <div class="options-container">
+              <button class="options-button" onclick="toggleMenu(this)">⋮</button>
+              <div class="options-menu">
+                <a href="#" onclick="openEditProductModal({{ prod.id | int }})">Editar</a>
+              </div>
+            </div>
+            <form method="post" action="{{ url_for('delete_product', product_id=prod.id) }}"
+              onsubmit="return confirm('Deseja realmente remover este produto?')" style="margin: 0;">
+              <button type="submit" title="Remover Produto"
+                style="background: none; border: none; font-size: 18px; font-weight: bold; color: #999; cursor: pointer; line-height: 1;">
+                ×
+              </button>
+            </form>
+          </div>
+        </td>            
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- MODAL: Cadastro de Produto (Novo Padrão com X) -->
+  <div id="addProductModal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000;">
+    <div style="background:white; padding:20px; border-radius:10px; width:90%; max-width:500px; position:relative;">
+      <!-- Botão X no canto -->
+      <button onclick="closeModal()" style="
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 22px;
+      font-weight: bold;
+      color: #333;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    " onmouseover="this.style.color='#133a5c';" onmouseout="this.style.color='#333';">
+        ×
+      </button>
+
+      <h2 style="text-align:center;">Cadastrar Produto</h2>
+      <form method="post" action="{{ url_for('add_product_route') }}">
+        <input type="text" name="name" placeholder="Nome do Produto" required
+          style="width: 95%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px;">
+        <input type="number" name="quantity" placeholder="Quantidade" required
+          style="width: 95%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px;">
+        <input type="number" name="purchase_price" placeholder="Preço de Compra" step="0.01" required
+          style="width: 95%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px;">
+        <input type="number" name="sale_price" placeholder="Preço de Venda" step="0.01" required
+          style="width: 95%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px;">
+
+        <button type="submit" class="menu-button" style="width: 100%;">Salvar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Editar Produto -->
+  <div id="editProductModal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000;">
+    <div style="background:white; padding:30px; border-radius:10px; width:90%; max-width:500px; position:relative;">
+      <!-- Botão X no topo -->
+      <button onclick="closeEditProductModal()" style="
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 22px;
+      font-weight: bold;
+      color: #333;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    " onmouseover="this.style.color='#133a5c';" onmouseout="this.style.color='#333';">
+        ×
+      </button>
+
+      <h2 style="text-align:center; margin-top: 10px;">Editar Produto</h2>
+
+      <!-- Formulário com ID para setar action via JS -->
+      <form method="post" id="editProductForm">
+        <input type="text" name="code" placeholder="Código" required
+          style="width: 97%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px;">
+        <input type="text" name="name" placeholder="Nome" required
+          style="width: 97%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px;">
+        <input type="number" name="quantity" placeholder="Quantidade" min="0" required
+          style="width: 97%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px;">
+        <input type="number" name="purchase_price" placeholder="Preço de Compra" step="0.01" required
+          style="width: 97%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px;">
+        <input type="number" name="sale_price" placeholder="Preço de Venda" step="0.01" required
+          style="width: 97%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px;">
+
+        <button type="submit" class="menu-button" style="width: 100%;">Salvar Alterações</button>
+      </form>
+    </div>
+  </div>
+
+
+  <script>
+    function openEditProductModal(productId) {
+      const form = document.getElementById('editProductForm');
+      form.action = `/stock_edit/${productId}`;
+      document.getElementById('editProductModal').style.display = 'flex';
+    }
+
+    function closeEditProductModal() {
+      document.getElementById('editProductModal').style.display = 'none';
+    }
+    function toggleMenu(button) {
+      document.querySelectorAll('.options-menu').forEach(menu => {
+        if (menu !== button.nextElementSibling) menu.style.display = 'none';
+      });
+      const menu = button.nextElementSibling;
+      if (menu) menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function toggleStatusMenu(span) {
+      document.querySelectorAll('.options-menu').forEach(menu => {
+        if (menu !== span.nextElementSibling) menu.style.display = 'none';
+      });
+      const menu = span.nextElementSibling;
+      if (menu) menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+    }
+
+    window.addEventListener('click', function (e) {
+      document.querySelectorAll('.options-container').forEach(container => {
+        if (!container.contains(e.target)) {
+          const menu = container.querySelector('.options-menu');
+          if (menu) menu.style.display = 'none';
+        }
+      });
+    });
+
+    function openModal() {
+      const modal = document.getElementById('addProductModal');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('addProductModal');
+      if (modal) modal.style.display = 'none';
+    }
+  </script>
+</body>
+
+</html>

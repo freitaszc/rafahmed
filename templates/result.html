@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Resultado - Ponza Health</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        .logo-img {
+            width: 100px;
+            display: block;
+            margin: 30px auto 10px auto;
+        }
+
+        h2 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 26px;
+            text-align: center;
+            margin: 10px 0 30px;
+            color: #2c3e50;
+        }
+
+        .section-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 40px;
+            margin-bottom: 10px;
+            color: #133a5c;
+        }
+
+        pre {
+            font-family: 'Montserrat', monospace;
+            white-space: pre-wrap;
+            text-align: left;
+            max-width: 600px;
+            margin: 0 auto;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .menu-button {
+            display: inline-block;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 6px;
+            background-color: white;
+            border: 2px solid #133a5c;
+            transition: 0.3s ease;
+            cursor: pointer;
+        }
+
+        .menu-button:hover {
+            background-color: #133a5c;
+            color: white;
+        }
+
+        .button-group {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .button-group a {
+            margin: 0 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <a href="{{ url_for('index') }}">
+            <img src="{{ url_for('static', filename='images/logo.svg') }}" class="logo-img">
+        </a>
+    </div>
+
+    <h2>Resultado da Análise</h2>
+
+    <div class="section-title">Diagnóstico</div>
+    <pre>{{ diagnostic_text }}</pre>
+
+    <div class="section-title">Prescrição</div>
+    <pre>{{ prescription_text }}</pre>
+
+    <div class="button-group no-print">
+        <a href="/download_pdf" target="_blank" class="menu-button">Download PDF</a>
+        <a href="/catalog" class="menu-button">Catálogo de Pacientes</a>
+    </div>
+</body>
+
+</html>

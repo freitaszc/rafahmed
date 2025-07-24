@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Editar Paciente - Ponza Health</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+
+    .logo-img {
+      width: 100px;
+      display: block;
+      margin: 40px auto 20px auto;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 0 auto 50px auto;
+      background-color: #fff;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      width: 96.5%
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: 'Montserrat', sans-serif;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background-color: #fff;
+    }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 30px;
+    }
+
+    .menu-button {
+      display: inline-block;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      text-decoration: none;
+      padding: 12px 22px;
+      border-radius: 6px;
+      background-color: white;
+      border: 2px solid #133a5c;
+      transition: 0.3s ease;
+      cursor: pointer;
+    }
+
+    .menu-button:hover {
+      background-color: #133a5c;
+      color: white;
+    }
+
+    .menu-button.danger {
+      border-color: #e74c3c;
+      color: #e74c3c;
+    }
+
+    .menu-button.danger:hover {
+      background-color: #e74c3c;
+      color: white;
+    }
+
+    .doctor-select-group {
+      margin-bottom: 20px;
+      width: 100%;
+    }
+
+    .doctor-select-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      color: #2c3e50;
+      text-align: left;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .doctor-select-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      color: #333;
+      outline-color: #133a5c;
+      font-weight: 500;
+    }
+
+    .doctor-select-group select option {
+      color: #333;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+
+<body>
+  <a href="{{ url_for('index') }}">
+    <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo-img">
+  </a>
+
+  <div class="container">
+    <h2>Editar Informações do Paciente</h2>
+
+    <form method="post">
+      <div class="form-group">
+        <label for="name">Nome</label>
+        <input type="text" id="name" name="name" value="{{ patient.name }}" required>
+      </div>
+
+      <div class="form-group">
+        <label for="age">Idade</label>
+        <input type="number" id="age" name="age" value="{{ patient.age }}" required>
+      </div>
+
+      <div class="form-group">
+        <label for="cpf">CPF</label>
+        <input type="text" id="cpf" name="cpf" value="{{ patient.cpf }}">
+      </div>
+
+      <div class="form-group">
+        <label for="gender">Sexo</label>
+        <input type="text" id="gender" name="gender" value="{{ patient.gender }}">
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Telefone</label>
+        <input type="text" id="phone" name="phone" value="{{ patient.phone }}">
+      </div>
+
+      <div class="doctor-select-group">
+        <label for="doctor">Médico</label>
+        <select name="doctor" id="doctor" required>
+          {% for d in doctors %}
+          <option value="{{ d.id }}" {% if patient.doctor==d.id %}selected{% endif %}>{{ d.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="prescription">Prescrição (opcional)</label>
+        <textarea id="prescription" name="prescription" rows="8" placeholder="Prescrição (opcional)"
+          style="width: 100%; padding: 10px 12px; font-size: 14px; font-family: 'Montserrat', sans-serif; border: 1px solid #ccc; border-radius: 6px; background-color: #fff;">{{ patient.prescription or '' }}</textarea>
+      </div>
+
+      {% if patient.prescription %}
+      <div class="doctor-select-group">
+        <label>Prescrição Atual Registrada</label>
+        <pre
+          style="white-space: pre-wrap; background-color: #f9f9f9; border: 1px solid #ccc; padding: 10px; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px;">
+      {{ patient.prescription }}
+          </pre>
+      </div>
+      {% endif %}
+
+      <div class="button-group">
+        <button type="submit" class="menu-button">Salvar Alterações</button>
+        <button type="button" id="btn-voltar-paciente" class="menu-button">Voltar</button>
+        <button type="button" id="btn-remover-paciente" class="menu-button danger">Remover Paciente</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.getElementById('btn-voltar-paciente').addEventListener('click', function () {
+        window.location.href = "{{ url_for('catalog') }}";
+      });
+
+      document.getElementById('btn-remover-paciente').addEventListener('click', function () {
+        if (confirm('Deseja realmente remover este paciente?')) {
+          window.location.href = "{{ url_for('delete_patient', patient_id=patient.id) }}";
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>

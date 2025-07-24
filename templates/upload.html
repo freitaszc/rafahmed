@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Ponza Lab</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+
+    .top-menu {
+      background-color: white;
+      padding: 10px 0;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .top-menu a {
+      font-weight: 500;
+      font-size: 14px;
+      color: #333;
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      transition: 0.3s;
+    }
+
+    .top-menu a:hover {
+      background-color: #133a5c;
+      color: white;
+    }
+
+    .content {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .logo-img {
+      width: 100px;
+      display: block;
+      margin: 0 auto 20px auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .header h2 {
+      font-size: 26px;
+      color: #2c3e50;
+      margin: 0;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      display: inline-block;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .file-input-wrapper input[type="file"] {
+      font-size: 100px;
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .file-input-wrapper .menu-button {
+      display: inline-block;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 500;
+      color: #333;
+      border: 2px solid #133a5c;
+      border-radius: 6px;
+      background-color: white;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    .file-input-wrapper .menu-button:hover {
+      background-color: #133a5c;
+      color: white;
+    }
+
+    .menu-button {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      border: 2px solid #133a5c;
+      background-color: white;
+      padding: 10px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: 0.3s ease;
+      cursor: pointer;
+      display: inline-block;
+      margin: 5px;
+    }
+
+    .menu-button:hover {
+      background-color: #133a5c;
+      color: white;
+    }
+
+    .info-text {
+      font-size: 14px;
+      color: #555;
+      margin: 10px 0 20px;
+    }
+
+    .alert {
+      max-width: 400px;
+      margin: 10px auto 20px;
+      padding: 10px 15px;
+      border-radius: 6px;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .alert-error {
+      background-color: #fbeaea;
+      color: #c0392b;
+      border: 1px solid #e0b4b4;
+    }
+
+    .alert-success {
+      background-color: #e0f6ec;
+      color: #2c7a3f;
+      border: 1px solid #b5e0cb;
+    }
+
+    .drop-zone {
+      border: 2px dashed #ccc;
+      border-radius: 6px;
+      padding: 40px;
+      width: 600px;
+      text-align: center;
+      background-color: #fdfdfd;
+      color: #666;
+      font-size: 14px;
+      margin: 0 auto 20px;
+      /* centraliza horizontalmente */
+      cursor: pointer;
+      transition: border-color 0.3s, background-color 0.3s;
+      position: relative;
+    }
+
+    .drop-zone:hover {
+      border-color: #133a5c;
+      background-color: #f8fefe;
+    }
+
+    .drop-zone input[type="file"] {
+      opacity: 0;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .menu-input,
+    .menu-textarea {
+      width: 100%;
+      max-width: 100%;
+      padding: 10px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+      margin-bottom: 12px;
+    }
+
+    .menu-textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="top-menu">
+    <div style="position: absolute; left: 20px;">
+      <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" style="height: 40px;">
+    </div>
+    <a href="{{ url_for('index') }}">Início</a>
+    <a href="{{ url_for('upload') }}">Ponza Lab</a>
+    <a href="{{ url_for('quote_index') }}">Cotações</a>
+    <a href="{{ url_for('catalog') }}">Pacientes</a>
+    <a href="{{ url_for('products') }}">Estoque</a>
+    <a href="{{ url_for('agenda') }}">Agenda</a>
+    <a href="{{ url_for('logout') }}">Sair</a>
+  </div>
+
+  <div class="content">
+    <div class="header">
+      <img src="{{ url_for('static', filename='images/PonzaLab.svg') }}" alt="Logo" style="height: 100px;">
+    </div>
+
+    <p class="info-text">
+      Envie um arquivo PDF contendo exames laboratoriais. O sistema identificará os valores e retornará automaticamente
+      um diagnóstico com prescrição de suplementos e enviará ao prescritor cadastrado por Whatsapp.
+    </p>
+
+    {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+    {% elif success %}
+    <div class="alert alert-success">✅ Análise realizada com sucesso! <a
+        href="{{ url_for('patient_result', patient_id=success_id) }}">Ver resultado</a></div>
+    {% endif %}
+
+    <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px;">
+      <button type="button" class="menu-button" onclick="showSection('upload')">📎 Upload PDF</button>
+      <button type="button" class="menu-button" onclick="showSection('manual')">📝 Inserir Manualmente</button>
+    </div>
+
+    <!-- UPLOAD PDF SECTION -->
+    <div id="upload-section">
+      <form method="post" enctype="multipart/form-data" onsubmit="return validateUpload()">
+        <div id="drop-zone" class="drop-zone">
+          <p id="drop-text">Selecione ou arraste um PDF aqui</p>
+          <input type="file" name="pdf_file" id="pdf_file" accept="application/pdf">
+        </div>
+        <div>
+          <button type="submit" class="menu-button">Enviar</button>
+          <a href="{{ url_for('doctors') }}" class="menu-button">Cadastrar Prescritor</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- MANUAL ENTRY SECTION -->
+    <div id="manual-section" style="display: none;">
+      <form method="post" style="max-width: 600px; margin: 0 auto; text-align: center;">
+        <input type="hidden" name="manual_entry" value="1">
+
+        <div class="form-group">
+          <input type="text" name="name" placeholder="Nome do Paciente" required class="menu-input">
+        </div>
+        <div class="form-group">
+          <input type="number" name="age" placeholder="Idade" required class="menu-input">
+        </div>
+        <div class="form-group">
+          <input type="text" name="cpf" placeholder="CPF" class="menu-input">
+        </div>
+        <div class="form-group">
+          <input type="text" name="gender" placeholder="Sexo" class="menu-input">
+        </div>
+        <div class="form-group">
+          <input type="text" name="phone" placeholder="Telefone" class="menu-input">
+        </div>
+        <div class="form-group">
+          <input type="text" name="doctor" placeholder="Médico" class="menu-input">
+        </div>
+        <div class="form-group">
+          <textarea name="lab_results" rows="8" placeholder="Digite os resultados dos exames..." required
+            class="menu-textarea"></textarea>
+        </div>
+        <button type="submit" class="menu-button">Analisar Manualmente</button>
+      </form>
+    </div>
+    <script>
+      const dropZone = document.getElementById('drop-zone');
+      const fileInput = document.getElementById('pdf_file');
+      const dropText = document.getElementById('drop-text');
+
+      fileInput.addEventListener('change', function () {
+        if (fileInput.files.length > 0) {
+          dropText.textContent = fileInput.files[0].name;
+        } else {
+          dropText.textContent = "Selecione ou arraste um PDF aqui";
+        }
+      });
+
+      function validateUpload() {
+        if (fileInput.files.length === 0) {
+          alert("Por favor, selecione um arquivo PDF antes de enviar.");
+          return false;
+        }
+        return true;
+      }
+    </script>
+
+    <script>
+      function showSection(section) {
+        const upload = document.getElementById('upload-section');
+        const manual = document.getElementById('manual-section');
+        if (section === 'upload') {
+          upload.style.display = 'block';
+          manual.style.display = 'none';
+        } else {
+          upload.style.display = 'none';
+          manual.style.display = 'block';
+        }
+      }
+    </script>
+
+</body>
+
+</html>

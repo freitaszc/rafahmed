@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Ponza Health - Início</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='web.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script>
+    const pacotes_usados = {{ used }};
+    const pacotes_comprados = {{ used + remaining }};
+
+    google.charts.load('current', { packages: ['corechart'] });
+    google.charts.setOnLoadCallback(drawChart);
+    google.charts.setOnLoadCallback(drawDonutChart);
+
+    function drawChart() {
+  const data = google.visualization.arrayToDataTable([
+    ['Data', 'PDFs Analisados', 'Média'],
+    {% for item in chart_data %}
+    ['{{ item.date }}', {{ item.count }}, {{ item.media }}]{% if not loop.last %}, {% endif %}
+    {% endfor %}
+  ]);
+
+  const options = {
+    title: '',
+    seriesType: 'bars',
+    series: { 1: { type: 'line', color: '#133a5c' } },
+    colors: ['#2c3e50'],
+    legend: { position: 'bottom' },
+    vAxis: { minValue: 0 }
+  };
+
+  const chart = new google.visualization.ComboChart(document.getElementById('curve_chart'));
+  chart.draw(data, options);
+}
+
+
+    function drawDonutChart() {
+      const data = google.visualization.arrayToDataTable([
+        ['Pacote', 'Análises'],
+        ['Usado', pacotes_usados],
+        ['Disponível', pacotes_comprados - pacotes_usados]
+      ]);
+
+      const options = {
+        pieHole: 0.7,
+        pieSliceText: 'none',
+        colors: ['#133a5c', '#2c3e50'],
+        legend: 'none'
+      };
+
+      const chart = new google.visualization.PieChart(document.getElementById('donut_chart'));
+      chart.draw(data, options);
+
+      document.getElementById('donut_label').innerText =
+        Math.round((pacotes_usados / pacotes_comprados) * 100) + '%';
+    }
+
+    function openModal() {
+      document.getElementById('detailsModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('detailsModal').style.display = 'none';
+    }
+  </script>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+
+    .sidebar {
+      width: 250px;
+      background-color: #fff;
+      padding: 30px 20px;
+      border-right: 1px solid #ddd;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+
+    .sidebar img {
+      width: 200px;
+      display: block;
+      margin: 0 auto 30px auto;
+    }
+
+    .sidebar a.menu-item {
+      display: block;
+      margin-bottom: 16px;
+      color: #333;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: 0.3s ease;
+    }
+
+    .sidebar a.menu-item i {
+      margin-right: 8px;
+      width: 24px;
+      text-align: center;
+    }
+
+    .sidebar a.menu-item:hover {
+      color: #133a5c;
+    }
+
+    .content {
+      flex-grow: 1;
+      padding: 40px;
+    }
+
+    h2 {
+      font-size: 32px;
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 30px;
+    }
+
+    .info-box {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      padding: 25px 30px;
+    }
+
+    .user-menu {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+
+    .user-menu img {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px solid #ccc;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    .user-menu img:hover {
+      border-color: #133a5c;
+    }
+  </style>
+</head>
+<!-- ✅ Modal com botão "X" no canto superior direito -->
+<div id="detailsModal"
+  style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+  <div
+    style="background:white; padding:30px; border-radius:8px; width: 300px; text-align:center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); position: relative;">
+    <!-- Botão X -->
+    <button onclick="closeModal()" style="
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    " onmouseover="this.style.color='#133a5c';" onmouseout="this.style.color='#333';">
+      ×
+    </button>
+
+    <h3 style="margin-bottom: 20px;">Detalhes do Pacote</h3>
+    <p><strong>Pacotes Totais:</strong> {{ used + remaining }}</p>
+    <p><strong>Usadas:</strong> {{ used }}</p>
+    <p><strong>Disponíveis:</strong> {{ remaining }}</p>
+
+    <!-- Botão Comprar Pacotes -->
+    <button type="button" onclick="window.location.href='{{ url_for('purchase') }}'" style="
+      padding: 10px 16px;
+      background-color: white;
+      color: #333;
+      border: 2px solid #133a5c;
+      border-radius: 6px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      margin-top: 20px;
+    " onmouseover="this.style.backgroundColor='#133a5c'; this.style.color='white';"
+      onmouseout="this.style.backgroundColor='white'; this.style.color='#333';">
+      Comprar Pacotes
+    </button>
+  </div>
+</div>
+
+</div>
+
+<body>
+  <div class="user-menu">
+    <a href="{{ url_for('account') }}">
+      <img src="{{ url_for('static', filename=user.get('profile_image', 'images/user-icon.png')) }}" alt="Minha Conta">
+    </a>
+  </div>
+  <div class="sidebar">
+    <a href="{{ url_for('index') }}">
+      <img src="{{ url_for('static', filename='images/logo-index.svg') }}">
+    </a>
+    <a href="{{ url_for('upload') }}" class="menu-item"><i class="fa fa-upload"></i> Ponza Lab</a>
+    <a href="{{ url_for('quote_index') }}" class="menu-item"><i class="fa fa-file-text-o"></i> Cotações</a>
+    <a href="{{ url_for('doctors') }}" class="menu-item"><i class="fa fa-user-md"></i> Cadastro de Prescritores</a>
+    <a href="{{ url_for('catalog') }}" class="menu-item"><i class="fa fa-users"></i> Pacientes</a>
+    <a href="{{ url_for('products') }}" class="menu-item"><i class="fa fa-archive"></i> Estoque</a>
+    <a href="{{ url_for('agenda') }}" class="menu-item"><i class="fa fa-calendar"></i> Agenda</a>
+    <a href="{{ url_for('purchase') }}" class="menu-item"><i class="fa fa-credit-card"></i> Pagamentos</a>
+    <a href="{{ url_for('logout') }}" class="menu-item"><i class="fa fa-sign-out"></i> Logout</a>
+  </div>
+
+  <div class="content">
+    <h2>Bem-vindo(a), {{username}}</h2>
+    <div style="display: flex; justify-content: center; align-items: flex-start; flex-wrap: wrap;">
+
+      <!-- Gráfico de Barras Reduzido -->
+      <div class="info-box" style="width: 700px; padding: 20px;">
+        <h3 style="font-size: 20px; font-weight: 600; color: #2c3e50; text-align: center; margin-bottom: 15px;">
+          PDFs Analisados nos Últimos 7 Dias
+        </h3>
+        <div id="curve_chart" style="width: 100%; height: 500px;"></div>
+      </div>
+
+      <!-- Gráfico de Donut ao lado -->
+      <div class="info-box" style="width: 260px; padding: 20px; text-align: center;">
+        <div style="position: relative; width: 160px; height: 160px; margin: 0 auto;">
+          <div id="donut_chart" style="width: 160px; height: 160px;"></div>
+          <div id="donut_label" style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+          "></div>
+        </div>
+        <p style="margin-top: 15px;">Pacotes de Análise Utilizados</p>
+        <button onclick="openModal()" style="
+        background: linear-gradient(90deg, #133a5c, #2c3e50);
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 30px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+        transition: background 0.3s ease, transform 0.2s ease;
+      " onmouseover="this.style.background='linear-gradient(90deg, #2c3e50, #133a5c)'"
+          onmouseout="this.style.background='linear-gradient(90deg, #133a5c, #2c3e50)'"
+          onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
+          Ver Detalhes
+        </button>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

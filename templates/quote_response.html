@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Resultado da Cotação - Ponza Health</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f9f9f9;
+    }
+
+    .top-menu {
+      background-color: white;
+      padding: 10px 0;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .top-menu a {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 500;
+      font-size: 14px;
+      color: #333;
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      transition: 0.3s;
+    }
+
+    .top-menu a:hover {
+      background-color: #133a5c;
+      color: white;
+    }
+
+    .content {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .logo-img {
+      width: 100px;
+      display: block;
+      margin: 0 auto 20px auto;
+    }
+
+    h2 {
+      font-size: 24px;
+      color: #2c3e50;
+      margin-bottom: 30px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 40px;
+    }
+
+    th, td {
+      padding: 14px;
+      border: 1px solid #ccc;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    th {
+      background-color: #f0f0f0;
+      font-weight: 600;
+    }
+
+    .highlight {
+      background-color: #d9f7f9;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-menu">
+    <div style="position: absolute; left: 20px;">
+        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" style="height: 40px;">
+    </div>
+    <a href="{{ url_for('index') }}">Início</a>
+    <a href="{{ url_for('upload') }}">Ponza Lab</a>
+    <a href="{{ url_for('quote_index') }}">Cotações</a>
+    <a href="{{ url_for('catalog') }}">Pacientes</a>
+    <a href="{{ url_for('products') }}">Estoque</a>
+    <a href="{{ url_for('agenda') }}">Agenda</a>
+    <a href="{{ url_for('logout') }}">Sair</a>
+  </div>
+
+  <div class="content">
+    <h2>{{ quote.title }}</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Item</th>
+          {% for name in supplier_names %}
+            <th>{{ name }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for idx_item in quote_items %}
+          <tr>
+            <td>{{ idx_item[1] }}</td>
+            {% for sid in quote.suppliers %}
+              {% set answer = quote.responses.get(sid, {}).get("answers", []) %}
+              {% if answer and answer[idx_item[0]] %}
+                <td class="{% if best_per_item[idx_item[0]] == sid %}highlight{% endif %}">
+                  R$ {{ answer[idx_item[0]]["price"] }}<br>
+                  {{ answer[idx_item[0]]["deadline"] }} dias
+                </td>
+              {% else %}
+                <td>-</td>
+              {% endif %}
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</body>
+</html>

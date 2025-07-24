@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Criar Cotação - Ponza Health</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f9f9f9;
+    }
+
+    .top-menu {
+      background-color: white;
+      padding: 10px 0;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .top-menu a {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 500;
+      font-size: 14px;
+      color: #333;
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      transition: 0.3s;
+    }
+
+    .top-menu a:hover {
+      background-color: #133a5c;
+      color: white;
+    }
+
+    .content {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .logo-img {
+      width: 100px;
+      display: block;
+      margin: 0 auto 20px auto;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      font-size: 24px;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    input[type="checkbox"] {
+      accent-color: #133a5c;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 96%;
+      padding: 12px;
+      margin: 10px 0 20px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+    }
+
+    label {
+      font-weight: 500;
+      font-size: 14px;
+      display: block;
+      margin-bottom: 6px;
+      color: #333;
+    }
+
+    .supplier-list {
+      text-align: left;
+      margin-bottom: 20px;
+    }
+
+    .supplier-list label {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .menu-button {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      border: 2px solid #133a5c;
+      background-color: white;
+      padding: 10px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: 0.3s ease;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .menu-button:hover {
+      background-color: #133a5c;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="top-menu">
+    <div style="position: absolute; left: 20px;">
+        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" style="height: 40px;">
+    </div>
+    <a href="{{ url_for('index') }}">Início</a>
+    <a href="{{ url_for('upload') }}">Ponza Lab</a>
+    <a href="{{ url_for('quote_index') }}">Cotações</a>
+    <a href="{{ url_for('catalog') }}">Pacientes</a>
+    <a href="{{ url_for('products') }}">Estoque</a>
+    <a href="{{ url_for('agenda') }}">Agenda</a>
+    <a href="{{ url_for('logout') }}">Sair</a>
+  </div>
+
+  <div class="content">
+    <h2>Criar Nova Cotação</h2>
+  </div>
+
+  <div class="container">
+    <form method="post">
+      <label for="title">Nome da Cotação</label>
+      <input type="text" name="title" id="title" placeholder="Ex: Reposição de Estoque de Suplementos" required>
+
+      <label for="items">Itens da Cotação</label>
+      <textarea name="items" id="items" rows="6"
+        placeholder="Um item por linha: ex:Vitamina D 2000UI - 10 un.
+        Magnésio Dimalato - 5 un." required></textarea>
+
+      <label>Fornecedores</label>
+      <div class="supplier-list">
+        {% for supplier in suppliers %}
+        <label>
+          <input type="checkbox" name="supplier_ids" value="{{ supplier.id }}">
+          {{ supplier.name }}
+        </label>
+        {% endfor %}
+      </div>
+
+      <button type="submit" class="menu-button">Criar Cotação</button>
+    </form>
+  </div>
+</body>
+
+</html>

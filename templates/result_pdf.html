@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Resultado - Ponza Health (PDF)</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pdf.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <style>
+        body {
+            margin: 1cm 0.5cm;
+            font-family: "Times New Roman", serif;
+            font-size: 14px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 10px 20px;
+        }
+        .patient-info {
+            text-align: left;
+            white-space: pre-wrap;
+            max-width: 60%;
+        }
+        .logo {
+            width: 150px;
+            margin-top: -10px;
+        }
+        .result-section {
+            padding: 0 20px;
+        }
+        .result-title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 40px 0 20px;
+        }
+        pre {
+            white-space: pre-wrap;
+            font-family: "Times New Roman", serif;
+            font-size: 14px;
+        }
+        .signature-block {
+            text-align: center;
+            margin-top: 60px;
+        }
+        .signature-line {
+            display: inline-block;
+            border-top: 1px solid #000;
+            width: 300px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="patient-info">{{ patient_info.strip() }}</div>
+        <div>
+            <img src="{{ logo_path }}" class="logo">
+        </div>
+    </div>
+
+    <div class="result-section">
+        <div class="result-title">Resultado da Análise</div>
+        <pre>{{ diagnostic_text }}</pre>
+
+        <div class="result-title" style="margin-top: 30px;">Prescrição</div>
+        <pre>{{ prescription_text }}</pre>
+    </div>
+
+    <div class="signature-block">
+        <div class="signature-line"></div>
+        <div style="margin-top: 6px;">
+            {{ doctor_name }}
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,35 @@
+# macOS system files
+.DS_Store
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment & credentials
+.env
+*.key
+*.pem
+*.crt
+
+# Virtual environment (if used)
+venv/
+ENV/
+env/
+.venv/
+
+# Private keys
+Keys/
+keys/
+
+# ZIP backups
+*.zip
+*.tar
+*.tar.gz
+
+# Logs (optional)
+*.log
+
+# IDE settings (optional, se usar)
+.vscode/
+.idea/
+

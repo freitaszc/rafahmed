@@ -1,0 +1,52 @@
+@page {
+    size: A4;
+    margin: 2cm;
+}
+
+body {
+    font-family: "Times New Roman", serif;
+    background-color: #fff;
+    color: #000;
+    margin-top: 3cm;
+    margin-bottom: 3cm;
+}
+
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2cm;
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+    line-height: 2cm;
+}
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2cm;
+    text-align: center;
+    font-size: 12px;
+    color: #999;
+    line-height: 2cm;
+}
+
+h2 {
+    font-family: "Times New Roman", serif;
+}
+
+pre {
+    font-family: "Times New Roman", serif;
+    background-color: #f9f9f9;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+table, th, td {
+    font-family: "Times New Roman", serif;
+}

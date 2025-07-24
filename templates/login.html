@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Ponza Health</title>
+    <link rel="stylesheet" href="/static/css/web.css">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <style>
+        .login-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-container form input {
+            display: block;
+            margin: 10px auto;
+            padding: 10px;
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .login-container form .button-outline {
+            display: block;
+            margin: 20px auto 0 auto;
+        }
+
+        .error-message {
+            color: red;
+            margin-top: 10px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 13px;
+            color: #16076c;
+            margin-top: 30px;
+        }
+
+        .footer a {
+            color: #133a5c;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="text-align: center; margin: 20px 0;">
+        <img src="{{ url_for('static', filename='images/logo.svg') }}"
+            style="width:200px; display:block; margin:0 auto;">
+    </div>
+    <div class="login-container">
+        <h2>Login</h2>
+        <form method="post">
+            <input type="text" name="username" placeholder="Usuário" required>
+            <input type="password" name="password" placeholder="Senha" required>
+            <button type="submit" class="button-outline">Entrar</button>
+        </form>
+        {% if error %}
+        <p class="error-message">{{ error }}</p>
+        {% endif %}
+    </div>
+
+    <a href="{{ url_for('hero') }}">
+        <button style="margin-top: 15px; border: 1px solid #00AEEF; background: transparent; color: #00AEEF; border-radius: 20px; padding: 10px 20px; font-size: 14px; cursor: pointer;">
+            Ver página inicial
+        </button>
+    </a>
+    
+
+    <div class="footer">
+        <p><a href="{{ url_for('privacy_policy') }}" target="_blank">Política de Privacidade</a></p>
+        <p><a href="{{ url_for('about') }}" class="about-link">Quem Somos</a></p>
+        <p><a href="https://wa.me/12157343496?text=Olá!%20Gostaria%20de%20consultar%20os%20pacotes%20de%20análises%20e%20ativar%20minha%20conta."
+            class="about-link" target="_blank">
+            Consulte preços e ative sua conta
+        </a></p>
+
+
+    </div>
+</body>
+
+</html>
