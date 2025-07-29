@@ -9,4 +9,5 @@ requests
 gunicorn
 cryptography
 mercadopago
-
+SQLAlchemy>=1.4,<2.0
+Flask‑SQLAlchemy>=3.0
