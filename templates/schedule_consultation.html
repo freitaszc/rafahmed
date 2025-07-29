@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Agendar Consulta - RafahMed</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+  <div class="min-h-screen flex flex-col items-center justify-center px-4 pt-10">
+    <div class="bg-white rounded-xl shadow-md w-full max-w-md p-8">
+      <h1 class="text-2xl font-bold text-center text-[#dd1b35] mb-6">Agendar Consulta</h1>
+
+      <form action="{{ url_for('submit_patient_consultation') }}" method="POST" class="space-y-4" onsubmit="return validateCPFForm()">
+        <div>
+          <label for="name" class="block text-sm font-medium">Nome completo</label>
+          <input type="text" name="name" id="name" required
+                 class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#dd1b35] focus:border-[#dd1b35]">
+        </div>
+
+        <div>
+            <label for="cpf" class="block text-sm font-medium">CPF</label>
+            <input type="text" name="cpf" id="cpf" required maxlength="14"
+                   class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#dd1b35] focus:border-[#dd1b35]"
+                   placeholder="000.000.000-00">
+        </div>
+
+        <div>
+          <label for="phone" class="block text-sm font-medium">Telefone para contato</label>
+          <input type="text" name="phone" id="phone" required maxlength="15"
+                 class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#dd1b35] focus:border-[#dd1b35]"
+                 placeholder="(00) 00000-0000">
+        </div>
+
+        <div>
+          <label for="date" class="block text-sm font-medium">Data desejada</label>
+          <input type="text" name="date" id="date" required
+                 class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#dd1b35] focus:border-[#dd1b35]"
+                 placeholder="dd/mm/aaaa">
+        </div>
+
+        <div>
+          <label for="time" class="block text-sm font-medium">Horário desejado</label>
+          <select name="time" id="time" required
+                  class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#dd1b35] focus:border-[#dd1b35]">
+            <option value="">Selecione um horário</option>
+            {% for hour in range(8, 18) %}
+              <option value="{{ "%02d" % hour }}:00">{{ "%02d" % hour }}:00</option>
+              <option value="{{ "%02d" % hour }}:30">{{ "%02d" % hour }}:30</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <button type="submit"
+                  class="w-full py-3 bg-[#dd1b35] text-white font-semibold rounded-md hover:bg-red-700 transition">
+            Confirmar Agendamento
+          </button>
+        </div>
+      </form>
+
+      <div class="mt-6 text-center">
+        <a href="{{ url_for('hero') }}" class="text-sm text-[#dd1b35] hover:underline">Voltar para a página inicial</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function validateCPFForm() {
+      const cpfInput = document.getElementById("cpf");
+      const cpf = cpfInput.value.replace(/[^\d]+/g, '');
+    
+      if (!isValidCPF(cpf)) {
+        alert("CPF inválido. Verifique e tente novamente.");
+        return false;
+      }
+    
+      return true;
+    }
+    
+    function isValidCPF(cpf) {
+      if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+    
+      let sum = 0;
+      for (let i = 0; i < 9; i++) sum += parseInt(cpf[i]) * (10 - i);
+      let digit1 = (sum * 10) % 11;
+      if (digit1 === 10 || digit1 === 11) digit1 = 0;
+      if (digit1 !== parseInt(cpf[9])) return false;
+    
+      sum = 0;
+      for (let i = 0; i < 10; i++) sum += parseInt(cpf[i]) * (11 - i);
+      let digit2 = (sum * 10) % 11;
+      if (digit2 === 10 || digit2 === 11) digit2 = 0;
+      if (digit2 !== parseInt(cpf[10])) return false;
+    
+      return true;
+    }
+    </script>
+
+  <script>
+    flatpickr("#date", {
+      dateFormat: "d/m/Y",
+      locale: "pt"
+    });
+  </script>
+
+
+</body>
+</html>

@@ -1,96 +1,130 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 
 <head>
-    <meta charset="UTF-8">
-    <title>Login - Ponza Health</title>
-    <link rel="stylesheet" href="/static/css/web.css">
-    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
-    <style>
-        .login-container {
-            max-width: 400px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
+  <meta charset="UTF-8" />
+  <title>Login - RafahMed</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: white;
+    }
 
-        .login-container form input {
-            display: block;
-            margin: 10px auto;
-            padding: 10px;
-            width: 300px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-family: 'Montserrat', sans-serif;
-        }
+    :root {
+      --rafahmed-red: #dd1b35;
+      --rafahmed-red-dark: #b81429;
+    }
 
-        .login-container form .button-outline {
-            display: block;
-            margin: 20px auto 0 auto;
-        }
+    .footer a {
+      color: var(--rafahmed-red);
+      text-decoration: none;
+    }
 
-        .error-message {
-            color: red;
-            margin-top: 10px;
-            font-size: 14px;
-            text-align: center;
-        }
+    .footer a:hover {
+      text-decoration: underline;
+    }
 
-        .footer {
-            text-align: center;
-            padding: 20px;
-            font-size: 13px;
-            color: #16076c;
-            margin-top: 30px;
-        }
-
-        .footer a {
-            color: #133a5c;
-            text-decoration: none;
-        }
-
-        .footer a:hover {
-            text-decoration: underline;
-        }
-    </style>
+    .navbar-blur {
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+  </style>
 </head>
 
-<body>
-    <div style="text-align: center; margin: 20px 0;">
-        <img src="{{ url_for('static', filename='images/logo.svg') }}"
-            style="width:200px; display:block; margin:0 auto;">
+<body class="text-gray-800">
+
+  <!-- NAVBAR ATUALIZADA -->
+  <header class="navbar-blur py-4 px-6 fixed top-0 left-0 w-full z-50">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <!-- Logo -->
+      <div class="flex items-center flex-shrink-0">
+        <a href="{{ url_for('hero') }}">
+          <img src="{{ url_for('static', filename='images/flatlogo.svg') }}" alt="Logo RafahMed"
+            class="h-14 w-auto max-w-none">
+        </a>
+      </div>
+
+      <!-- Menu Centralizado -->
+      <nav class="hidden md:flex space-x-8 text-sm font-medium">
+        <a href="{{ url_for('hero') }}#quem-somos"
+          class="hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
+          Quem Somos
+          <span
+            class="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--rafahmed-red)] transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <a href="{{ url_for('hero') }}#psicologos"
+          class="hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
+          Para Psicólogos
+          <span
+            class="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--rafahmed-red)] transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <a href="{{ url_for('hero') }}#empresas"
+          class="hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
+          Para Empresas
+          <span
+            class="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--rafahmed-red)] transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <a href="{{ url_for('hero') }}#agendar"
+          class="hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
+          Agendar Consulta
+          <span
+            class="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--rafahmed-red)] transition-all duration-300 group-hover:w-full"></span>
+        </a>
+      </nav>
+
+      <!-- Botões à Direita -->
+      <div class="hidden md:flex items-center space-x-4">
+        <a href="/register"
+          class="text-sm font-semibold text-[var(--rafahmed-red)] hover:text-[var(--rafahmed-red-dark)] transition-colors duration-300 px-4 py-2 rounded-full border border-[var(--rafahmed-red)] hover:bg-[var(--rafahmed-red)] hover:text-white">
+          Cadastrar
+        </a>
+        <a href="/login"
+          class="text-sm font-semibold text-[var(--rafahmed-red)] hover:text-[var(--rafahmed-red-dark)] transition-colors duration-300 px-4 py-2 rounded-full border border-[var(--rafahmed-red)] hover:bg-[var(--rafahmed-red)] hover:text-white">
+          Entrar
+        </a>
+      </div>
     </div>
-    <div class="login-container">
-        <h2>Login</h2>
-        <form method="post">
-            <input type="text" name="username" placeholder="Usuário" required>
-            <input type="password" name="password" placeholder="Senha" required>
-            <button type="submit" class="button-outline">Entrar</button>
-        </form>
-        {% if error %}
-        <p class="error-message">{{ error }}</p>
-        {% endif %}
-    </div>
+  </header>
 
-    <a href="{{ url_for('hero') }}">
-        <button style="margin-top: 15px; border: 1px solid #00AEEF; background: transparent; color: #00AEEF; border-radius: 20px; padding: 10px 20px; font-size: 14px; cursor: pointer;">
-            Ver página inicial
-        </button>
-    </a>
-    
+<!-- LOGIN FORM -->
+<main class="pt-32 min-h-screen flex flex-col items-center justify-start px-4">
+  <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-8 w-full max-w-md text-center">
+    <h2 class="text-2xl font-bold mb-6 text-[var(--rafahmed-red)]">Entrar</h2>
 
-    <div class="footer">
-        <p><a href="{{ url_for('privacy_policy') }}" target="_blank">Política de Privacidade</a></p>
-        <p><a href="{{ url_for('about') }}" class="about-link">Quem Somos</a></p>
-        <p><a href="https://wa.me/12157343496?text=Olá!%20Gostaria%20de%20consultar%20os%20pacotes%20de%20análises%20e%20ativar%20minha%20conta."
-            class="about-link" target="_blank">
-            Consulte preços e ative sua conta
-        </a></p>
+    <form method="post" class="space-y-4">
+      <input
+        type="text"
+        name="login"
+        placeholder="E‑mail"
+        required
+        class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--rafahmed-red)]"
+      >
+      <input
+        type="password"
+        name="password"
+        placeholder="Senha"
+        required
+        class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--rafahmed-red)]"
+      >
+      <button
+        type="submit"
+        class="w-full bg-[var(--rafahmed-red)] text-white py-2 rounded-md font-semibold hover:bg-red-700 transition"
+      >
+        Entrar
+      </button>
+      {% if error %}
+        <p class="text-red-600 text-sm mt-4">{{ error }}</p>
+      {% endif %}
+    </form>
+  </div>
+</main>
 
 
-    </div>
 </body>
 
 </html>

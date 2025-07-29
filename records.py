@@ -131,7 +131,7 @@ def save_patients(patients):
 
 # Consultation Management
 
-def add_consultation(patient_id, consultation_text, user_id):
+def save_consultation_text(patient_id, consultation_text, user_id):
     consults = {}
     if os.path.exists(CONSULTS_FILE):
         with open(CONSULTS_FILE, 'r', encoding='utf-8') as f:

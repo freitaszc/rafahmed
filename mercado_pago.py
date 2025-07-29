@@ -23,9 +23,9 @@ def generate_payment_link(package, amount):
             }
         ],
         "back_urls": {
-            "success": "https://BioO3.com/payments/success",
-            "failure": "https://BioO3.com/payments/failure",
-            "pending": "https://BioO3.com/payments/pending"
+            "success": "https://RafahMed.com/payments/success",
+            "failure": "https://RafahMed.com/payments/failure",
+            "pending": "https://RafahMed.com/payments/pending"
         },
         "auto_return": "approved"
     }

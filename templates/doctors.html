@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Cadastro de Prescritores - Ponza Health</title>
+  <title>Cadastro de Prescritores - RafahMed</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
   <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -27,7 +27,7 @@
       font-family: 'Montserrat', sans-serif;
       font-weight: 500;
       font-size: 14px;
-      color: #333;
+      color: #000000;
       text-decoration: none;
       padding: 8px 12px;
       border-radius: 6px;
@@ -35,7 +35,7 @@
     }
 
     .top-menu a:hover {
-      background-color: #133a5c;
+      background-color: #dd1b35;
       color: white;
     }
 
@@ -56,8 +56,8 @@
       font-family: 'Montserrat', sans-serif;
       font-size: 14px;
       font-weight: 500;
-      color: #333;
-      border: 2px solid #133a5c;
+      color: #000000;
+      border: 2px solid #dd1b35;
       background-color: white;
       padding: 10px 16px;
       border-radius: 6px;
@@ -67,7 +67,7 @@
     }
 
     .menu-button:hover {
-      background-color: #133a5c;
+      background-color: #dd1b35;
       color: white;
     }
 
@@ -122,13 +122,13 @@
       display: block;
       padding: 10px 12px;
       text-decoration: none;
-      color: #333;
+      color: #000000;
       font-size: 14px;
       transition: background 0.3s ease;
     }
 
     .options-menu button:hover {
-      background-color: #133a5c;
+      background-color: #dd1b35;
       color: white;
     }
 
@@ -140,14 +140,14 @@
       width: 100%;
       text-align: left;
       font-size: 14px;
-      color: #333;
+      color: #000000;
       font-family: 'Montserrat', sans-serif;
       cursor: pointer;
       transition: background 0.3s ease;
     }
 
     .delete-button:hover {
-      background-color: #133a5c;
+      background-color: #dd1b35;
       color: white;
     }
 
@@ -176,7 +176,7 @@
       font-family: 'Montserrat', sans-serif;
       font-weight: 500;
       font-size: 14px;
-      color: #333;
+      color: #000000;
       text-decoration: none;
       padding: 8px 12px;
       border-radius: 6px;
@@ -184,7 +184,7 @@
     }
 
     .menu-links a:hover {
-      background-color: #133a5c;
+      background-color: #dd1b35;
       color: white;
     }
   </style>
@@ -198,6 +198,7 @@
     </div>
     <a href="{{ url_for('index') }}">Início</a>
     <a href="{{ url_for('upload') }}">Ponza Lab</a>
+    <a href="{{ url_for('quiz_results') }}">Autoavaliações</a>
     <a href="{{ url_for('quote_index') }}">Cotações</a>
     <a href="{{ url_for('catalog') }}">Pacientes</a>
     <a href="{{ url_for('products') }}">Estoque</a>
@@ -264,10 +265,10 @@
       border: none;
       font-size: 22px;
       font-weight: bold;
-      color: #333;
+      color: #000000;
       cursor: pointer;
       transition: color 0.3s ease;
-    " onmouseover="this.style.color='#133a5c';" onmouseout="this.style.color='#333';">
+    " onmouseover="this.style.color='#dd1b35';" onmouseout="this.style.color='#000000';">
         ×
       </button>
 
@@ -297,10 +298,10 @@
   border: none;
   font-size: 22px;
   font-weight: bold;
-  color: #333;
+  color: #000000;
   cursor: pointer;
   transition: color 0.3s ease;
-" onmouseover="this.style.color='#133a5c';" onmouseout="this.style.color='#333';">
+" onmouseover="this.style.color='#dd1b35';" onmouseout="this.style.color='#000000';">
         ×
       </button>
 

@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Minha Conta - Ponza Health</title>
+  <title>Minha Conta - RafahMed</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='web.css') }}">
   <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
@@ -15,7 +15,7 @@
       display: flex;
       font-family: 'Montserrat', sans-serif;
       background-color: #f9f9f9;
-      color: #333;
+      color: #000000;
     }
 
     .sidebar {
@@ -45,7 +45,7 @@
     .sidebar a.menu-item {
       display: block;
       margin-bottom: 16px;
-      color: #333;
+      color: #000000;
       text-decoration: none;
       font-size: 14px;
       font-weight: 500;
@@ -59,13 +59,13 @@
     }
 
     .sidebar a.menu-item:hover {
-      color: #133a5c;
+      color: #dd1b35;
     }
 
     h2 {
       font-size: 32px;
       text-align: center;
-      color: #12181f;
+      color: #000000;
       margin-bottom: 30px;
     }
 
@@ -93,7 +93,7 @@
     }
 
     form input:focus {
-      border-color: #133a5c;
+      border-color: #dd1b35;
       outline: none;
     }
 
@@ -101,7 +101,7 @@
       width: 100%;
       background-color: white;
       color: #000000;
-      border: 2px solid #133a5c;
+      border: 2px solid #dd1b35;
       padding: 12px 0;
       border-radius: 6px;
       font-family: 'Montserrat', sans-serif;
@@ -113,13 +113,13 @@
     }
 
     .button-outline:active {
-      background-color: #133a5c;
+      background-color: #dd1b35;
       color: white;
-      border-color: #133a5c;
+      border-color: #dd1b35;
     }
 
     .button-outline:hover {
-      background-color: #133a5c;
+      background-color: #dd1b35;
       color: white;
     }
 
@@ -143,39 +143,188 @@
       right: 20px;
     }
 
-    .user-menu img {
+    .user-menu .user-avatar {
       width: 48px;
       height: 48px;
       border-radius: 50%;
-      border: 2px solid #ccc;
+      border: 2px solid #ddd;
       cursor: pointer;
-      transition: 0.3s ease;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
-    .user-menu img:hover {
-      border-color: #133a5c;
+    .user-menu .user-avatar:hover {
+      border-color: #dd1b35;
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(221, 27, 53, 0.2);
+    }
+
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      margin-top: 12px;
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+      list-style: none;
+      padding: 8px 0;
+      min-width: 180px;
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+    }
+
+    .dropdown-menu.show {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .dropdown-menu::before {
+      content: '';
+      position: absolute;
+      top: -8px;
+      right: 20px;
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-bottom: 8px solid #ffffff;
+      filter: drop-shadow(0 -2px 4px rgba(0, 0, 0, 0.1));
+    }
+
+    .dropdown-item {
+      display: block;
+      padding: 12px 20px;
+      color: #333333;
+      text-decoration: none;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      border-radius: 8px;
+      margin: 2px 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dropdown-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(221, 27, 53, 0.1), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .dropdown-item:hover {
+      background-color: #f8f9fa;
+      color: #dd1b35;
+      transform: translateX(4px);
+    }
+
+    .dropdown-item:hover::before {
+      left: 100%;
+    }
+
+    .dropdown-item i {
+      margin-right: 10px;
+      width: 16px;
+      text-align: center;
+      opacity: 0.7;
+      transition: opacity 0.2s ease;
+    }
+
+    .dropdown-item:hover i {
+      opacity: 1;
+    }
+
+    .dropdown-separator {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
+      margin: 8px 16px;
     }
   </style>
 </head>
 
 <body>
   <div class="user-menu">
-    <a href="{{ url_for('account') }}">
-      <img src="{{ url_for('static', filename=user.get('profile_image', 'images/user-icon.png')) }}" alt="Minha Conta">
-    </a>
+    <div class="dropdown">
+      <img
+        class="user-avatar"
+        src="{{ url_for('static', filename=user.profile_image or 'images/user-icon.png') }}"
+        alt="Minha Conta"
+        onclick="toggleDropdown()" />
+      <ul id="userDropdown" class="dropdown-menu">
+        <li>
+          <a href="{{ url_for('account') }}" class="dropdown-item">
+            <i class="fa fa-user"></i>
+            Meu Perfil
+          </a>
+        </li>
+        {% if session.username and session.username.lower() == 'admin' %}
+        <li><div class="dropdown-separator"></div></li>
+        <li>
+          <a href="{{ url_for('admin_companies') }}" class="dropdown-item">
+            <i class="fa fa-cog"></i>
+            Admin
+          </a>
+        </li>
+        {% endif %}
+        <li><div class="dropdown-separator"></div></li>
+        <li>
+          <a href="{{ url_for('logout') }}" class="dropdown-item">
+            <i class="fa fa-sign-out"></i>
+            Sair
+          </a>
+        </li>
+      </ul>
+    </div>
   </div>
+
+  <script>
+    function toggleDropdown() {
+      const dropdown = document.getElementById('userDropdown');
+      dropdown.classList.toggle('show');
+    }
+
+    // Fechar dropdown quando clicar fora
+    window.addEventListener('click', function(e) {
+      if (!e.target.closest('.dropdown')) {
+        document.getElementById('userDropdown').classList.remove('show');
+      }
+    });
+
+    // Fechar dropdown com Escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        document.getElementById('userDropdown').classList.remove('show');
+      }
+    });
+  </script>
+  
   <div class="sidebar">
     <a href="{{ url_for('index') }}">
-      <img src="{{ url_for('static', filename='images/logo-index.svg') }}">
+      <img src="{{ url_for('static', filename='images/logocompleta.svg') }}">
     </a>
     <a href="{{ url_for('upload') }}" class="menu-item"><i class="fa fa-upload"></i> Ponza Lab</a>
+    <a href="{{ url_for('quiz_results') }}" class="menu-item"><i class="fa fa-list-alt"></i> Autoavaliações</a>
     <a href="{{ url_for('quote_index') }}" class="menu-item"><i class="fa fa-file-text-o"></i> Cotações</a>
-    <a href="{{ url_for('doctors') }}" class="menu-item"><i class="fa fa-user-md"></i> Cadastro de Prescritores</a>
-    <a href="{{ url_for('catalog') }}" class="menu-item"><i class="fa fa-users"></i>Pacientes</a>
+    <a href="{{ url_for('catalog') }}" class="menu-item"><i class="fa fa-users"></i> Pacientes</a>
     <a href="{{ url_for('products') }}" class="menu-item"><i class="fa fa-archive"></i> Estoque</a>
     <a href="{{ url_for('agenda') }}" class="menu-item"><i class="fa fa-calendar"></i> Agenda</a>
     <a href="{{ url_for('purchase') }}" class="menu-item"><i class="fa fa-credit-card"></i> Pagamentos</a>
-    <a href="{{ url_for('logout') }}" class="menu-item"><i class="fa fa-sign-out"></i> Logout</a>
   </div>
 
   <div class="content">
@@ -194,8 +343,7 @@
 
         <!-- Foto de Perfil -->
         <div style="text-align: center; margin-bottom: 20px;">
-          <img src="{{ url_for('static', filename=user.get('profile_image', 'images/user-icon.png')) }}"
-            alt="Foto de Perfil"
+          <img src="{{ url_for('static', filename=user.profile_image or 'images/user-icon.png') }}" alt="Foto de Perfil"
             style="width: 100px; height: 100px; border-radius: 50%; border: 2px solid #ccc; object-fit: cover;">
         </div>
 
@@ -213,13 +361,13 @@
           <div style="display: flex; gap: 20px; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 200px;">
               <label for="name" style="display: block; margin-bottom: 8px; font-weight: 550;">PRIMEIRO NOME</label>
-              <input type="text" id="name" name="name" value="{{ user.get('name', '').split(' ')[0] }}"
+              <input type="text" id="name" name="name" value="{{ (user.name or '').split(' ')[0] }}"
                 placeholder="Primeiro Nome" style="width: 90%;">
             </div>
             <div style="flex: 1; min-width: 200px;">
               <label for="secondname" style="display: block; margin-bottom: 8px; font-weight: 550;">SEGUNDO NOME</label>
               <input type="text" id="secondname" name="secondname"
-                value="{{ user.get('name', '').split(' ')[1] if ' ' in user.get('name', '') else '' }}"
+                    value="{{ (user.name.split(' ', 1)[1] if user.name and ' ' in user.name else '') }}"
                 placeholder="Segundo Nome" style="width: 90%;">
             </div>
           </div>
@@ -228,13 +376,13 @@
             <div style="flex: 1; min-width: 200px;">
               <label for="birthdate" style="display: block; margin-bottom: 8px; font-weight: 550;">DATA DE
                 NASCIMENTO</label>
-              <input type="date" id="birthdate" name="birthdate" value="{{ user.get('birthdate', '') }}"
+              <input type="date" id="birthdate" name="birthdate" value="{{ user.birthdate or '' }}"
                 style="width: 90%;">
             </div>
             <div style="flex: 1; min-width: 200px;">
               <label for="email" style="display: block; margin-bottom: 8px; font-weight: 550;">EMAIL</label>
-              <input type="email" id="email" name="email" value="{{ user.get('email', '') }}" placeholder="Email"
-                style="width: 90%;">
+              <input type="email" id="email" name="email" value="{{ user.email or '' }}"
+              style="width: 90%;">
             </div>
           </div>
         </div>

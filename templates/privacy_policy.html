@@ -3,53 +3,109 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Política de Privacidade - Ponza Health</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='web.css') }}">
+  <title>Termos de Uso - RafahMed</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    .privacy-container {
-      max-width: 700px;
-      margin: 0 auto;
-      background-color: #ffffff;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    body {
       font-family: 'Montserrat', sans-serif;
+      background-color: #f9fafb;
+      color: #333;
     }
 
-    .privacy-container p,
-    .privacy-container h3 {
-      font-size: 14px;
-      line-height: 1.6;
+    :root {
+      --rafahmed-red: #dd1b35;
     }
 
-    .privacy-container h2 {
-      font-size: 22px;
+    .terms-container {
+      max-width: 800px;
+      margin: 5rem auto 3rem auto;
+      background-color: #ffffff;
+      padding: 2.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    .terms-container h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--rafahmed-red);
+      margin-bottom: 1.5rem;
       text-align: center;
+    }
+
+    .terms-container h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: #111827;
+    }
+
+    .terms-container p {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: #4b5563;
+    }
+
+    .logo-topo {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .logo-topo img {
+      width: 120px;
+      cursor: pointer;
     }
   </style>
 </head>
 
 <body>
-  <div style="text-align: center; margin: 20px 0;">
-    <img src="{{ url_for('static', filename='images/logo.svg') }}" style="width:100px; display:block; margin:0 auto;">
+  <div class="logo-topo">
+    <a href="{{ url_for('hero') }}">
+      <img src="{{ url_for('static', filename='images/logocompleta.svg') }}" alt="Logo RafahMed">
+    </a>
   </div>
 
-  <div class="privacy-container">
-    <h2>Política de Privacidade</h2>
-    <p>Esta política descreve como a Ponza Health coleta, utiliza e protege suas informações pessoais.</p>
-    <h3>1. Coleta de Informações</h3>
-    <p>Coletamos apenas informações necessárias para autenticação no sistema e comunicação, como nome, e-mail e
-      telefone.</p>
-    <h3>2. Uso das Informações</h3>
-    <p>As informações são utilizadas exclusivamente para autenticação e suporte ao usuário.</p>
-    <h3>3. Compartilhamento de Dados</h3>
-    <p>Não compartilhamos suas informações com terceiros.</p>
-    <h3>4. Direitos do Usuário</h3>
-    <p>Você pode solicitar a remoção dos seus dados a qualquer momento.</p>
-    <h3>5. Contato</h3>
-    <p>Para dúvidas, entre em contato pelo e-mail: contato@BioO3.com.br</p>
+  <div class="terms-container">
+    <h2>Termos e Condições de Uso</h2>
+
+    <p>A RafahMed oferece uma plataforma digital voltada para a intermediação entre pacientes, profissionais e empresas do setor da saúde. Ao acessar este site ou qualquer funcionalidade da plataforma, o usuário declara estar ciente e de acordo com todos os termos descritos a seguir.</p>
+
+    <h3>1. Aceitação e Atualizações</h3>
+    <p>Estes termos podem ser revisados a qualquer momento pela RafahMed, a seu critério. Sempre que atualizados, será publicada a nova versão no site. O uso contínuo da plataforma implica em aceitação plena das novas condições.</p>
+
+    <h3>2. Cadastro de Usuários</h3>
+    <p>O acesso à plataforma exige o fornecimento de informações pessoais e profissionais. O usuário é o único responsável pela veracidade dos dados informados, bem como pela guarda de seu login e senha de acesso.</p>
+
+    <h3>3. Perfil e Atividades Permitidas</h3>
+    <p>A plataforma é destinada a maiores de 18 anos ou menores com autorização formal de seus responsáveis legais. Estão vedadas práticas ilegais, antiéticas ou ofensivas durante o uso da plataforma.</p>
+
+    <h3>4. Pagamentos e Reembolsos</h3>
+    <p>As sessões e serviços podem ser pagos por cartão, convênio ou terceiros. Cancelamentos com pelo menos 24 horas de antecedência garantem reembolso. A não utilização do serviço agendado no horário não garante devolução do valor.</p>
+
+    <h3>5. Atendimento Online</h3>
+    <p>A RafahMed disponibiliza agendamento e consultas através de sala virtual, com suporte para vídeo, áudio e chat. O comparecimento é essencial e eventuais ausências devem ser justificadas conforme regras internas.</p>
+
+    <h3>6. Privacidade e Proteção de Dados</h3>
+    <p>A RafahMed respeita a LGPD e protege os dados dos usuários com tecnologias de criptografia e protocolos de segurança. Nenhuma gravação de sessões é permitida sem consentimento expresso das partes envolvidas.</p>
+
+    <h3>7. Responsabilidades do Usuário</h3>
+    <p>É proibido realizar qualquer tipo de engenharia reversa, invadir sistemas, acessar contas de terceiros ou utilizar a plataforma para veiculação de conteúdo ofensivo, ilegal ou malicioso.</p>
+
+    <h3>8. Direitos Autorais</h3>
+    <p>Todo o material disponibilizado pela RafahMed é protegido por direitos autorais. A utilização indevida de textos, logos ou imagens sem autorização configura infração legal.</p>
+
+    <h3>9. Encerramento de Conta</h3>
+    <p>O usuário pode solicitar a exclusão de sua conta a qualquer momento por meio de contato com o suporte. O cancelamento também pode ocorrer por descumprimento de qualquer item deste termo.</p>
+
+    <h3>10. Contato</h3>
+    <p>Para esclarecimentos, dúvidas ou solicitações relacionadas a estes termos, entre em contato pelo e-mail:</p>
+    <p class="mt-1 font-semibold text-[var(--rafahmed-red)]">contato.rafahmed@gmail.com.br</p>
   </div>
+
 </body>
-
 </html>

@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Catálogo de Pacientes - Ponza Health</title>
+  <title>Catálogo de Pacientes - RafahMed</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
   <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -33,7 +33,7 @@
       font-family: 'Montserrat', sans-serif;
       font-weight: 500;
       font-size: 14px;
-      color: #333;
+      color: #000000;
       text-decoration: none;
       padding: 8px 12px;
       border-radius: 6px;
@@ -41,7 +41,7 @@
     }
 
     .top-menu a:hover {
-      background-color: #133a5c;
+      background-color: #dd1b35;
       color: white;
     }
 
@@ -62,8 +62,8 @@
       font-family: 'Montserrat', sans-serif;
       font-size: 14px;
       font-weight: 500;
-      color: #333;
-      border: 2px solid #133a5c;
+      color: #000000;
+      border: 2px solid #dd1b35;
       background-color: white;
       padding: 10px 16px;
       border-radius: 6px;
@@ -73,7 +73,7 @@
     }
 
     .menu-button:hover {
-      background-color: #133a5c;
+      background-color: #dd1b35;
       color: white;
     }
   </style>
@@ -86,6 +86,7 @@
     </div>
     <a href="{{ url_for('index') }}">Início</a>
     <a href="{{ url_for('upload') }}">Ponza Lab</a>
+    <a href="{{ url_for('quiz_results') }}">Autoavaliações</a>
     <a href="{{ url_for('quote_index') }}">Cotações</a>
     <a href="{{ url_for('catalog') }}">Pacientes</a>
     <a href="{{ url_for('products') }}">Estoque</a>
@@ -177,25 +178,25 @@
       border: none;
       font-size: 22px;
       font-weight: bold;
-      color: #333;
+      color: #000000;
       cursor: pointer;
       transition: color 0.3s ease;
-    " onmouseover="this.style.color='#133a5c';" onmouseout="this.style.color='#333';">
+    " onmouseover="this.style.color='#dd1b35';" onmouseout="this.style.color='#000000';">
         ×
       </button>
 
       <h2 style="margin-bottom: 20px; color: #2c3e50; font-weight: 600;">Novo Paciente</h2>
 
       <input type="text" id="name" placeholder="Nome" required
-        style="width: 96%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px; color: #333; outline-color: #133a5c; font-weight: 500;">
+        style="width: 96%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px; color: #000000; outline-color: #dd1b35; font-weight: 500;">
       <input type="number" id="age" placeholder="Idade" required
-        style="width: 96%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px; color: #333; outline-color: #133a5c; font-weight: 500;">
+        style="width: 96%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px; color: #000000; outline-color: #dd1b35; font-weight: 500;">
       <input type="text" id="cpf" placeholder="CPF"
-        style="width: 96%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px; color: #333; outline-color: #133a5c; font-weight: 500;">
+        style="width: 96%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px; color: #000000; outline-color: #dd1b35; font-weight: 500;">
       <input type="text" id="gender" placeholder="Sexo"
-        style="width: 96%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px; color: #333; outline-color: #133a5c; font-weight: 500;">
+        style="width: 96%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px; color: #000000; outline-color: #dd1b35; font-weight: 500;">
       <input type="text" id="phone" placeholder="Telefone"
-        style="width: 96%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px; color: #333; outline-color: #133a5c; font-weight: 500;">
+        style="width: 96%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px; color: #000000; outline-color: #dd1b35; font-weight: 500;">
       <textarea id="prescription" placeholder="Prescrição (opcional)" rows="4" style="
       width: 96%;
       padding: 10px;
@@ -204,34 +205,25 @@
       border-radius: 6px;
       font-family: 'Montserrat', sans-serif;
       font-size: 14px;
-      color: #333;
-      outline-color: #133a5c;
+      color: #000000;
+      outline-color: #dd1b35;
       font-weight: 500;
     "></textarea>
-      <!-- Campo de Médico no Modal -->
-      <select id="doctor" required
-        style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px; color: #333; outline-color: #133a5c; font-weight: 500;"
-        onfocus="this.style.border='1px solid #133a5c';" onblur="this.style.border='1px solid #ccc';">
-        <option value="">Selecione o Médico</option>
-        {% for doctor in doctors %}
-        <option value="{{ doctor.id }}">{{ doctor.name }}</option>
-        {% endfor %}
-      </select>
 
       <button type="button" onclick="submitPatient()" style="
       width: 100%;
       padding: 10px 16px;
       background-color: white;
-      color: #333;
-      border: 2px solid #133a5c;
+      color: #000000;
+      border: 2px solid #dd1b35;
       border-radius: 6px;
       font-family: 'Montserrat', sans-serif;
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
       transition: background-color 0.3s ease, color 0.3s ease;
-    " onmouseover="this.style.backgroundColor='#133a5c'; this.style.color='white';"
-        onmouseout="this.style.backgroundColor='white'; this.style.color='#333';">
+    " onmouseover="this.style.backgroundColor='#dd1b35'; this.style.color='white';"
+        onmouseout="this.style.backgroundColor='white'; this.style.color='#000000';">
         Salvar
       </button>
     </div>
@@ -251,10 +243,10 @@
     border: none;
     font-size: 22px;
     font-weight: bold;
-    color: #333;
+    color: #000000;
     cursor: pointer;
     transition: color 0.3s ease;
-  " onmouseover="this.style.color='#133a5c';" onmouseout="this.style.color='#333';">
+  " onmouseover="this.style.color='#dd1b35';" onmouseout="this.style.color='#000000';">
         ×
       </button>
 
@@ -268,8 +260,8 @@
     border-radius: 6px;
     font-family: 'Montserrat', sans-serif;
     font-size: 14px;
-    color: #333;
-    outline-color: #133a5c;
+    color: #000000;
+    outline-color: #dd1b35;
     font-weight: 500;">
         <option value="">Selecione o Paciente</option>
         {% for patient in patients %}
@@ -285,8 +277,8 @@
     border-radius: 6px;
     font-family: 'Montserrat', sans-serif;
     font-size: 14px;
-    color: #333;
-    outline-color: #133a5c;
+    color: #000000;
+    outline-color: #dd1b35;
     font-weight: 500;">
 
       <textarea id="consultation_notes" placeholder="Observações" rows="4" style="
@@ -297,24 +289,24 @@
     border-radius: 6px;
     font-family: 'Montserrat', sans-serif;
     font-size: 14px;
-    color: #333;
-    outline-color: #133a5c;
+    color: #000000;
+    outline-color: #dd1b35;
     font-weight: 500;"></textarea>
 
       <button type="button" onclick="submitConsultation()" style="
     width: 100%;
     padding: 10px 16px;
     background-color: white;
-    color: #333;
-    border: 2px solid #133a5c;
+    color: #000000;
+    border: 2px solid #dd1b35;
     border-radius: 6px;
     font-family: 'Montserrat', sans-serif;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     transition: background-color 0.3s ease, color 0.3s ease;
-  " onmouseover="this.style.backgroundColor='#133a5c'; this.style.color='white';"
-        onmouseout="this.style.backgroundColor='white'; this.style.color='#333';">
+  " onmouseover="this.style.backgroundColor='#dd1b35'; this.style.color='white';"
+        onmouseout="this.style.backgroundColor='white'; this.style.color='#000000';">
         Salvar Consulta
       </button>
     </div>
@@ -347,27 +339,11 @@
     });
 
     function openPatientModal() {
-      carregarMedicos();
       document.getElementById("patientModal").style.display = "flex";
     }
 
     function closePatientModal() {
       document.getElementById("patientModal").style.display = "none";
-    }
-
-    function carregarMedicos() {
-      fetch('/api/doctors')
-        .then(response => response.json())
-        .then(data => {
-          const select = document.getElementById('doctor');
-          select.innerHTML = '<option value="">Selecione o médico</option>';
-          data.forEach(med => {
-            const opt = document.createElement('option');
-            opt.value = med.id;
-            opt.textContent = med.name;
-            select.appendChild(opt);
-          });
-        });
     }
 
     function submitPatient() {
@@ -377,10 +353,8 @@
         cpf: document.getElementById("cpf").value,
         gender: document.getElementById("gender").value,
         phone: document.getElementById("phone").value,
-        doctor: document.getElementById("doctor").value,
         prescription: document.getElementById("prescription").value
       };
-
 
       fetch("/api/add_patient", {
         method: "POST",

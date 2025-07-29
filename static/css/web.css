@@ -3,7 +3,7 @@ body {
   font-family: 'Montserrat', sans-serif;
   margin: 40px;
   background-color: #f9f9f9;
-  color: #333;
+  color: #000000;
 }
 
 h2 {
@@ -23,10 +23,10 @@ h2 {
   font-family: 'Montserrat', sans-serif;
   font-size: 14px;
   font-weight: 500;
-  color: #333;
+  color: #000000;
   text-decoration: none;
   padding: 10px 16px;
-  border: 2px solid #133a5c;
+  border: 2px solid #dd1b35;
   border-radius: 6px;
   background-color: white;
   transition: 0.3s ease;
@@ -35,7 +35,7 @@ h2 {
 }
 
 .menu-button:hover, .button-outline:hover, .filter-form button:hover, #addPatientModal .button-outline:hover, #addProductModal .button-outline:hover {
-  background-color: #133a5c;
+  background-color: #dd1b35;
   color: white;
 }
 
@@ -80,10 +80,10 @@ h2 {
   margin: 0 6px;
   width: auto;
   font-family: 'Montserrat', sans-serif;
-  border: 2px solid #133a5c;
+  border: 2px solid #dd1b35;
   border-radius: 6px;
   background-color: white;
-  color: #333;
+  color: #000000;
   transition: 0.2s ease;
 }
 
@@ -93,8 +93,8 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border: 2px solid #133a5c;
-  box-shadow: 0 0 4px #133a5c;
+  border: 2px solid #dd1b35;
+  box-shadow: 0 0 4px #dd1b35;
 }
 
 /* Badges de status */
@@ -123,7 +123,7 @@ textarea:focus {
   font-size: 20px;
   cursor: pointer;
   padding: 0;
-  color: #333;
+  color: #000000;
 }
 
 .options-container {
@@ -146,13 +146,13 @@ textarea:focus {
   display: block;
   padding: 10px 16px;
   text-decoration: none;
-  color: #333;
+  color: #000000;
   font-family: 'Montserrat', sans-serif;
   transition: background-color 0.2s;
 }
 
 .options-menu a:hover {
-  background-color: #133a5c;
+  background-color: #dd1b35;
   color: white;
 }
 
@@ -278,7 +278,7 @@ textarea:focus {
   padding: 10px;
   font-weight: 600;
   font-size: 16px;
-  color: #333;
+  color: #000000;
 }
 
 #calendar td {
@@ -317,5 +317,5 @@ textarea:focus {
 .event-list li {
   margin-bottom: 10px;
   font-size: 15px;
-  color: #333;
+  color: #000000;
 }

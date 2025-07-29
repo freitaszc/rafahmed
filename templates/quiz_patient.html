@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Autoavaliação - {{ patient.nome }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f9f9f9;
+    }
+
+    .top-menu {
+      background-color: white;
+      padding: 10px 0;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .top-menu a {
+      font-weight: 500;
+      font-size: 14px;
+      color: #000000;
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      transition: 0.3s;
+    }
+
+    .top-menu a:hover {
+      background-color: #dd1b35;
+      color: white;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      font-size: 26px;
+      color: #dd1b35;
+      margin-bottom: 20px;
+    }
+
+    .response-item {
+      margin-top: 15px;
+      padding: 12px;
+      border-left: 4px solid #dd1b35;
+      background-color: #fafafa;
+      border-radius: 6px;
+    }
+
+    .response-question {
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #333;
+    }
+
+    .response-answer {
+      font-size: 15px;
+      color: #555;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 30px;
+      color: #dd1b35;
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="top-menu">
+    <div style="position: absolute; left: 20px;">
+      <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" style="height: 40px;">
+    </div>
+    <a href="{{ url_for('index') }}">Início</a>
+    <a href="{{ url_for('upload') }}">Ponza Lab</a>
+    <a href="{{ url_for('quiz_results') }}">Autoavaliações</a>
+    <a href="{{ url_for('quote_index') }}">Cotações</a>
+    <a href="{{ url_for('catalog') }}">Pacientes</a>
+    <a href="{{ url_for('products') }}">Estoque</a>
+    <a href="{{ url_for('agenda') }}">Agenda</a>
+    <a href="{{ url_for('logout') }}">Sair</a>
+  </div>
+
+  <div class="container">
+    <h2>Detalhes do Paciente</h2>
+    {% set perguntas = [
+    ('nome', 'Qual seu nome?'),
+    ('idade', 'Qual sua idade?'),
+    ('nervosismo', 'Nas últimas 2 semanas, com que frequência você se sentiu nervoso(a), ansioso(a) ou muito
+    tenso(a)?'),
+    ('preocupacao', 'Nas últimas 2 semanas, você não foi capaz de controlar a preocupação?'),
+    ('interesse', 'Nas últimas 2 semanas, você teve pouco interesse ou prazer em fazer as coisas?'),
+    ('depressao', 'Nas últimas 2 semanas, você se sentiu desanimado(a), deprimido(a) ou sem esperança?'),
+    ('estresse', 'Considerando as últimas 2 semanas, o quanto você sentiu que estava estressado(a)?'),
+    ('hora_extra', 'Considerando uma semana de trabalho normal, quantos dias você normalmente precisa trabalhar a mais
+    do que a sua carga horária habitual e/ou fazer hora extra?'),
+    ('sono', 'Como você classificaria sua qualidade do sono nas últimas 2 semanas?'),
+    ('atividade_fisica', 'Com que frequência você pratica atividade física?'),
+    ('fatores', 'Quando você pensa na sua saúde mental e qualidade de vida, quais os fatores que mais impactam?'),
+    ('motivacao', 'Com relação à questão apontada, em qual estágio de motivação você considera que está para tentar
+    resolver a questão?'),
+    ('pronto_socorro', 'Nos últimos 3 meses, quantas vezes você utilizou o pronto socorro?'),
+    ('relacionamentos', 'Como você avalia seu relacionamento com família e amigos?'),
+    ('hobbies', 'Você tem algum hobby ou atividade que lhe dá prazer?'),
+    ('ansiedade', 'Nível de Ansiedade'),
+    ('depressao', 'Nível de Depressão'),
+    ('estresse', 'Nível de Estresse'),
+    ('qualidade', 'Qualidade de Vida'),
+    ('risco', 'Risco Geral'),
+    ('recomendacao', 'Recomendação Final')
+    ] %}
+
+    {% for key, pergunta in perguntas %}
+    <div class="response-item">
+      <div class="response-question">{{ pergunta }}</div>
+      <div class="response-answer">
+        {% if patient[key] %}
+        {% if patient[key] is iterable and patient[key] is not string %}
+        {{ patient[key]|join(', ') }}
+        {% else %}
+        {{ patient[key] }}
+        {% endif %}
+        {% else %}
+        Não informado
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+
+    <a href="{{ url_for('quiz_results') }}" class="back-link">← Voltar aos Resultados</a>
+  </div>
+
+</body>
+
+</html>
