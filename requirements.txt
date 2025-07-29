@@ -11,3 +11,4 @@ cryptography
 mercadopago
 SQLAlchemy>=1.4,<2.0
 Flask-SQLAlchemy>=3.0
+google-auth>=2.0.0
