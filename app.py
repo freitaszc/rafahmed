@@ -389,42 +389,48 @@ def index():
     if not user:
         return redirect(url_for('login'))
 
-    try:
-        used = user.packets_used or 0
-        remaining = user.packets_remaining or 50
-    except AttributeError:
-        used = 0
-        remaining = 50
+    # pacotes usados / restantes
+    used      = getattr(user, 'packets_used', 0) or 0
+    remaining = getattr(user, 'packets_remaining', 50) or 50
 
-    # Coleta dados de quiz dos últimos 7 dias
-    today = datetime.utcnow().date()
+    # período dos últimos 7 dias
+    today    = datetime.utcnow().date()
     week_ago = today - timedelta(days=6)
 
+    # query: retorna tuplas (day, count)
     results = (
         db.session.query(
-            func.date(QuizResult.date).label('day'),
-            func.count().label('count')
+            cast(QuizResult.date, Date),
+            func.count(QuizResult.id)
         )
         .filter(
             QuizResult.doctor_id == user.id,
-            cast(QuizResult.date, Date) >= week_ago
+            cast(QuizResult.date, Date) >= week_ago,
+            cast(QuizResult.date, Date) <= today
         )
-        .group_by(func.date(QuizResult.date))
-        .order_by(func.date(QuizResult.date))
+        .group_by(cast(QuizResult.date, Date))
+        .order_by(cast(QuizResult.date, Date))
         .all()
     )
 
-    date_counts = {r.day.strftime('%d/%m'): r.count for r in results}
-    total_count = sum(date_counts.values()) #type: ignore
-    media = round(total_count / 7, 2) if total_count else 0
+    # mapeia string da data para o count (cnt já é int)
+    date_counts: dict[str, int] = {
+        day.strftime('%d/%m'): cnt
+        for day, cnt in results
+    }
 
+    # soma direta de ints
+    total_count: int = sum(date_counts.values())
+    media: float     = round(total_count / 7, 2)
+
+    # preenche zero para dias sem resultados
     quiz_chart_data = []
     for i in range(7):
-        day = (week_ago + timedelta(days=i)).strftime('%d/%m')
-        count = date_counts.get(day, 0)
+        dia = week_ago + timedelta(days=i)
+        key = dia.strftime('%d/%m')
         quiz_chart_data.append({
-            'date': day,
-            'count': count,
+            'date':  key,
+            'count': date_counts.get(key, 0),
             'media': media
         })
 
