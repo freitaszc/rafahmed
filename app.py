@@ -1400,7 +1400,7 @@ def submit_quiz():
         interesse       = respostas['interesse'],
         sono            = respostas['sono'],
         atividade_fisica= respostas['atividade_fisica'],
-        fatores         = json.dumps(respostas['fatores'], ensure_ascii=False),
+        fatores         = respostas['fatores'],        
         motivacao       = respostas['motivacao'],
         hora_extra      = respostas['hora_extra'],
         pronto_socorro  = respostas['pronto_socorro'],
@@ -1523,6 +1523,22 @@ def quiz_patient(patient_id):
     }
 
     return render_template('quiz_patient.html', patient=patient, questions=questions)
+
+@app.route('/delete_quiz_result', methods=['GET','POST'])
+def delete_quiz_result():
+    # obtém o ID do resultado pela query string
+    patient_id = request.args.get('patient_id', type=int)
+    # busca o registro ou 404
+    result = QuizResult.query.get_or_404(patient_id)
+    
+    # deleta e confirma no banco
+    db.session.delete(result)
+    db.session.commit()
+    
+    # feedback opcional ao usuário
+    flash('Resultado de autoavaliação deletado com sucesso.', 'success')
+    # redireciona de volta para a lista de resultados
+    return redirect(url_for('quiz_results'))
 
 
 # ==============================================

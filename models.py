@@ -133,44 +133,62 @@ class Consult(db.Model):
 class QuizResult(db.Model):
     __tablename__ = 'quiz_results'
 
-    id              = db.Column(db.Integer, primary_key=True)
-    name            = db.Column(db.String(100))
-    age             = db.Column(db.String(10))
-    date            = db.Column(db.Date, default=datetime.utcnow)
-    # seus antigos
-    ansiedade       = db.Column(db.String(50))
-    depressao       = db.Column(db.String(50))
-    estresse        = db.Column(db.String(50))
-    qualidade       = db.Column(db.String(50))
-    risco           = db.Column(db.String(50))
-    # novas colunas
-    nervosismo      = db.Column(db.String(50))
-    preocupacao     = db.Column(db.String(50))
-    interesse       = db.Column(db.String(50))
-    sono            = db.Column(db.String(50))
-    atividade_fisica= db.Column(db.String(50))
-    fatores         = db.Column(db.Text)     # pode armazenar JSON ou comma‑separated
-    motivacao       = db.Column(db.Text)
-    hora_extra      = db.Column(db.String(50))
-    pronto_socorro  = db.Column(db.String(20))
-    relacionamentos = db.Column(db.String(50))
-    hobbies         = db.Column(db.String(50))
-    recomendacao    = db.Column(db.Text)
+    id               = db.Column(db.Integer, primary_key=True)
+    name             = db.Column(db.String(100), nullable=False)
+    age              = db.Column(db.String(10), nullable=False)
+    date             = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
-    doctor_id       = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    doctor          = db.relationship('User', backref='quiz_results')
+    # resultados agregados
+    ansiedade        = db.Column(db.String(50))
+    depressao        = db.Column(db.String(50))
+    estresse         = db.Column(db.String(50))
+    qualidade        = db.Column(db.String(50))
+    risco            = db.Column(db.String(50))
 
-    def __init__(self, name: str, age: str, date: Optional[datetime]=None,
-                 ansiedade: Optional[str]=None, depressao: Optional[str]=None,
-                 estresse: Optional[str]=None, qualidade: Optional[str]=None,
-                 risco: Optional[str]=None,
-                 nervosismo: Optional[str]=None, preocupacao: Optional[str]=None,
-                 interesse: Optional[str]=None, sono: Optional[str]=None,
-                 atividade_fisica: Optional[str]=None, fatores: Optional[str]=None,
-                 motivacao: Optional[str]=None, hora_extra: Optional[str]=None,
-                 pronto_socorro: Optional[str]=None, relacionamentos: Optional[str]=None,
-                 hobbies: Optional[str]=None, recomendacao: Optional[str]=None,
-                 doctor_id: Optional[int]=None):
+    # respostas individuais
+    nervosismo       = db.Column(db.String(50))
+    preocupacao      = db.Column(db.String(50))
+    interesse        = db.Column(db.String(50))
+    sono             = db.Column(db.String(50))
+    atividade_fisica = db.Column(db.String(50))
+    hora_extra       = db.Column(db.String(50))
+    pronto_socorro   = db.Column(db.String(20))
+    relacionamentos  = db.Column(db.String(50))
+    hobbies          = db.Column(db.String(50))
+
+    # listas/checkboxes como JSON
+    fatores          = db.Column(db.JSON)
+    motivacao        = db.Column(db.JSON)
+
+    recomendacao     = db.Column(db.Text)
+
+    doctor_id        = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    doctor           = db.relationship('User', backref='quiz_results')
+
+    def __init__(
+        self,
+        name: str,
+        age: str,
+        doctor_id: Optional[int] = None,   
+        date: Optional[datetime]    = None,
+        ansiedade: Optional[str]   = None,
+        depressao: Optional[str]   = None,
+        estresse: Optional[str]    = None,
+        qualidade: Optional[str]   = None,
+        risco: Optional[str]       = None,
+        nervosismo: Optional[str]  = None,
+        preocupacao: Optional[str] = None,
+        interesse: Optional[str]   = None,
+        sono: Optional[str]        = None,
+        atividade_fisica: Optional[str] = None,
+        hora_extra: Optional[str]  = None,
+        pronto_socorro: Optional[str] = None,
+        relacionamentos: Optional[str] = None,
+        hobbies: Optional[str]     = None,
+        fatores: Optional[list]    = None,
+        motivacao: Optional[list]  = None,
+        recomendacao: Optional[str] = None,
+    ):
         self.name             = name
         self.age              = age
         self.date             = date or datetime.utcnow()
@@ -184,11 +202,11 @@ class QuizResult(db.Model):
         self.interesse        = interesse
         self.sono             = sono
         self.atividade_fisica = atividade_fisica
-        self.fatores          = fatores
-        self.motivacao        = motivacao
         self.hora_extra       = hora_extra
         self.pronto_socorro   = pronto_socorro
         self.relacionamentos  = relacionamentos
         self.hobbies          = hobbies
+        self.fatores          = fatores or []
+        self.motivacao        = motivacao or []
         self.recomendacao     = recomendacao
         self.doctor_id        = doctor_id

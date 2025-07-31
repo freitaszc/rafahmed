@@ -129,7 +129,40 @@
         "phone": "",
         "doctor": 1,
         "status": "Ativo",
-        "prescription": "Resultado do quiz: ",
-        "created_at": "2025-07-29"
+        "prescription": "Resultado do quiz: "
+    },
+    {
+        "id": 40,
+        "name": "Amanda",
+        "age": 20,
+        "cpf": "",
+        "gender": "",
+        "phone": "",
+        "doctor": 1,
+        "status": "Ativo",
+        "prescription": "Resultado do quiz: BAIXO"
+    },
+    {
+        "id": 41,
+        "name": "Gabriell",
+        "age": 20,
+        "cpf": "",
+        "gender": "",
+        "phone": "",
+        "doctor": 1,
+        "status": "Ativo",
+        "prescription": "Resultado do quiz: NORMAL/LEVE"
+    },
+    {
+        "id": 42,
+        "name": "gabriel",
+        "age": 20,
+        "cpf": "",
+        "gender": "",
+        "phone": "",
+        "doctor": 1,
+        "status": "Ativo",
+        "prescription": "Resultado do quiz: NORMAL/LEVE",
+        "created_at": "2025-07-31"
     }
 ]

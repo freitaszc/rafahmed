@@ -24,6 +24,7 @@
     }
 
     .top-menu a {
+      font-family: 'Montserrat', sans-serif;
       font-weight: 500;
       font-size: 14px;
       color: #000000;
@@ -46,22 +47,29 @@
     .header h2 {
       font-size: 26px;
       color: #2c3e50;
+      margin: 0;
     }
 
-    .quiz-link {
-      background-color: #dd1b35;
-      color: white;
-      padding: 10px 20px;
+    /* Botão no estilo de "Cotações" */
+    .menu-button {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: #000000;
+      border: 2px solid #dd1b35;
+      background-color: white;
+      padding: 10px 16px;
       border-radius: 6px;
       text-decoration: none;
-      font-weight: 600;
-      transition: background-color 0.3s;
+      transition: 0.3s ease;
+      cursor: pointer;
       display: inline-block;
       margin-top: 12px;
     }
 
-    .quiz-link:hover {
-      background-color: #b81429;
+    .menu-button:hover {
+      background-color: #dd1b35;
+      color: white;
     }
 
     .catalog-table {
@@ -104,14 +112,18 @@
       background-color: #f4fcfd;
     }
 
-    .catalog-table td a {
-      color: #1a202c;
-      font-weight: 600;
-      text-decoration: none;
+    .delete-button {
+      background: none;
+      border: none;
+      font-size: 18px;
+      font-weight: bold;
+      color: #999;
+      cursor: pointer;
+      line-height: 1;
     }
 
-    .catalog-table td a:hover {
-      color: #dd1b35;
+    .delete-button:hover {
+      color: #c53030;
     }
   </style>
 </head>
@@ -138,7 +150,6 @@
     </a>
   </div>
 
-
   {% if results %}
   <table class="catalog-table">
     <thead>
@@ -150,6 +161,7 @@
         <th>Qualidade de Vida</th>
         <th>Risco Geral</th>
         <th>Data</th>
+        <th>Ações</th>
       </tr>
     </thead>
     <tbody>
@@ -182,8 +194,13 @@
           <span class="value"><strong>{{ result.risco or 'Não informado' }}</strong></span>
         </td>
         <td>{{ result.data }}</td>
+        <td>
+          <form method="post" action="{{ url_for('delete_quiz_result', patient_id=result.id) }}" onsubmit="return confirm('Deseja realmente remover este resultado?')" style="margin: 0;">
+            <button type="submit" class="delete-button" title="Deletar Resultado">×</button>
+          </form>
+        </td>
       </tr>
-      {% endfor %}      
+      {% endfor %}
     </tbody>
   </table>
   {% else %}
