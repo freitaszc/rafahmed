@@ -13,126 +13,295 @@
   <script>
     const pacotes_usados = {{ used or 0 }};
     const pacotes_comprados = {{ (used or 0) + (remaining or 0) }};
-      
+
     google.charts.load('current', { packages: ['corechart'] });
     google.charts.setOnLoadCallback(drawChart);
     google.charts.setOnLoadCallback(drawDonutChart);
-  
+
     function drawChart() {
       const data = google.visualization.arrayToDataTable([
         ['Data', 'Autoavaliações', 'Média'],
         {% for item in quiz_chart_data %}
-        ['{{ item.date }}', {{ item.count }}, {{ item.media }}]{% if not loop.last %}, {% endif %}
-        {% endfor %}
+    ['{{ item.date }}', {{ item.count }}, {{ item.media }}]{% if not loop.last %}, {% endif %}
+    {% endfor %}
       ]);
-  
+
       const options = {
         title: '',
+        titleTextStyle: {
+          color: '#333',
+          fontName: 'Montserrat',
+          fontSize: 16,
+          bold: true
+        },
         seriesType: 'bars',
-        series: { 1: { type: 'line', color: '#dd1b35' } },
-        colors: ['#111111'],
-        legend: { position: 'bottom' },
-        vAxis: { minValue: 0 }
+        series: { 
+          0: { 
+            color: '#dd1b35',
+            type: 'bars'
+          },
+          1: { 
+            type: 'line', 
+            color: '#2c3e50',
+            lineWidth: 4,
+            pointSize: 8,
+            pointShape: 'circle'
+          } 
+        },
+        legend: { 
+          position: 'bottom',
+          textStyle: {
+            color: '#333',
+            fontName: 'Montserrat',
+            fontSize: 13,
+            bold: true
+          }
+        },
+        vAxis: { 
+          minValue: 0,
+          textStyle: {
+            color: '#666',
+            fontName: 'Montserrat',
+            fontSize: 12
+          },
+          gridlines: {
+            color: '#f0f0f0',
+            count: 5
+          }
+        },
+        hAxis: {
+          textStyle: {
+            color: '#666',
+            fontName: 'Montserrat',
+            fontSize: 12,
+            bold: true
+          }
+        },
+        backgroundColor: 'transparent',
+        chartArea: {
+          left: 60,
+          top: 20,
+          width: '85%',
+          height: '75%'
+        },
+        bar: {
+          groupWidth: '60%'
+        },
+        animation: {
+          duration: 1000,
+          easing: 'out',
+          startup: true
+        }
       };
-  
+
       const chart = new google.visualization.ComboChart(document.getElementById('curve_chart'));
       chart.draw(data, options);
     }
-  
+
     function drawDonutChart() {
       const data = google.visualization.arrayToDataTable([
         ['Pacote', 'Análises'],
         ['Usado', pacotes_usados],
         ['Disponível', pacotes_comprados - pacotes_usados]
       ]);
-  
+      
       const options = {
-        pieHole: 0.7,
+        pieHole: 0.65,
         pieSliceText: 'none',
-        colors: ['#dd1b35', '#111111'],
-        legend: 'none'
+        colors: ['#dd1b35', '#e8e8e8'],
+        legend: 'none',
+        chartArea: { 
+          width: '95%', 
+          height: '95%',
+          top: 5,
+          left: 5
+        },
+        backgroundColor: 'transparent',
+        pieSliceBorderColor: '#ffffff',
+        slices: {
+          0: { offset: 0.02 },
+          1: { offset: 0 }
+        },
+        animation: {
+          duration: 1200,
+          easing: 'out',
+          startup: true
+        }
       };
-  
+      
       const chart = new google.visualization.PieChart(document.getElementById('donut_chart'));
       chart.draw(data, options);
-  
-      const total = pacotes_comprados > 0 ? pacotes_comprados : 1; // evita divisão por zero só no cálculo
-      document.getElementById('donut_label').innerText =
-        Math.round((pacotes_usados / total) * 100) + '%';
 
+      // Efeito glow mais intenso
+      setTimeout(() => {
+        const chartDiv = document.getElementById('donut_chart');
+        const svgElement = chartDiv.querySelector('svg');
+        if (svgElement) {
+          svgElement.style.filter = 'drop-shadow(0 0 20px rgba(221, 27, 53, 0.4))';
+          svgElement.style.borderRadius = '50%';
+        }
+      }, 100);
+
+      const total = pacotes_comprados > 0 ? pacotes_comprados : 1;
+      const percentage = Math.round((pacotes_usados / total) * 100);
+      document.getElementById('donut_label').innerText = percentage + '%';
+      
+      // Animação do número central
+      animateNumber('donut_label', 0, percentage, 1000);
+    }
+
+    function animateNumber(elementId, start, end, duration) {
+      const element = document.getElementById(elementId);
+      const startTime = performance.now();
+      
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+        const current = Math.round(start + (end - start) * easeOutQuart);
+        
+        element.innerText = current + '%';
+        
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        }
+      }
+      
+      requestAnimationFrame(update);
     }
 
     function openModal() {
-      document.getElementById('detailsModal').style.display = 'flex';
+      const modal = document.getElementById('detailsModal');
+      modal.style.display = 'flex';
     }
 
     function closeModal() {
-      document.getElementById('detailsModal').style.display = 'none';
+      const modal = document.getElementById('detailsModal');
+        modal.style.display = 'none';
     }
   </script>
   <style>
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    @keyframes modalFadeOut {
+      from { opacity: 1; transform: scale(1); }
+      to { opacity: 0; transform: scale(0.9); }
+    }
+    
+    @keyframes chartSlideIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 20px rgba(221, 27, 53, 0.3); }
+      50% { box-shadow: 0 0 30px rgba(221, 27, 53, 0.6); }
+    }
+
     body {
       margin: 0;
       display: flex;
       font-family: 'Montserrat', sans-serif;
-      background-color: #f9f9f9;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
       color: #000000;
+      min-height: 100vh;
     }
 
     .sidebar {
       width: 250px;
-      background-color: #fff;
+      background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
       padding: 30px 20px;
-      border-right: 1px solid #ddd;
+      border-right: 2px solid #e9ecef;
       height: 100vh;
       box-sizing: border-box;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.05);
     }
 
     .sidebar img {
       width: 200px;
       display: block;
       margin: 0 auto 30px auto;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
     }
 
     .sidebar a.menu-item {
       display: block;
       margin-bottom: 16px;
-      color: #000000;
+      color: #333333;
       text-decoration: none;
       font-size: 14px;
       font-weight: 500;
-      transition: 0.3s ease;
+      font-family: 'Montserrat', sans-serif;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      padding: 12px 16px;
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar a.menu-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(221, 27, 53, 0.1), transparent);
+      transition: left 0.5s ease;
     }
 
     .sidebar a.menu-item i {
-      margin-right: 8px;
-      width: 24px;
+      margin-right: 12px;
+      width: 20px;
       text-align: center;
+      transition: transform 0.3s ease;
     }
 
     .sidebar a.menu-item:hover {
       color: #dd1b35;
+      background: rgba(221, 27, 53, 0.05);
+      transform: translateX(8px);
+      box-shadow: 0 4px 12px rgba(221, 27, 53, 0.15);
+    }
+
+    .sidebar a.menu-item:hover::before {
+      left: 100%;
+    }
+
+    .sidebar a.menu-item:hover i {
+      transform: scale(1.2);
     }
 
     .content {
       flex-grow: 1;
       padding: 40px;
+      position: relative;
     }
 
     h2 {
-      font-size: 32px;
+      font-size: 36px;
+      font-weight: 700;
       text-align: center;
-      color: #000000;
-      margin-bottom: 30px;
+      color: #2c3e50;
+      margin-bottom: 40px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: relative;
     }
 
-    .info-box {
-      max-width: 900px;
-      margin: 0 auto;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-      padding: 25px 30px;
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: linear-gradient(90deg, #dd1b35, #ff6b8a);
+      border-radius: 2px;
     }
 
     .user-menu {
@@ -142,19 +311,20 @@
     }
 
     .user-menu .user-avatar {
-      width: 48px;
-      height: 48px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
-      border: 2px solid #ddd;
+      border: 3px solid #dd1b35;
       cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 16px rgba(221, 27, 53, 0.25);
+      background: #ffffff;
     }
 
     .user-menu .user-avatar:hover {
-      border-color: #dd1b35;
-      transform: scale(1.05);
-      box-shadow: 0 4px 12px rgba(221, 27, 53, 0.2);
+      transform: scale(1.1) rotate(5deg);
+      box-shadow: 0 8px 25px rgba(221, 27, 53, 0.4);
+      border-color: #ff6b8a;
     }
 
     .dropdown {
@@ -166,51 +336,51 @@
       display: none;
       position: absolute;
       right: 0;
-      margin-top: 12px;
+      margin-top: 15px;
       background: #ffffff;
-      border: 1px solid #e0e0e0;
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+      border: 1px solid #e9ecef;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
       list-style: none;
-      padding: 8px 0;
-      min-width: 180px;
+      padding: 12px 0;
+      min-width: 200px;
       z-index: 1000;
       opacity: 0;
-      transform: translateY(-10px);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      backdrop-filter: blur(10px);
+      transform: translateY(-20px) scale(0.95);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(20px);
     }
 
     .dropdown-menu.show {
       display: block;
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
     }
 
     .dropdown-menu::before {
       content: '';
       position: absolute;
-      top: -8px;
-      right: 20px;
+      top: -10px;
+      right: 24px;
       width: 0;
       height: 0;
-      border-left: 8px solid transparent;
-      border-right: 8px solid transparent;
-      border-bottom: 8px solid #ffffff;
-      filter: drop-shadow(0 -2px 4px rgba(0, 0, 0, 0.1));
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-bottom: 10px solid #ffffff;
+      filter: drop-shadow(0 -3px 6px rgba(0, 0, 0, 0.1));
     }
 
     .dropdown-item {
       display: block;
-      padding: 12px 20px;
+      padding: 14px 24px;
       color: #333333;
       text-decoration: none;
       font-family: 'Montserrat', sans-serif;
       font-size: 14px;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      border-radius: 8px;
-      margin: 2px 8px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      border-radius: 12px;
+      margin: 3px 12px;
       position: relative;
       overflow: hidden;
     }
@@ -227,9 +397,9 @@
     }
 
     .dropdown-item:hover {
-      background-color: #f8f9fa;
+      background: linear-gradient(90deg, rgba(221, 27, 53, 0.05), rgba(221, 27, 53, 0.1));
       color: #dd1b35;
-      transform: translateX(4px);
+      transform: translateX(6px);
     }
 
     .dropdown-item:hover::before {
@@ -237,86 +407,318 @@
     }
 
     .dropdown-item i {
-      margin-right: 10px;
-      width: 16px;
+      margin-right: 12px;
+      width: 18px;
       text-align: center;
-      opacity: 0.7;
-      transition: opacity 0.2s ease;
+      opacity: 0.8;
+      transition: all 0.3s ease;
     }
 
     .dropdown-item:hover i {
       opacity: 1;
+      transform: scale(1.2);
     }
 
     .dropdown-separator {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
-      margin: 8px 16px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #dd1b35, transparent);
+      margin: 12px 20px;
+      border-radius: 1px;
     }
 
     .chart-container {
-      background-color: #ffffff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       max-width: 700px;
       width: 100%;
       margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+      animation: chartSlideIn 0.8s ease-out;
+    }
+
+    .chart-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(221, 27, 53, 0.03), transparent);
+      transition: left 0.8s ease;
     }
 
     .chart-container:hover {
-      transform: scale(1.02);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(221, 27, 53, 0.1) inset;
+    }
+
+    .chart-container:hover::before {
+      left: 100%;
+    }
+
+    .chart-container h3 {
+      color: #2c3e50;
+      font-weight: 700;
+      font-size: 18px;
+      margin-bottom: 20px;
+      text-align: center;
+      position: relative;
+    }
+
+    .chart-container h3::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 3px;
+      background: linear-gradient(90deg, #dd1b35, #ff6b8a);
+      border-radius: 2px;
+    }
+
+    /* Estilos específicos para o container do donut */
+    .donut-container {
+      width: 300px !important;
+      background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      animation: chartSlideIn 0.8s ease-out 0.2s both;
+    }
+
+    .donut-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(221, 27, 53, 0.05), transparent);
+      transition: left 0.8s ease;
+    }
+
+    .donut-container:hover {
+      transform: translateY(-8px) scale(1.05);
+      box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(221, 27, 53, 0.1) inset;
+    }
+
+    .donut-container:hover::before {
+      left: 100%;
+    }
+
+    .donut-chart-wrapper {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(221, 27, 53, 0.05) 0%, transparent 70%);
+    }
+
+    #donut_label {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.8em;
+      font-weight: 900;
+      color: #dd1b35;
+      pointer-events: none;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .donut-stats {
+      margin: 20px 0;
+      padding: 15px;
+      background: rgba(221, 27, 53, 0.05);
+      border-radius: 12px;
+      border: 1px solid rgba(221, 27, 53, 0.1);
+    }
+
+    .donut-stats div {
+      margin: 8px 0;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .stat-used {
+      color: #dd1b35;
+    }
+
+    .stat-available {
+      color: #2c3e50;
+    }
+
+    .details-button {
+      margin-top: 20px;
+      background: linear-gradient(135deg, #dd1b35 0%, #ff6b8a 100%);
+      color: #ffffff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      font-family: 'Montserrat', sans-serif;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 15px rgba(221, 27, 53, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .details-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .details-button:hover {
+      background: linear-gradient(135deg, #ff6b8a 0%, #dd1b35 100%);
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 8px 25px rgba(221, 27, 53, 0.4);
+    }
+
+    .details-button:hover::before {
+      left: 100%;
+    }
+
+    .details-button:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    /* Modal melhorado */
+    #detailsModal {
+      backdrop-filter: blur(10px);
+      background: rgba(0, 0, 0, 0.6) !important;
+    }
+
+    #detailsModal > div {
+      background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%) !important;
+      border-radius: 20px !important;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25) !important;
+      border: 1px solid rgba(255, 255, 255, 0.5) !important;
+      width: 350px !important;
+      padding: 35px !important;
+    }
+
+    #detailsModal h3 {
+      color: #2c3e50 !important;
+      font-weight: 700 !important;
+      margin-bottom: 25px !important;
+      font-size: 22px !important;
+    }
+
+    #detailsModal p {
+      margin: 12px 0 !important;
+      font-weight: 600 !important;
+      color: #555 !important;
+    }
+
+    #detailsModal button[onclick="closeModal()"] {
+      color: #999 !important;
+      font-size: 24px !important;
+      transition: all 0.3s ease !important;
+    }
+
+    #detailsModal button[onclick="closeModal()"]:hover {
+      color: #dd1b35 !important;
+      transform: scale(1.2) !important;
+    }
+
+    #detailsModal button[onclick*="purchase"] {
+      background: linear-gradient(135deg, #dd1b35 0%, #ff6b8a 100%) !important;
+      color: #ffffff !important;
+      border: none !important;
+      padding: 12px 24px !important;
+      border-radius: 25px !important;
+      font-weight: 700 !important;
+      transition: all 0.3s ease !important;
+      box-shadow: 0 4px 15px rgba(221, 27, 53, 0.3) !important;
+    }
+
+    #detailsModal button[onclick*="purchase"]:hover {
+      background: linear-gradient(135deg, #ff6b8a 0%, #dd1b35 100%) !important;
+      transform: translateY(-2px) scale(1.05) !important;
+      box-shadow: 0 8px 25px rgba(221, 27, 53, 0.4) !important;
     }
   </style>
 </head>
 
-<!-- ✅ Modal com botão "X" no canto superior direito -->
+<!-- Modal melhorado -->
 <div id="detailsModal"
-  style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-  <div
-    style="background:white; padding:30px; border-radius:8px; width: 300px; text-align:center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); position: relative;">
-    <!-- Botão X -->
+  style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="position: relative; background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; font-family: 'Montserrat', sans-serif;">
+
+    <!-- Botão X dentro do container -->
     <button onclick="closeModal()" style="
       position: absolute;
       top: 10px;
       right: 10px;
       background: none;
       border: none;
-      font-size: 20px;
+      font-size: 22px;
       font-weight: bold;
-      color: #000000;
+      color: #999;
       cursor: pointer;
       transition: color 0.3s ease;
-    " onmouseover="this.style.color='#dd1b35';" onmouseout="this.style.color='#000000';">
+    " onmouseover="this.style.color='#dd1b35';" onmouseout="this.style.color='#999';">
       ×
     </button>
 
-    <h3 style="margin-bottom: 20px;">Detalhes do Pacote</h3>
-    <p><strong>Pacotes Totais:</strong> {{ used + remaining }}</p>
-    <p><strong>Usadas:</strong> {{ used }}</p>
-    <p><strong>Disponíveis:</strong> {{ remaining }}</p>
+    <h3 style="margin-top: 10px; color: #2c3e50;">Detalhes do Pacote</h3>
 
-    <!-- Botão Comprar Pacotes -->
+    <div style="background: rgba(221, 27, 53, 0.05); padding: 20px; border-radius: 12px; margin: 20px 0;">
+      <p><strong>Pacotes Totais:</strong> {{ used + remaining }}</p>
+      <p><strong>Usadas:</strong> <span style="color: #dd1b35;">{{ used }}</span></p>
+      <p><strong>Disponíveis:</strong> <span style="color: #2c3e50;">{{ remaining }}</span></p>
+    </div>
+
     <button type="button" onclick="window.location.href='{{ url_for('purchase') }}'" style="
-      padding: 10px 16px;
-      background-color: white;
-      color: #000000;
-      border: 2px solid #dd1b35;
-      border-radius: 6px;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 14px;
-      font-weight: 500;
+      background: linear-gradient(135deg, #dd1b35 0%, #ff6b8a 100%);
+      color: #ffffff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 25px;
       cursor: pointer;
-      transition: background-color 0.3s ease, color 0.3s ease;
-      margin-top: 20px;
-    " onmouseover="this.style.backgroundColor='#dd1b35'; this.style.color='white';"
-      onmouseout="this.style.backgroundColor='white'; this.style.color='#000000';">
+      font-weight: 600;
+      font-size: 14px;
+      font-family: 'Montserrat', sans-serif;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 10px rgba(221, 27, 53, 0.2);
+    " onmouseover="this.style.background='linear-gradient(135deg, #ff6b8a 0%, #dd1b35 100%)';"
+       onmouseout="this.style.background='linear-gradient(135deg, #dd1b35 0%, #ff6b8a 100%)';">
       Comprar Pacotes
     </button>
+
   </div>
 </div>
+
 
 <body>
   <div class="user-menu">
@@ -355,19 +757,43 @@
   </div>
 
   <script>
+    const avatar = document.querySelector('.user-avatar');
+    const dropdown = document.getElementById('userDropdown');
+  
+    // Alterna menu ao clicar no avatar
+    avatar.addEventListener('click', function (e) {
+      e.stopPropagation(); // Não deixa o click subir pra window!
+      dropdown.classList.toggle('show');
+    });
+  
+    // Fecha ao clicar fora
+    window.addEventListener('click', function (e) {
+      if (!dropdown.contains(e.target) && e.target !== avatar) {
+        dropdown.classList.remove('show');
+      }
+    });
+  
+    // Fecha com ESC
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        dropdown.classList.remove('show');
+      }
+    });
+  </script>
+  
+
+  <script>
     function toggleDropdown() {
       const dropdown = document.getElementById('userDropdown');
       dropdown.classList.toggle('show');
     }
 
-    // Fechar dropdown quando clicar fora
     window.addEventListener('click', function (e) {
       if (!e.target.closest('.dropdown')) {
         document.getElementById('userDropdown').classList.remove('show');
       }
     });
 
-    // Fechar dropdown com Escape
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') {
         document.getElementById('userDropdown').classList.remove('show');
@@ -389,51 +815,26 @@
   </div>
 
   <div class="content">
-    <h2>Bem-vindo(a), {{username}}</h2>
-    <div style="display: flex; justify-content: center; align-items: flex-start; flex-wrap: wrap;">
+    <h2>Bem-vindo(a), {{ username }}</h2>
+    <div style="display: flex; justify-content: center; align-items: flex-start; flex-wrap: wrap; gap: 40px; margin-top: 30px;">
 
-      <div class="chart-container">
-        <h3 style="font-size: 20px; font-weight: 600; color: #000000; text-align: center; margin-bottom: 15px;">
-          Autoavaliações Preenchidas nos Últimos 7 Dias
-        </h3>
-        <div id="curve_chart" style="width: 100%; height: 500px;"></div>
+      <!-- Gráfico de barras + linha melhorado -->
+      <div class="chart-container" style="flex: 1; min-width: 600px;">
+        <h3>Autoavaliações Preenchidas nos Últimos 7 Dias</h3>
+        <div id="curve_chart" style="width: 100%; height: 450px;"></div>
       </div>
 
-
-      <!-- Gráfico de Donut ao lado -->
-      <div class="chart-container" style="width: 260px; text-align: center; padding: 20px;">
-        <div style="position: relative; width: 160px; height: 160px; margin: 0 auto;">
-          <div id="donut_chart" style="width: 160px; height: 160px;"></div>
-          <div id="donut_label" style="
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: 600;
-            color: #000000;
-          "></div>
+      <!-- Gráfico de Donut melhorado -->
+      <div class="donut-container">
+        <h3 style="color: #2c3e50; font-weight: 700; font-size: 16px; margin-bottom: 20px;">Pacotes de Análise Usados</h3>
+        
+        <div class="donut-chart-wrapper">
+          <div id="donut_chart" style="width: 180px; height: 180px;"></div>
+          <div id="donut_label"></div>
         </div>
-        <p style="margin-top: 15px;">Pacotes de Análise Utilizados</p>
-        <button onclick="openModal()" style="
-          background: linear-gradient(90deg, #dd1b35, #ffffff);
-          color: #fff;
-          border: none;
-          padding: 10px 20px;
-          border-radius: 30px;
-          cursor: pointer;
-          font-weight: 600;
-          font-size: 14px;
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-          transition: background 0.3s ease, transform 0.2s ease;
-        " onmouseover="this.style.background='linear-gradient(90deg, #2c3e50, #dd1b35)'"
-          onmouseout="this.style.background='linear-gradient(90deg, #dd1b35, #2c3e50)'"
-          onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
-          Ver Detalhes
+      
+        <button onclick="openModal()" class="details-button">
+          Ver Detalhes Completos
         </button>
       </div>
     </div>

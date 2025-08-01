@@ -13,7 +13,15 @@
       font-family: 'Montserrat', sans-serif;
       background-color: #f9f9f9;
     }
-
+    h2 {
+      font-size: 36px;
+      font-weight: 700;
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 40px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: relative;
+    }
     .top-menu {
       background-color: white;
       padding: 10px 0;
@@ -22,7 +30,6 @@
       gap: 20px;
       border-bottom: 1px solid #eee;
     }
-
     .top-menu a {
       font-family: 'Montserrat', sans-serif;
       font-weight: 500;
@@ -33,24 +40,25 @@
       border-radius: 6px;
       transition: 0.3s;
     }
-
     .top-menu a:hover {
       background-color: #dd1b35;
       color: white;
     }
-
+    .content {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+    }
+    .logo-img {
+      width: 100px;
+      display: block;
+      margin: 0 auto 20px auto;
+    }
     .header {
       text-align: center;
-      margin: 30px 0 10px;
+      margin-bottom: 20px;
     }
-
-    .header h2 {
-      font-size: 26px;
-      color: #2c3e50;
-      margin: 0;
-    }
-
-    /* Botão no estilo de "Cotações" */
     .menu-button {
       font-family: 'Montserrat', sans-serif;
       font-size: 14px;
@@ -63,55 +71,36 @@
       text-decoration: none;
       transition: 0.3s ease;
       cursor: pointer;
-      display: inline-block;
-      margin-top: 12px;
     }
-
     .menu-button:hover {
       background-color: #dd1b35;
       color: white;
     }
-
     .catalog-table {
       width: 100%;
-      max-width: 1100px;
-      margin: 20px auto;
+      max-width: 900px;
+      margin: 20px auto 0 auto;
       border-collapse: collapse;
       background-color: #fff;
       border-radius: 8px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      margin-top: 20px;
     }
-
     .catalog-table th,
     .catalog-table td {
       padding: 12px 14px;
       border-bottom: 1px solid #ddd;
       text-align: center;
-      vertical-align: middle;
     }
-
     .catalog-table th {
       background-color: #f5f5f5;
       font-weight: 600;
       color: #2c3e50;
     }
-
-    .catalog-table td span.label {
-      display: block;
-      font-size: 12px;
-      font-weight: 500;
-      color: #777;
-    }
-
-    .catalog-table td span.value {
-      font-size: 14px;
-      font-weight: 600;
-    }
-
     .catalog-table tr:hover {
       background-color: #f4fcfd;
+      cursor: pointer;
     }
-
     .delete-button {
       background: none;
       border: none;
@@ -121,9 +110,18 @@
       cursor: pointer;
       line-height: 1;
     }
-
     .delete-button:hover {
       color: #c53030;
+    }
+    .label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: #777;
+    }
+    .value {
+      font-size: 14px;
+      font-weight: 600;
     }
   </style>
 </head>
@@ -131,7 +129,7 @@
 <body>
   <div class="top-menu">
     <div style="position: absolute; left: 20px;">
-      <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" style="height: 40px;">
+        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" style="height: 40px;">
     </div>
     <a href="{{ url_for('index') }}">Início</a>
     <a href="{{ url_for('upload') }}">Ponza Lab</a>
@@ -143,69 +141,70 @@
     <a href="{{ url_for('logout') }}">Sair</a>
   </div>
 
-  <div class="header">
+  <div class="content">
     <h2>Resultados das Autoavaliações</h2>
-    <a href="{{ url_for('quiz') }}?admin={{ user.id }}" target="_blank" class="menu-button">
-      Gerar link da Autoavaliação
-    </a>
-  </div>
+    <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+      <a href="{{ url_for('quiz') }}?admin={{ user.id }}" target="_blank" class="menu-button">
+        Gerar link da Autoavaliação
+      </a>
+    </div>
 
-  {% if results %}
-  <table class="catalog-table">
-    <thead>
-      <tr>
-        <th>Nome</th>
-        <th>Ansiedade</th>
-        <th>Depressão</th>
-        <th>Estresse</th>
-        <th>Qualidade de Vida</th>
-        <th>Risco Geral</th>
-        <th>Data</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for result in results %}
-      <tr>
-        <td>
-          <a href="{{ url_for('quiz_patient', patient_id=result.id) }}" target="_blank">
+    {% if results %}
+    <table class="catalog-table">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Ansiedade</th>
+          <th>Depressão</th>
+          <th>Estresse</th>
+          <th>Qualidade de Vida</th>
+          <th>Risco Geral</th>
+          <th>Data</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for result in results %}
+        <tr>
+          <td onclick="window.open('{{ url_for('quiz_patient', quiz_id=result.id) }}', '_blank')"
+              style="cursor:pointer;">
             {{ result.nome }}
-          </a>
-          <span class="label">Idade: {{ result.idade }}</span>
-        </td>
-        <td style="color: {{ result.ansiedade_cor }}">
-          <span class="label">Ansiedade</span>
-          <span class="value">{{ result.ansiedade or 'Não informado' }}</span>
-        </td>
-        <td style="color: {{ result.depressao_cor }}">
-          <span class="label">Depressão</span>
-          <span class="value">{{ result.depressao or 'Não informado' }}</span>
-        </td>
-        <td style="color: {{ result.estresse_cor }}">
-          <span class="label">Estresse</span>
-          <span class="value">{{ result.estresse or 'Não informado' }}</span>
-        </td>
-        <td style="color: {{ result.qualidade_cor }}">
-          <span class="label">Qualidade</span>
-          <span class="value">{{ result.qualidade or 'Não informado' }}</span>
-        </td>
-        <td style="color: {{ result.risco_cor }}">
-          <span class="label">Risco</span>
-          <span class="value"><strong>{{ result.risco or 'Não informado' }}</strong></span>
-        </td>
-        <td>{{ result.data }}</td>
-        <td>
-          <form method="post" action="{{ url_for('delete_quiz_result', patient_id=result.id) }}" onsubmit="return confirm('Deseja realmente remover este resultado?')" style="margin: 0;">
-            <button type="submit" class="delete-button" title="Deletar Resultado">×</button>
-          </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <p style="text-align:center; color:#888;">Nenhum resultado encontrado.</p>
-  {% endif %}
+            <span class="label">Idade: {{ result.idade }}</span>
+          </td>
+          <td style="color: {{ result.ansiedade_cor }}">
+            <span class="label">Ansiedade</span>
+            <span class="value">{{ result.ansiedade or 'Não informado' }}</span>
+          </td>
+          <td style="color: {{ result.depressao_cor }}">
+            <span class="label">Depressão</span>
+            <span class="value">{{ result.depressao or 'Não informado' }}</span>
+          </td>
+          <td style="color: {{ result.estresse_cor }}">
+            <span class="label">Estresse</span>
+            <span class="value">{{ result.estresse or 'Não informado' }}</span>
+          </td>
+          <td style="color: {{ result.qualidade_cor }}">
+            <span class="label">Qualidade</span>
+            <span class="value">{{ result.qualidade or 'Não informado' }}</span>
+          </td>
+          <td style="color: {{ result.risco_cor }}">
+            <span class="label">Risco</span>
+            <span class="value"><strong>{{ result.risco or 'Não informado' }}</strong></span>
+          </td>
+          <td>{{ result.data }}</td>
+          <td>
+            <form method="post" action="{{ url_for('delete_quiz_result', patient_id=result.id) }}"
+                  onsubmit="return confirm('Deseja realmente remover este resultado?')" style="margin: 0;">
+              <button type="submit" class="delete-button" title="Deletar Resultado">×</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="text-align:center; color:#888;">Nenhum resultado encontrado.</p>
+    {% endif %}
+  </div>
 </body>
-
 </html>

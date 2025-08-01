@@ -10,131 +10,154 @@
     rel="stylesheet">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
   <style>
+    @keyframes modalFadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes modalFadeOut {
+      from {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      to {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+    }
+
+    @keyframes chartSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulseGlow {
+
+      0%,
+      100% {
+        box-shadow: 0 0 20px rgba(221, 27, 53, 0.3);
+      }
+
+      50% {
+        box-shadow: 0 0 30px rgba(221, 27, 53, 0.6);
+      }
+    }
+
     body {
       margin: 0;
       display: flex;
       font-family: 'Montserrat', sans-serif;
-      background-color: #f9f9f9;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
       color: #000000;
+      min-height: 100vh;
     }
 
     .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
       width: 250px;
-      background-color: #fff;
+      background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
       padding: 30px 20px;
-      border-right: 1px solid #ddd;
+      border-right: 2px solid #e9ecef;
       height: 100vh;
       box-sizing: border-box;
-    }
-
-    .content {
-      flex-grow: 1;
-      padding: 40px;
-      margin-left: 250px;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
     }
 
     .sidebar img {
       width: 200px;
       display: block;
       margin: 0 auto 30px auto;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
     }
 
     .sidebar a.menu-item {
       display: block;
       margin-bottom: 16px;
-      color: #000000;
+      color: #333333;
       text-decoration: none;
       font-size: 14px;
       font-weight: 500;
-      transition: 0.3s ease;
+      font-family: 'Montserrat', sans-serif;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      padding: 12px 16px;
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar a.menu-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(221, 27, 53, 0.1), transparent);
+      transition: left 0.5s ease;
     }
 
     .sidebar a.menu-item i {
-      margin-right: 8px;
-      width: 24px;
+      margin-right: 12px;
+      width: 20px;
       text-align: center;
+      transition: transform 0.3s ease;
     }
 
     .sidebar a.menu-item:hover {
       color: #dd1b35;
+      background: rgba(221, 27, 53, 0.05);
+      transform: translateX(8px);
+      box-shadow: 0 4px 12px rgba(221, 27, 53, 0.15);
+    }
+
+    .sidebar a.menu-item:hover::before {
+      left: 100%;
+    }
+
+    .sidebar a.menu-item:hover i {
+      transform: scale(1.2);
+    }
+
+    .content {
+      flex-grow: 1;
+      padding: 40px;
+      position: relative;
     }
 
     h2 {
-      font-size: 32px;
+      font-size: 36px;
+      font-weight: 700;
       text-align: center;
-      color: #000000;
-      margin-bottom: 30px;
+      color: #2c3e50;
+      margin-bottom: 40px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      position: relative;
     }
 
-    .info-box {
-      max-width: 900px;
-      margin: 0 auto;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-      padding: 30px 40px;
-    }
-
-    form input {
-      width: 50%;
-      padding: 12px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-      font-family: 'Montserrat', sans-serif;
-    }
-
-    form input::placeholder {
-      font-family: 'Montserrat', sans-serif;
-    }
-
-    form input:focus {
-      border-color: #dd1b35;
-      outline: none;
-    }
-
-    .button-outline {
-      width: 100%;
-      background-color: white;
-      color: #000000;
-      border: 2px solid #dd1b35;
-      padding: 12px 0;
-      border-radius: 6px;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      text-decoration: none;
-      transition: 0.3s ease;
-    }
-
-    .button-outline:active {
-      background-color: #dd1b35;
-      color: white;
-      border-color: #dd1b35;
-    }
-
-    .button-outline:hover {
-      background-color: #dd1b35;
-      color: white;
-    }
-
-    .message {
-      font-size: 14px;
-      margin-bottom: 15px;
-      text-align: center;
-    }
-
-    .message.error {
-      color: #e74c3c;
-    }
-
-    .message.success {
-      color: #2ecc71;
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: linear-gradient(90deg, #dd1b35, #ff6b8a);
+      border-radius: 2px;
     }
 
     .user-menu {
@@ -144,19 +167,20 @@
     }
 
     .user-menu .user-avatar {
-      width: 48px;
-      height: 48px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
-      border: 2px solid #ddd;
+      border: 3px solid #dd1b35;
       cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 16px rgba(221, 27, 53, 0.25);
+      background: #ffffff;
     }
 
     .user-menu .user-avatar:hover {
-      border-color: #dd1b35;
-      transform: scale(1.05);
-      box-shadow: 0 4px 12px rgba(221, 27, 53, 0.2);
+      transform: scale(1.1) rotate(5deg);
+      box-shadow: 0 8px 25px rgba(221, 27, 53, 0.4);
+      border-color: #ff6b8a;
     }
 
     .dropdown {
@@ -168,51 +192,51 @@
       display: none;
       position: absolute;
       right: 0;
-      margin-top: 12px;
+      margin-top: 15px;
       background: #ffffff;
-      border: 1px solid #e0e0e0;
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+      border: 1px solid #e9ecef;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
       list-style: none;
-      padding: 8px 0;
-      min-width: 180px;
+      padding: 12px 0;
+      min-width: 200px;
       z-index: 1000;
       opacity: 0;
-      transform: translateY(-10px);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      backdrop-filter: blur(10px);
+      transform: translateY(-20px) scale(0.95);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(20px);
     }
 
     .dropdown-menu.show {
       display: block;
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
     }
 
     .dropdown-menu::before {
       content: '';
       position: absolute;
-      top: -8px;
-      right: 20px;
+      top: -10px;
+      right: 24px;
       width: 0;
       height: 0;
-      border-left: 8px solid transparent;
-      border-right: 8px solid transparent;
-      border-bottom: 8px solid #ffffff;
-      filter: drop-shadow(0 -2px 4px rgba(0, 0, 0, 0.1));
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-bottom: 10px solid #ffffff;
+      filter: drop-shadow(0 -3px 6px rgba(0, 0, 0, 0.1));
     }
 
     .dropdown-item {
       display: block;
-      padding: 12px 20px;
+      padding: 14px 24px;
       color: #333333;
       text-decoration: none;
       font-family: 'Montserrat', sans-serif;
       font-size: 14px;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      border-radius: 8px;
-      margin: 2px 8px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      border-radius: 12px;
+      margin: 3px 12px;
       position: relative;
       overflow: hidden;
     }
@@ -229,9 +253,9 @@
     }
 
     .dropdown-item:hover {
-      background-color: #f8f9fa;
+      background: linear-gradient(90deg, rgba(221, 27, 53, 0.05), rgba(221, 27, 53, 0.1));
       color: #dd1b35;
-      transform: translateX(4px);
+      transform: translateX(6px);
     }
 
     .dropdown-item:hover::before {
@@ -239,21 +263,248 @@
     }
 
     .dropdown-item i {
-      margin-right: 10px;
-      width: 16px;
+      margin-right: 12px;
+      width: 18px;
       text-align: center;
-      opacity: 0.7;
-      transition: opacity 0.2s ease;
+      opacity: 0.8;
+      transition: all 0.3s ease;
     }
 
     .dropdown-item:hover i {
       opacity: 1;
+      transform: scale(1.2);
     }
 
     .dropdown-separator {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
-      margin: 8px 16px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #dd1b35, transparent);
+      margin: 12px 20px;
+      border-radius: 1px;
+    }
+
+    .account-container {
+      background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+      animation: chartSlideIn 0.8s ease-out;
+    }
+
+    .account-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(221, 27, 53, 0.03), transparent);
+      transition: left 0.8s ease;
+    }
+
+    .account-container:hover {
+      transform: translateY(-4px);
+      box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(221, 27, 53, 0.1) inset;
+    }
+
+    .account-container:hover::before {
+      left: 100%;
+    }
+
+    .section-title {
+      color: #2c3e50;
+      font-weight: 700;
+      font-size: 20px;
+      margin-bottom: 25px;
+      position: relative;
+    }
+
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 0;
+      width: 50px;
+      height: 3px;
+      background: linear-gradient(90deg, #dd1b35, #ff6b8a);
+      border-radius: 2px;
+    }
+
+    .profile-picture-section {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .profile-picture {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 4px solid #dd1b35;
+      object-fit: cover;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 25px rgba(221, 27, 53, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .profile-picture:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 35px rgba(221, 27, 53, 0.4);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .form-col {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 14px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      font-size: 14px;
+      font-family: 'Montserrat', sans-serif;
+      transition: all 0.3s ease;
+      background: #ffffff;
+    }
+
+    .form-input:focus {
+      border-color: #dd1b35;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(221, 27, 53, 0.1);
+    }
+
+    .rafah-button {
+      background: linear-gradient(135deg, #dd1b35 0%, #ff6b8a 100%);
+      color: #ffffff;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      font-family: 'Montserrat', sans-serif;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 15px rgba(221, 27, 53, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .rafah-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .rafah-button:hover {
+      background: linear-gradient(135deg, #ff6b8a 0%, #dd1b35 100%);
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 8px 25px rgba(221, 27, 53, 0.4);
+    }
+
+    .rafah-button:hover::before {
+      left: 100%;
+    }
+
+    .rafah-button:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .file-input-label {
+      background: #ffffff;
+      color: #dd1b35;
+      border: 2px solid #dd1b35;
+      padding: 12px 24px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      font-family: 'Montserrat', sans-serif;
+      transition: all 0.3s ease;
+      display: inline-block;
+      margin-right: 15px;
+    }
+
+    .file-input-label:hover {
+      background: #dd1b35;
+      color: #ffffff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(221, 27, 53, 0.3);
+    }
+
+    .section-divider {
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #dd1b35, transparent);
+      margin: 40px 0;
+      border-radius: 1px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 30px;
+    }
+
+    .message {
+      padding: 12px 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .message.success {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #059669;
+    }
+
+    .message.error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #dc2626;
     }
   </style>
 </head>
@@ -261,11 +512,8 @@
 <body>
   <div class="user-menu">
     <div class="dropdown">
-      <img
-        class="user-avatar"
-        src="{{ url_for('static', filename=user.profile_image or 'images/user-icon.png') }}"
-        alt="Minha Conta"
-        onclick="toggleDropdown()" />
+      <img class="user-avatar" src="{{ url_for('static', filename=(user.profile_image or 'images/user-icon.png')) }}"
+        alt="Minha Conta" onclick="toggleDropdown()" />
       <ul id="userDropdown" class="dropdown-menu">
         <li>
           <a href="{{ url_for('account') }}" class="dropdown-item">
@@ -274,7 +522,9 @@
           </a>
         </li>
         {% if session.username and session.username.lower() == 'admin' %}
-        <li><div class="dropdown-separator"></div></li>
+        <li>
+          <div class="dropdown-separator"></div>
+        </li>
         <li>
           <a href="{{ url_for('admin_companies') }}" class="dropdown-item">
             <i class="fa fa-cog"></i>
@@ -282,7 +532,9 @@
           </a>
         </li>
         {% endif %}
-        <li><div class="dropdown-separator"></div></li>
+        <li>
+          <div class="dropdown-separator"></div>
+        </li>
         <li>
           <a href="{{ url_for('logout') }}" class="dropdown-item">
             <i class="fa fa-sign-out"></i>
@@ -299,21 +551,19 @@
       dropdown.classList.toggle('show');
     }
 
-    // Fechar dropdown quando clicar fora
-    window.addEventListener('click', function(e) {
+    window.addEventListener('click', function (e) {
       if (!e.target.closest('.dropdown')) {
         document.getElementById('userDropdown').classList.remove('show');
       }
     });
 
-    // Fechar dropdown com Escape
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') {
         document.getElementById('userDropdown').classList.remove('show');
       }
     });
   </script>
-  
+
   <div class="sidebar">
     <a href="{{ url_for('index') }}">
       <img src="{{ url_for('static', filename='images/logocompleta.svg') }}">
@@ -329,113 +579,94 @@
 
   <div class="content">
     <h2>Minha Conta</h2>
-    <div class="info-box">
+
+    <div class="account-container">
       {% if error %}
       <div class="message error">{{ error }}</div>
       {% endif %}
       {% if success %}
       <div class="message success">{{ success }}</div>
       {% endif %}
-      <!-- ✅ Formulário Informações Pessoais -->
-      <form method="post" enctype="multipart/form-data" action="{{ url_for('update_personal_info') }}"
-        style="margin-bottom: 30px;">
-        <h3>Informações Pessoais</h3>
+
+      <!-- Formulário Informações Pessoais -->
+      <form method="post" enctype="multipart/form-data" action="{{ url_for('update_personal_info') }}">
+        <h3 class="section-title">👤 Informações Pessoais</h3>
 
         <!-- Foto de Perfil -->
-        <div style="text-align: center; margin-bottom: 20px;">
+        <div class="profile-picture-section">
           <img src="{{ url_for('static', filename=user.profile_image or 'images/user-icon.png') }}" alt="Foto de Perfil"
-            style="width: 100px; height: 100px; border-radius: 50%; border: 2px solid #ccc; object-fit: cover;">
-        </div>
+            class="profile-picture">
 
-        <!-- Botão Alterar Foto -->
-        <div style="text-align: center; margin-bottom: 20px;">
-          <label for="profile_image" class="button-outline"
-            style="display: inline-block; width: auto; padding: 12px 16px; cursor: pointer;">
-            Alterar Foto de Perfil
-          </label>
-          <input type="file" id="profile_image" name="profile_image" accept="image/*" style="display: none;">
+          <div>
+            <label for="profile_image" class="file-input-label">
+              📷 Alterar Foto de Perfil
+            </label>
+            <input type="file" id="profile_image" name="profile_image" accept="image/*" class="file-input">
+          </div>
         </div>
 
         <!-- Campos Pessoais -->
-        <div style="max-width: 570px; margin: 0 auto;">
-          <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 200px;">
-              <label for="name" style="display: block; margin-bottom: 8px; font-weight: 550;">PRIMEIRO NOME</label>
-              <input type="text" id="name" name="name" value="{{ (user.name or '').split(' ')[0] }}"
-                placeholder="Primeiro Nome" style="width: 90%;">
-            </div>
-            <div style="flex: 1; min-width: 200px;">
-              <label for="secondname" style="display: block; margin-bottom: 8px; font-weight: 550;">SEGUNDO NOME</label>
-              <input type="text" id="secondname" name="secondname"
-                    value="{{ (user.name.split(' ', 1)[1] if user.name and ' ' in user.name else '') }}"
-                placeholder="Segundo Nome" style="width: 90%;">
-            </div>
+        <div class="form-row">
+          <div class="form-col">
+            <label for="name" class="form-label">PRIMEIRO NOME</label>
+            <input type="text" id="name" name="name" value="{{ (user.name or '').split(' ')[0] }}"
+              placeholder="Primeiro Nome" class="form-input">
           </div>
-
-          <div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 200px;">
-              <label for="birthdate" style="display: block; margin-bottom: 8px; font-weight: 550;">DATA DE
-                NASCIMENTO</label>
-              <input type="date" id="birthdate" name="birthdate" value="{{ user.birthdate or '' }}"
-                style="width: 90%;">
-            </div>
-            <div style="flex: 1; min-width: 200px;">
-              <label for="email" style="display: block; margin-bottom: 8px; font-weight: 550;">EMAIL</label>
-              <input type="email" id="email" name="email" value="{{ user.email or '' }}"
-              style="width: 90%;">
-            </div>
+          <div class="form-col">
+            <label for="secondname" class="form-label">SEGUNDO NOME</label>
+            <input type="text" id="secondname" name="secondname"
+              value="{{ (user.name.split(' ', 1)[1] if user.name and ' ' in user.name else '') }}"
+              placeholder="Segundo Nome" class="form-input">
           </div>
         </div>
 
-        <!-- ✅ Botões de Salvar e Remover lado a lado -->
-        <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 30px;">
-          <!-- Botão Salvar (dentro do form principal) -->
-          <button type="submit" class="button-outline" style="width: auto; padding: 12px 84px;">Salvar</button>
+        <div class="form-row">
+          <div class="form-col">
+            <label for="birthdate" class="form-label">DATA DE NASCIMENTO</label>
+            <input type="date" id="birthdate" name="birthdate" value="{{ user.birthdate or '' }}" class="form-input">
+          </div>
+          <div class="form-col">
+            <label for="email" class="form-label">EMAIL</label>
+            <input type="email" id="email" name="email" value="{{ user.email or '' }}" class="form-input">
+          </div>
+        </div>
 
-          <!-- Botão Remover Foto (form separado, lado a lado) -->
+        <div class="button-group">
+          <button type="submit" class="rafah-button">💾 Salvar Informações</button>
           <form method="post" action="{{ url_for('remove_profile_image') }}"
-            onsubmit="return confirm('Tem certeza que deseja remover sua foto de perfil?')">
-            <button type="submit" class="button-outline" style="width: auto; padding: 12px 16px;">Remover Foto de
-              Perfil</button>
+            onsubmit="return confirm('Tem certeza que deseja remover sua foto de perfil?')" style="display: inline;">
+            <button type="submit" class="file-input-label" style="margin: 0;">🗑️ Remover Foto</button>
           </form>
         </div>
+      </form>
 
+      <div class="section-divider"></div>
 
-        <hr style="border: none; border-top: 1px solid #ccc; margin: 30px 0;">
+      <!-- Seção: Senha -->
+      <form method="post" action="{{ url_for('update_password') }}">
+        <h3 class="section-title">🔐 Alterar Senha</h3>
 
-        <!-- Seção: Senha -->
-        <form method="post" action="{{ url_for('update_password') }}" style="margin-bottom: 30px;">
-          <h3>Senha</h3>
+        <div class="form-group" style="text-align: center; margin-bottom: 25px;">
+          <label for="current_password" class="form-label">SENHA ATUAL</label>
+          <input type="password" id="current_password" name="current_password" class="form-input"
+            style="max-width: 350px; margin: 0 auto;">
+        </div>
 
-          <!-- Senha Atual centralizada (igual alterar foto de perfil) -->
-          <div style="text-align: center; margin-bottom: 20px;">
-            <label for="current_password" style="display: block; margin-bottom: 8px; font-weight: 550;">SENHA
-              ATUAL</label>
-            <input type="password" id="current_password" name="current_password" style="width: 300px;">
+        <div class="form-row">
+          <div class="form-col">
+            <label for="new_password" class="form-label">NOVA SENHA</label>
+            <input type="password" id="new_password" name="new_password" class="form-input">
           </div>
-
-          <!-- Nova Senha e Confirmar Senha lado a lado -->
-          <div style="max-width: 570px; margin: 0 auto;">
-            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-              <div style="flex: 1; min-width: 200px;">
-                <label for="new_password" style="display: block; margin-bottom: 8px; font-weight: 550;">NOVA
-                  SENHA</label>
-                <input type="password" id="new_password" name="new_password" style="width: 90%;">
-              </div>
-              <div style="flex: 1; min-width: 200px;">
-                <label for="confirm_password" style="display: block; margin-bottom: 8px; font-weight: 550;">CONFIRME A
-                  SENHA</label>
-                <input type="password" id="confirm_password" name="confirm_password" style="width: 90%;">
-              </div>
-            </div>
+          <div class="form-col">
+            <label for="confirm_password" class="form-label">CONFIRME A SENHA</label>
+            <input type="password" id="confirm_password" name="confirm_password" class="form-input">
           </div>
+        </div>
 
-          <div style="text-align: center; margin-top: 30px;">
-            <button type="submit" class="button-outline" style="width: auto; padding: 12px 84px;">Salvar</button>
-          </div>
-        </form>
-
-        <hr style="border: none; border-top: 1px solid #ccc; margin: 30px 0;">
+        <div class="button-group">
+          <button type="submit" class="rafah-button">🔑 Alterar Senha</button>
+        </div>
+      </form>
     </div>
   </div>
 </body>

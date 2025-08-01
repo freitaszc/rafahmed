@@ -68,6 +68,9 @@
     }
 
     .response-answer {
+      white-space: normal !important;
+      overflow: visible !important;
+      text-overflow: unset !important;
       font-size: 15px;
       color: #555;
     }
@@ -134,7 +137,8 @@
     {% for key, pergunta in perguntas %}
     <div class="response-item">
       <div class="response-question">{{ pergunta }}</div>
-      <div class="response-answer">
+      <div class="response-answer" {% if key=='recomendacao' %} style="white-space: normal; display: block;" {% endif
+        %}>
         {% if patient[key] %}
         {% if patient[key] is iterable and patient[key] is not string %}
         {{ patient[key]|join(', ') }}
@@ -147,6 +151,7 @@
       </div>
     </div>
     {% endfor %}
+
 
     <a href="{{ url_for('quiz_results') }}" class="back-link">← Voltar aos Resultados</a>
   </div>

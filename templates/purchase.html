@@ -10,131 +10,154 @@
     rel="stylesheet">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
   <style>
+    @keyframes modalFadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes modalFadeOut {
+      from {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      to {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+    }
+
+    @keyframes chartSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulseGlow {
+
+      0%,
+      100% {
+        box-shadow: 0 0 20px rgba(221, 27, 53, 0.3);
+      }
+
+      50% {
+        box-shadow: 0 0 30px rgba(221, 27, 53, 0.6);
+      }
+    }
+
     body {
       margin: 0;
       display: flex;
       font-family: 'Montserrat', sans-serif;
-      background-color: #f9f9f9;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
       color: #000000;
+      min-height: 100vh;
     }
 
     .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
       width: 250px;
-      background-color: #fff;
+      background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
       padding: 30px 20px;
-      border-right: 1px solid #ddd;
+      border-right: 2px solid #e9ecef;
       height: 100vh;
       box-sizing: border-box;
-    }
-
-    .content {
-      flex-grow: 1;
-      padding: 40px;
-      margin-left: 250px;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
     }
 
     .sidebar img {
       width: 200px;
       display: block;
       margin: 0 auto 30px auto;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
     }
 
     .sidebar a.menu-item {
       display: block;
       margin-bottom: 16px;
-      color: #000000;
+      color: #333333;
       text-decoration: none;
       font-size: 14px;
       font-weight: 500;
-      transition: 0.3s ease;
+      font-family: 'Montserrat', sans-serif;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      padding: 12px 16px;
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar a.menu-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(221, 27, 53, 0.1), transparent);
+      transition: left 0.5s ease;
     }
 
     .sidebar a.menu-item i {
-      margin-right: 8px;
-      width: 24px;
+      margin-right: 12px;
+      width: 20px;
       text-align: center;
+      transition: transform 0.3s ease;
     }
 
     .sidebar a.menu-item:hover {
       color: #dd1b35;
+      background: rgba(221, 27, 53, 0.05);
+      transform: translateX(8px);
+      box-shadow: 0 4px 12px rgba(221, 27, 53, 0.15);
+    }
+
+    .sidebar a.menu-item:hover::before {
+      left: 100%;
+    }
+
+    .sidebar a.menu-item:hover i {
+      transform: scale(1.2);
+    }
+
+    .content {
+      flex-grow: 1;
+      padding: 40px;
+      position: relative;
     }
 
     h2 {
-      font-size: 32px;
+      font-size: 36px;
+      font-weight: 700;
       text-align: center;
-      color: #12181f;
-      margin-bottom: 30px;
+      color: #2c3e50;
+      margin-bottom: 40px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      position: relative;
     }
 
-    .info-box {
-      max-width: 900px;
-      margin: 0 auto;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-      padding: 30px 40px;
-    }
-
-    form input {
-      width: 50%;
-      padding: 12px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-      font-family: 'Montserrat', sans-serif;
-    }
-
-    form input::placeholder {
-      font-family: 'Montserrat', sans-serif;
-    }
-
-    form input:focus {
-      border-color: #dd1b35;
-      outline: none;
-    }
-
-    .button-outline {
-      width: 100%;
-      background-color: white;
-      color: #000000;
-      border: 2px solid #dd1b35;
-      padding: 12px 0;
-      border-radius: 6px;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      text-decoration: none;
-      transition: 0.3s ease;
-    }
-
-    .button-outline:active {
-      background-color: #dd1b35;
-      color: white;
-      border-color: #dd1b35;
-    }
-
-    .button-outline:hover {
-      background-color: #dd1b35;
-      color: white;
-    }
-
-    .message {
-      font-size: 14px;
-      margin-bottom: 15px;
-      text-align: center;
-    }
-
-    .message.error {
-      color: #e74c3c;
-    }
-
-    .message.success {
-      color: #2ecc71;
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: linear-gradient(90deg, #dd1b35, #ff6b8a);
+      border-radius: 2px;
     }
 
     .user-menu {
@@ -144,19 +167,20 @@
     }
 
     .user-menu .user-avatar {
-      width: 48px;
-      height: 48px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
-      border: 2px solid #ddd;
+      border: 3px solid #dd1b35;
       cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 16px rgba(221, 27, 53, 0.25);
+      background: #ffffff;
     }
 
     .user-menu .user-avatar:hover {
-      border-color: #dd1b35;
-      transform: scale(1.05);
-      box-shadow: 0 4px 12px rgba(221, 27, 53, 0.2);
+      transform: scale(1.1) rotate(5deg);
+      box-shadow: 0 8px 25px rgba(221, 27, 53, 0.4);
+      border-color: #ff6b8a;
     }
 
     .dropdown {
@@ -168,51 +192,55 @@
       display: none;
       position: absolute;
       right: 0;
-      margin-top: 12px;
+      top: 100%;
+      margin-top: 8px;
       background: #ffffff;
-      border: 1px solid #e0e0e0;
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+      border: 1px solid #e9ecef;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
       list-style: none;
-      padding: 8px 0;
-      min-width: 180px;
-      z-index: 1000;
+      padding: 12px 0;
+      min-width: 200px;
+      z-index: 9999;
       opacity: 0;
-      transform: translateY(-10px);
+      transform: translateY(-10px) scale(0.95);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(20px);
+      pointer-events: none;
     }
 
     .dropdown-menu.show {
       display: block;
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
     }
+
 
     .dropdown-menu::before {
       content: '';
       position: absolute;
-      top: -8px;
-      right: 20px;
+      top: -10px;
+      right: 24px;
       width: 0;
       height: 0;
-      border-left: 8px solid transparent;
-      border-right: 8px solid transparent;
-      border-bottom: 8px solid #ffffff;
-      filter: drop-shadow(0 -2px 4px rgba(0, 0, 0, 0.1));
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-bottom: 10px solid #ffffff;
+      filter: drop-shadow(0 -3px 6px rgba(0, 0, 0, 0.1));
     }
 
     .dropdown-item {
       display: block;
-      padding: 12px 20px;
+      padding: 14px 24px;
       color: #333333;
       text-decoration: none;
       font-family: 'Montserrat', sans-serif;
       font-size: 14px;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      border-radius: 8px;
-      margin: 2px 8px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      border-radius: 12px;
+      margin: 3px 12px;
       position: relative;
       overflow: hidden;
     }
@@ -229,9 +257,9 @@
     }
 
     .dropdown-item:hover {
-      background-color: #f8f9fa;
+      background: linear-gradient(90deg, rgba(221, 27, 53, 0.05), rgba(221, 27, 53, 0.1));
       color: #dd1b35;
-      transform: translateX(4px);
+      transform: translateX(6px);
     }
 
     .dropdown-item:hover::before {
@@ -239,21 +267,311 @@
     }
 
     .dropdown-item i {
-      margin-right: 10px;
-      width: 16px;
+      margin-right: 12px;
+      width: 18px;
       text-align: center;
-      opacity: 0.7;
-      transition: opacity 0.2s ease;
+      opacity: 0.8;
+      transition: all 0.3s ease;
     }
 
     .dropdown-item:hover i {
       opacity: 1;
+      transform: scale(1.2);
     }
 
     .dropdown-separator {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
-      margin: 8px 16px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #dd1b35, transparent);
+      margin: 12px 20px;
+      border-radius: 1px;
+    }
+
+    .payment-container {
+      background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      max-width: 700px;
+      width: 100%;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+      animation: chartSlideIn 0.8s ease-out;
+    }
+
+    .payment-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(221, 27, 53, 0.03), transparent);
+      transition: left 0.8s ease;
+    }
+
+    .payment-container:hover {
+      transform: translateY(-4px);
+      box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(221, 27, 53, 0.1) inset;
+    }
+
+    .payment-container:hover::before {
+      left: 100%;
+    }
+
+    .section-title {
+      color: #2c3e50;
+      font-weight: 700;
+      font-size: 24px;
+      margin-bottom: 30px;
+      text-align: center;
+      position: relative;
+    }
+
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, #dd1b35, #ff6b8a);
+      border-radius: 2px;
+    }
+
+    .package-selector {
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .package-label {
+      display: block;
+      margin-bottom: 15px;
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 16px;
+    }
+
+    .package-select {
+      width: 100%;
+      max-width: 400px;
+      padding: 15px 20px;
+      border: 2px solid #e9ecef;
+      border-radius: 15px;
+      font-size: 16px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      background: #ffffff;
+      color: #2c3e50;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .package-select:focus {
+      border-color: #dd1b35;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(221, 27, 53, 0.1);
+    }
+
+    .package-benefits {
+      background: rgba(221, 27, 53, 0.05);
+      border: 1px solid rgba(221, 27, 53, 0.1);
+      border-radius: 15px;
+      padding: 25px;
+      margin: 30px 0;
+    }
+
+    .benefits-title {
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 15px;
+      text-align: center;
+      font-size: 18px;
+    }
+
+    .benefits-list {
+      display: grid;
+      gap: 12px;
+      font-size: 14px;
+    }
+
+    .benefit-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .benefit-icon {
+      color: #dd1b35;
+      font-weight: bold;
+    }
+
+    .payment-methods {
+      margin: 30px 0;
+    }
+
+    .methods-title {
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 18px;
+    }
+
+    .methods-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 15px;
+    }
+
+    .method-item {
+      padding: 20px;
+      background: #ffffff;
+      border: 2px solid #e9ecef;
+      border-radius: 15px;
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .method-item:hover {
+      border-color: rgba(221, 27, 53, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(221, 27, 53, 0.1);
+    }
+
+    .method-icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .method-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .rafah-button {
+      background: linear-gradient(135deg, #dd1b35 0%, #ff6b8a 100%);
+      color: #ffffff;
+      border: none;
+      padding: 16px 40px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 16px;
+      font-family: 'Montserrat', sans-serif;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 15px rgba(221, 27, 53, 0.3);
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      max-width: 300px;
+      margin: 0 auto;
+      display: block;
+    }
+
+    .rafah-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .rafah-button:hover {
+      background: linear-gradient(135deg, #ff6b8a 0%, #dd1b35 100%);
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 8px 25px rgba(221, 27, 53, 0.4);
+    }
+
+    .rafah-button:hover::before {
+      left: 100%;
+    }
+
+    .rafah-button:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    .rafah-button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .security-info {
+      margin-top: 30px;
+      padding: 20px;
+      background: rgba(46, 204, 113, 0.05);
+      border: 1px solid rgba(46, 204, 113, 0.2);
+      border-radius: 15px;
+      text-align: center;
+    }
+
+    .security-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+
+    .security-description {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .package-warning {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 30px;
+      text-align: center;
+      color: #dc2626;
+    }
+
+    .warning-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .loading-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
     }
   </style>
 </head>
@@ -261,11 +579,9 @@
 <body>
   <div class="user-menu">
     <div class="dropdown">
-      <img
-        class="user-avatar"
+      <img class="user-avatar"
         src="{{ url_for('static', filename=(user.get('profile_image', 'images/user-icon.png') if user else 'images/user-icon.png')) }}"
-        alt="Minha Conta"
-        onclick="toggleDropdown()" />
+        alt="Minha Conta" onclick="toggleDropdown(event)" />
       <ul id="userDropdown" class="dropdown-menu">
         <li>
           <a href="{{ url_for('account') }}" class="dropdown-item">
@@ -274,7 +590,9 @@
           </a>
         </li>
         {% if session.username and session.username.lower() == 'admin' %}
-        <li><div class="dropdown-separator"></div></li>
+        <li>
+          <div class="dropdown-separator"></div>
+        </li>
         <li>
           <a href="{{ url_for('admin_companies') }}" class="dropdown-item">
             <i class="fa fa-cog"></i>
@@ -282,7 +600,9 @@
           </a>
         </li>
         {% endif %}
-        <li><div class="dropdown-separator"></div></li>
+        <li>
+          <div class="dropdown-separator"></div>
+        </li>
         <li>
           <a href="{{ url_for('logout') }}" class="dropdown-item">
             <i class="fa fa-sign-out"></i>
@@ -294,24 +614,67 @@
   </div>
 
   <script>
-    function toggleDropdown() {
+    function toggleDropdown(event) {
+      event.stopPropagation();
       const dropdown = document.getElementById('userDropdown');
-      dropdown.classList.toggle('show');
+      const isVisible = dropdown.classList.contains('show');
+
+      // Fechar todos os dropdowns abertos
+      document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+        menu.classList.remove('show');
+      });
+
+      // Se não estava visível, mostrar
+      if (!isVisible) {
+        dropdown.classList.add('show');
+      }
     }
 
-    // Fechar dropdown quando clicar fora
-    window.addEventListener('click', function(e) {
-      if (!e.target.closest('.dropdown')) {
+    // Fechar dropdown ao clicar fora
+    document.addEventListener('click', function (event) {
+      const dropdown = document.querySelector('.dropdown');
+      if (!dropdown.contains(event.target)) {
         document.getElementById('userDropdown').classList.remove('show');
       }
     });
 
-    // Fechar dropdown com Escape
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
+    // Fechar dropdown com ESC
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') {
         document.getElementById('userDropdown').classList.remove('show');
       }
     });
+
+    // Prevenir que cliques no dropdown o fechem
+    document.getElementById('userDropdown').addEventListener('click', function (event) {
+      event.stopPropagation();
+    });
+
+    function simulatePayment() {
+      const button = document.getElementById('paymentButton');
+      const select = document.getElementById('packageSelect');
+
+      if (!select.value) {
+        alert('Por favor, selecione um pacote.');
+        return false;
+      }
+
+      button.disabled = true;
+      button.innerHTML = `
+    <div class="loading-button">
+      <div class="spinner"></div>
+      Processando...
+    </div>
+  `;
+
+      setTimeout(() => {
+        alert('Pagamento gerado com sucesso! Redirecionando...');
+        button.disabled = false;
+        button.innerHTML = '<span></span> Gerar Pagamento';
+      }, 3000);
+
+      return false;
+    }
   </script>
 
   <div class="sidebar">
@@ -329,31 +692,71 @@
 
   <div class="content">
     <h2>Pagamentos</h2>
-    <div class="info-box">
-      <form method="post">
-        <h3>Comprar Pacote de Análises</h3>
 
-        <div style="text-align: center; margin: 20px 0;">
-          <label for="package" style="display: block; margin-bottom: 8px; font-weight: 550;">Selecione o Pacote</label>
-          <select name="package" id="package"
-            style="width: 60%; padding: 12px; border-radius: 6px; border: 1px solid #ccc; font-family: 'Montserrat', sans-serif;"
-            required>
+    <div class="payment-container">
+      {% if request.args.get('message') == 'pacote' %}
+      <div class="package-warning">
+        <div class="warning-title">
+          <i class="fa fa-exclamation-triangle"></i>
+          <strong>Pacote esgotado!</strong>
+        </div>
+        <p>Seu pacote de análises acabou. Por favor, adquira mais para continuar usando o Ponza Lab.</p>
+      </div>
+      {% endif %}
+
+      <form method="post">
+        <h3 class="section-title">Comprar Pacote de Análises</h3>
+
+        <!-- Package Selection -->
+        <div class="package-selector">
+          <label for="packageSelect" class="package-label">Selecione o Pacote</label>
+          <select name="package" id="packageSelect" class="package-select" required>
+            <option value="">Escolha seu pacote...</option>
             <option value="50">50 Análises - R$ 120</option>
             <option value="150">150 Análises - R$ 300</option>
             <option value="500">500 Análises - R$ 950</option>
           </select>
         </div>
 
-        <div style="text-align: center; margin-top: 30px;">
-          <button type="submit" class="button-outline" style="width: 200px;">Gerar Pagamento</button>
+        <!-- Package Benefits -->
+        <div class="package-benefits">
+          <h4 class="benefits-title">Benefícios Inclusos</h4>
+          <div class="benefits-list">
+            <div class="benefit-item">
+              <span class="benefit-icon">✅</span>
+              <span>Análises ilimitadas durante a validade</span>
+            </div>
+            <div class="benefit-item">
+              <span class="benefit-icon">✅</span>
+              <span>Relatórios detalhados em PDF</span>
+            </div>
+            <div class="benefit-item">
+              <span class="benefit-icon">✅</span>
+              <span>Suporte técnico prioritário</span>
+            </div>
+            <div class="benefit-item">
+              <span class="benefit-icon">✅</span>
+              <span>Backup automático dos dados</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="paymentButton" class="rafah-button">
+          <span></span> Gerar Pagamento
+        </button>
+
+        <!-- Security Info -->
+        <div class="security-info">
+          <div class="security-title">
+            <span>🔒</span>
+            <strong>Pagamento 100% Seguro</strong>
+          </div>
+          <p class="security-description">
+            Seus dados são protegidos com criptografia SSL de última geração.
+          </p>
         </div>
       </form>
-      {% if request.args.get('message') == 'pacote' %}
-      <div
-        style="background-color: #ffe6e6; border: 1px solid #ff0000; padding: 12px 16px; border-radius: 6px; color: #cc0000; text-align: center; margin: 20px auto; max-width: 600px; font-size: 14px; line-height: 1.4;">
-        Seu pacote de análises acabou. Por favor, adquira mais para continuar usando o Ponza Lab.
-      </div>
-      {% endif %}
     </div>
   </div>
 </body>

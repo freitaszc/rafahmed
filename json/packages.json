@@ -4,6 +4,11 @@
       "user_id": 0,
       "total": 50,
       "used": 34
+    },
+    {
+      "user_id": 1,
+      "total": 50,
+      "used": 3
     }
   ]
 }

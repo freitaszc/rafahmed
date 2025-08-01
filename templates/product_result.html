@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Produto - RafahMed</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
+  <style>
+    body { font-family: 'Montserrat', sans-serif; background: #f9f9f9; }
+    .container { max-width: 520px; margin: 36px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); padding: 36px 28px; }
+    h2 { text-align: center; margin-bottom: 26px; color: #dd1b35; font-size: 30px;}
+    .field-label { color: #444; font-size: 15px; font-weight: 600; margin-bottom: 4px; text-align:left;}
+    .field-value, .edit-input { width: 100%; font-size: 16px; color: #222; border: none; background: none; margin-bottom: 16px; text-align:left;}
+    .field-value { padding: 8px 0; cursor: pointer; border-radius: 4px; transition: background 0.2s;}
+    .field-value:hover { background: #f6f6fa;}
+    .edit-input { border: 1.5px solid #dd1b35; padding: 7px 10px; border-radius: 6px; background: #fff;}
+    .actions { display: flex; gap: 16px; margin-top: 20px;}
+    .action-btn {
+      font-family: 'Montserrat', sans-serif; font-size: 15px; font-weight: 500;
+      border: 2px solid #dd1b35; background: white; color: #dd1b35;
+      border-radius: 6px; padding: 8px 22px; cursor: pointer; transition: 0.2s;
+    }
+    .action-btn:hover { background: #dd1b35; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Detalhes do Produto</h2>
+    <form id="productForm">
+      <div>
+        <div class="field-label">Nome</div>
+        <span class="field-value" onclick="editField(this, 'name')">{{ product.name }}</span>
+      </div>
+      <div>
+        <div class="field-label">Código</div>
+        <span class="field-value" onclick="editField(this, 'code')">{{ product.code }}</span>
+      </div>
+      <div>
+        <div class="field-label">Quantidade</div>
+        <span class="field-value" onclick="editField(this, 'quantity')">{{ product.quantity }}</span>
+      </div>
+      <div>
+        <div class="field-label">Preço de Compra</div>
+        <span class="field-value" onclick="editField(this, 'purchase_price')">R$ {{ "%.2f"|format(product.purchase_price) }}</span>
+      </div>
+      <div>
+        <div class="field-label">Preço de Venda</div>
+        <span class="field-value" onclick="editField(this, 'sale_price')">R$ {{ "%.2f"|format(product.sale_price) }}</span>
+      </div>
+      <div>
+        <div class="field-label">Status</div>
+        <span class="field-value" onclick="editField(this, 'status')">{{ product.status }}</span>
+      </div>
+      <div class="actions">
+        <button type="button" class="action-btn" onclick="saveAll()">Salvar Tudo</button>
+        <a href="{{ url_for('products') }}" class="action-btn" style="text-decoration:none;">Voltar</a>
+      </div>
+    </form>
+  </div>
+  <script>
+    // Função de edição inline
+    function editField(span, field) {
+      if (span.querySelector('input, select')) return;
+      let value = span.innerText.trim();
+      let input;
+      if (field === 'status') {
+        input = document.createElement('select');
+        ['Ativo', 'Inativo'].forEach(opt => {
+          let o = document.createElement('option');
+          o.value = o.textContent = opt;
+          if (opt === value) o.selected = true;
+          input.appendChild(o);
+        });
+      } else if (field === 'quantity') {
+        input = document.createElement('input');
+        input.type = 'number';
+        input.min = 0;
+        input.value = value;
+        input.className = 'edit-input';
+      } else if (field === 'purchase_price' || field === 'sale_price') {
+        input = document.createElement('input');
+        input.type = 'number';
+        input.step = '0.01';
+        input.value = value.replace(/[^\d,\.]/g, '').replace(',','.');
+        input.className = 'edit-input';
+      } else {
+        input = document.createElement('input');
+        input.type = 'text';
+        input.value = value;
+        input.className = 'edit-input';
+      }
+      input.onblur = function() { saveField(span, field, input.value); };
+      input.onkeydown = function(e) { if (e.key === "Enter") { e.preventDefault(); input.blur(); }};
+      span.innerHTML = '';
+      span.appendChild(input);
+      input.focus();
+      input.select();
+    }
+    // Salva campo e troca pelo valor
+    function saveField(span, field, value) {
+      if(field === 'purchase_price' || field === 'sale_price'){
+        value = parseFloat(value).toFixed(2);
+        span.textContent = 'R$ ' + value;
+      } else {
+        span.textContent = value;
+      }
+      span.setAttribute('data-edited', '1');
+    }
+    // Salvar todos campos alterados
+    function saveAll() {
+      const fields = ['name','code','quantity','purchase_price','sale_price','status'];
+      let data = {};
+      document.querySelectorAll('.field-value').forEach((el, idx) => {
+        let field = fields[idx];
+        let val = el.textContent.trim();
+        if(field === 'purchase_price' || field === 'sale_price') val = val.replace(/[^\d,\.]/g, '').replace(',','.');
+        data[field] = val;
+      });
+      fetch("{{ url_for('edit_product_api', product_id=product.id) }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+      .then(r=>r.json())
+      .then(resp=>{
+        alert(resp.success ? "Produto atualizado!" : "Erro ao salvar.");
+        if(resp.success) location.reload();
+      });
+    }
+  </script>
+</body>
+</html>

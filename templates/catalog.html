@@ -14,10 +14,14 @@
       background-color: #f9f9f9;
     }
 
-    .logo-img {
-      width: 100px;
-      display: block;
-      margin: 0 auto 20px auto;
+    h2 {
+      font-size: 36px;
+      font-weight: 700;
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 40px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      position: relative;
     }
 
     .top-menu {
@@ -46,16 +50,10 @@
     }
 
     .content {
-      max-width: 900px;
+      max-width: 1000px;
       margin: 0 auto;
       padding: 20px;
       text-align: center;
-    }
-
-    h2 {
-      font-size: 26px;
-      color: #2c3e50;
-      margin-bottom: 20px;
     }
 
     .menu-button {
@@ -70,11 +68,136 @@
       text-decoration: none;
       transition: 0.3s ease;
       cursor: pointer;
+      margin-bottom: 6px;
+      min-width: 70px;
+      height: 38px;
+      box-shadow: 0 2px 8px 0 rgba(221, 27, 53, 0.04);
+      line-height: 1.1;
+      outline: none;
     }
 
     .menu-button:hover {
       background-color: #dd1b35;
       color: white;
+    }
+
+    .filter-form {
+      margin: 10px 0 10px 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .filter-form input,
+    .filter-form select {
+      padding: 8px 12px;
+      border: 2px solid #dd1b35;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: 'Montserrat', sans-serif;
+      outline: none;
+      background: #fff;
+      transition: border-color 0.15s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .filter-form input:focus,
+    .filter-form select:focus {
+      border-color: #b31226;
+    }
+
+    .catalog-table {
+      width: 100%;
+      max-width: 900px;
+      margin: 20px auto 0 auto;
+      border-collapse: collapse;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      margin-top: 20px;
+    }
+
+    .catalog-table th,
+    .catalog-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
+    }
+
+    .catalog-table th {
+      background-color: #f5f5f5;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .catalog-table tr:hover {
+      background-color: #f4fcfd;
+      cursor: pointer;
+    }
+
+    .options-button {
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: #999;
+      cursor: pointer;
+    }
+
+    .options-menu {
+      display: none;
+      position: absolute;
+      background: #fff;
+      border: 1px solid #eee;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+      border-radius: 8px;
+      margin-top: 6px;
+      min-width: 150px;
+      z-index: 2;
+      text-align: left;
+    }
+
+    .options-menu a {
+      display: block;
+      padding: 10px 16px;
+      color: #222;
+      text-decoration: none;
+      font-size: 14px;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+
+    .options-menu a:hover {
+      background: #f8eaea;
+      color: #dd1b35;
+    }
+
+    .options-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 16px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #fff;
+      background: #a0aec0;
+      margin-right: 8px;
+      border: none;
+      outline: none;
+      transition: background 0.2s;
+    }
+
+    .status-ativo {
+      background: #38c172 !important;
+    }
+
+    .status-inativo {
+      background: #e3342f !important;
     }
   </style>
 </head>
@@ -96,80 +219,66 @@
   <div class="content">
     <h2>Catálogo de Pacientes</h2>
     <button class="menu-button" onclick="openPatientModal()">Cadastrar Paciente</button>
-  </div>
+    <form method="get" action="{{ url_for('catalog') }}" class="filter-form">
+      <input type="search" name="search" placeholder="Pesquisar paciente..."
+        value="{{ request.args.get('search','') }}">
+      <select name="status">
+        <option value="">Todos</option>
+        <option value="Ativo" {% if request.args.get('status')=='Ativo' %}selected{% endif %}>Ativo</option>
+        <option value="Inativo" {% if request.args.get('status')=='Inativo' %}selected{% endif %}>Inativo</option>
+      </select>
+      <button type="submit" class="menu-button">Filtrar</button>
+    </form>
 
-  <form method="get" action="{{ url_for('catalog') }}" class="filter-form" style="text-align:center;">
-    <input type="search" name="search" placeholder="Pesquisar paciente..." value="{{ request.args.get('search', '') }}">
-    <select name="status">
-      <option value="">Todos</option>
-      <option value="Ativo" {% if request.args.get('status')=='Ativo' %}selected{% endif %}>Ativo</option>
-      <option value="Inativo" {% if request.args.get('status')=='Inativo' %}selected{% endif %}>Inativo</option>
-    </select>
-    <button type="submit" class="menu-button">Filtrar</button>
-  </form>
-
-  <table class="catalog-table">
-    <thead>
-      <tr>
-        <th>Paciente</th>
-        <th>Telefone</th>
-        <th>Médico</th>
-        <th>Status</th>
-        <th style="text-align: center;">Opções</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for patient in patients %}
-      <tr>
-        <td>{{ patient.name }}</td>
-        <td>{{ patient.phone }}</td>
-        <td>{{ patient.doctor_name }}</td>
-        <td>
-          <div class="options-container">
-            <span class="status-badge status-{{ patient.status|lower }}" onclick="toggleStatusMenu(this)">
-              {{ patient.status }} ▾
-            </span>
-            <div class="options-menu">
-              {% if patient.status != 'Ativo' %}
-              <a href="{{ url_for('toggle_patient_status', patient_id=patient.id, new_status='Ativo') }}">Ativo</a>
-              {% endif %}
-              {% if patient.status != 'Inativo' %}
-              <a href="{{ url_for('toggle_patient_status', patient_id=patient.id, new_status='Inativo') }}">Inativo</a>
-              {% endif %}
-            </div>
-          </div>
-        </td>
-        <td>
-          <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
-            <div class="options-container">
-              <button class="options-button" onclick="toggleMenu(this)">⋮</button>
-              <div class="options-menu">
-                <a href="{{ url_for('patient_result', patient_id=patient.id) }}">Ver Diagnóstico</a>
-                <a href="{{ url_for('edit_patient', patient_id=patient.id) }}">Editar Informações</a>
-                <a href="javascript:void(0);" onclick="openConsultationModal({{ patient.id }})">Adicionar Consulta</a>
-              </div>
-            </div>
-
+    <table class="catalog-table">
+      <thead>
+        <tr>
+          <th>Paciente</th>
+          <th>Telefone</th>
+          <th>Status</th>
+          <th style="text-align:center;">Opções</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for patient in patients %}
+        <tr>
+          <td>
+            <a href="{{ url_for('patient_info', patient_id=patient.id) }}" style="color: #2c3e50; text-decoration: underline; font-weight: 500;">
+              {{ patient.name }}
+            </a>
+          </td>
+          <td>{{ patient.phone }}</td>
+          <td>
+            <form method="post"
+              action="{{ url_for('toggle_patient_status', patient_id=patient.id, new_status='Ativo' if patient.status != 'Ativo' else 'Inativo') }}"
+              style="display:inline;">
+              <button type="submit" class="status-badge status-{{ patient.status|lower }}"
+                title="Clique para alternar o status">
+                {{ patient.status }}
+              </button>
+            </form>
+          </td>
+          <td style="text-align: center;">
             <form method="post" action="{{ url_for('delete_patient', patient_id=patient.id) }}"
-              onsubmit="return confirm('Deseja realmente remover este paciente?')" style="margin: 0;">
+              onsubmit="return confirm('Deseja realmente remover este paciente?')" style="margin:0;">
               <button type="submit" title="Remover Paciente"
-                style="background: none; border: none; font-size: 18px; font-weight: bold; color: #999; cursor: pointer; line-height: 1;">
+                style="background:none;border:none;font-size:18px;color:#999;cursor:pointer;">
                 ×
               </button>
             </form>
-          </div>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>      
+
+    </table>
+  </div>
 
   <!-- Modal de Cadastro de Paciente (Novo Padrão com X no topo) -->
   <div id="patientModal"
     style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000;">
     <div
       style="background:white; padding:30px; border-radius:10px; width:90%; max-width:500px; text-align:center; font-family:'Montserrat', sans-serif; position: relative;">
-      <!-- Botão X -->
       <button onclick="closePatientModal()" style="
       position: absolute;
       top: 10px;
@@ -184,9 +293,7 @@
     " onmouseover="this.style.color='#dd1b35';" onmouseout="this.style.color='#000000';">
         ×
       </button>
-
       <h2 style="margin-bottom: 20px; color: #2c3e50; font-weight: 600;">Novo Paciente</h2>
-
       <input type="text" id="name" placeholder="Nome" required
         style="width: 96%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px; color: #000000; outline-color: #dd1b35; font-weight: 500;">
       <input type="number" id="age" placeholder="Idade" required
@@ -209,23 +316,7 @@
       outline-color: #dd1b35;
       font-weight: 500;
     "></textarea>
-
-      <button type="button" onclick="submitPatient()" style="
-      width: 100%;
-      padding: 10px 16px;
-      background-color: white;
-      color: #000000;
-      border: 2px solid #dd1b35;
-      border-radius: 6px;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background-color 0.3s ease, color 0.3s ease;
-    " onmouseover="this.style.backgroundColor='#dd1b35'; this.style.color='white';"
-        onmouseout="this.style.backgroundColor='white'; this.style.color='#000000';">
-        Salvar
-      </button>
+      <button type="button" class="menu-button" onclick="submitPatient()" style="width: 100%;">Salvar</button>
     </div>
   </div>
 
@@ -234,7 +325,6 @@
     style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000;">
     <div
       style="background:white; padding:30px; border-radius:10px; width:90%; max-width:500px; text-align:center; font-family:'Montserrat', sans-serif; position: relative;">
-      <!-- Botão X -->
       <button onclick="closeConsultationModal()" style="
     position: absolute;
     top: 10px;
@@ -249,9 +339,7 @@
   " onmouseover="this.style.color='#dd1b35';" onmouseout="this.style.color='#000000';">
         ×
       </button>
-
       <h2 style="margin-bottom: 20px; color: #2c3e50; font-weight: 600;">Nova Consulta</h2>
-
       <select id="patient_consultation" required style="
     width: 100%;
     padding: 10px;
@@ -268,7 +356,6 @@
         <option value="{{ patient.id }}">{{ patient.name }}</option>
         {% endfor %}
       </select>
-
       <input type="text" id="consultation_date" placeholder="Data (dd/mm/aaaa)" maxlength="10" required style="
     width: 96%;
     padding: 10px;
@@ -280,7 +367,6 @@
     color: #000000;
     outline-color: #dd1b35;
     font-weight: 500;">
-
       <textarea id="consultation_notes" placeholder="Observações" rows="4" style="
     width: 96%;
     padding: 10px;
@@ -292,23 +378,8 @@
     color: #000000;
     outline-color: #dd1b35;
     font-weight: 500;"></textarea>
-
-      <button type="button" onclick="submitConsultation()" style="
-    width: 100%;
-    padding: 10px 16px;
-    background-color: white;
-    color: #000000;
-    border: 2px solid #dd1b35;
-    border-radius: 6px;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.3s ease, color 0.3s ease;
-  " onmouseover="this.style.backgroundColor='#dd1b35'; this.style.color='white';"
-        onmouseout="this.style.backgroundColor='white'; this.style.color='#000000';">
-        Salvar Consulta
-      </button>
+      <button type="button" class="menu-button" onclick="submitConsultation()" style="width: 100%;">Salvar
+        Consulta</button>
     </div>
   </div>
 
@@ -318,14 +389,6 @@
         if (menu !== button.nextElementSibling) menu.style.display = 'none';
       });
       const menu = button.nextElementSibling;
-      menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-    }
-
-    function toggleStatusMenu(span) {
-      document.querySelectorAll('.options-menu').forEach(menu => {
-        if (menu !== span.nextElementSibling) menu.style.display = 'none';
-      });
-      const menu = span.nextElementSibling;
       menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
     }
 
@@ -444,7 +507,6 @@
       const [day, month, year] = dateStr.split('/');
       return `${year}-${month}-${day}T00:00:00`;
     }
-
 
     // Máscara de data dd/mm/aaaa
     document.getElementById("consultation_date").addEventListener("input", function (e) {

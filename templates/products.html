@@ -46,16 +46,20 @@
     }
 
     .content {
-      max-width: 900px;
+      max-width: 1000px;
       margin: 0 auto;
       padding: 20px;
       text-align: center;
     }
 
     h2 {
-      font-size: 26px;
+      font-size: 36px;
+      font-weight: 700;
+      text-align: center;
       color: #2c3e50;
-      margin-bottom: 20px;
+      margin-bottom: 40px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      position: relative;
     }
 
     .menu-button {
@@ -70,11 +74,136 @@
       text-decoration: none;
       transition: 0.3s ease;
       cursor: pointer;
+      margin-bottom: 10px;
+      min-width: 70px;
+      height: 38px;
+      box-shadow: 0 2px 8px 0 rgba(221, 27, 53, 0.04);
+      line-height: 1.1;
+      outline: none;
     }
 
     .menu-button:hover {
       background-color: #dd1b35;
       color: white;
+    }
+
+    .filter-form {
+      margin: 10px 0 10px 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .filter-form input,
+    .filter-form select {
+      padding: 8px 12px;
+      border: 2px solid #dd1b35;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: 'Montserrat', sans-serif;
+      outline: none;
+      background: #fff;
+      transition: border-color 0.15s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .filter-form input:focus,
+    .filter-form select:focus {
+      border-color: #b31226;
+    }
+
+    .catalog-table {
+      width: 100%;
+      max-width: 900px;
+      margin: 20px auto 0 auto;
+      border-collapse: collapse;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      margin-top: 20px;
+    }
+
+    .catalog-table th,
+    .catalog-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
+    }
+
+    .catalog-table th {
+      background-color: #f5f5f5;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .catalog-table tr:hover {
+      background-color: #f4fcfd;
+      cursor: pointer;
+    }
+
+    .options-button {
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: #999;
+      cursor: pointer;
+    }
+
+    .options-menu {
+      display: none;
+      position: absolute;
+      background: #fff;
+      border: 1px solid #eee;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+      border-radius: 8px;
+      margin-top: 6px;
+      min-width: 150px;
+      z-index: 2;
+      text-align: left;
+    }
+
+    .options-menu a {
+      display: block;
+      padding: 10px 16px;
+      color: #222;
+      text-decoration: none;
+      font-size: 14px;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+
+    .options-menu a:hover {
+      background: #f8eaea;
+      color: #dd1b35;
+    }
+
+    .options-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 16px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #fff;
+      background: #a0aec0;
+      margin-right: 8px;
+      border: none;
+      outline: none;
+      transition: background 0.2s;
+    }
+
+    .status-ativo {
+      background: #38c172 !important;
+    }
+
+    .status-inativo {
+      background: #e3342f !important;
     }
   </style>
 </head>
@@ -82,7 +211,7 @@
 <body>
   <div class="top-menu">
     <div style="position: absolute; left: 20px;">
-        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" style="height: 40px;">
+      <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" style="height: 40px;">
     </div>
     <a href="{{ url_for('index') }}">Início</a>
     <a href="{{ url_for('upload') }}">Ponza Lab</a>
@@ -95,59 +224,50 @@
   </div>
   <div class="content">
     <h2>Estoque</h2>
-    <a href="#" class="menu-button" onclick="openModal()">Cadastrar Produto</a>
-  </div>
-  <form method="get" action="{{ url_for('products') }}" class="filter-form">
-    <input type="search" name="search" placeholder="Pesquisar produto..." value="{{ request.args.get('search', '') }}">
-    <select name="status">
-      <option value="">Todos</option>
-      <option value="Ativo" {% if request.args.get('status')=='Ativo' %}selected{% endif %}>Ativo</option>
-      <option value="Inativo" {% if request.args.get('status')=='Inativo' %}selected{% endif %}>Inativo</option>
-    </select>
-    <button type="submit" class="menu-button">Filtrar</button>
-  </form>
+    <button class="menu-button" onclick="openModal()">Cadastrar Produto</button>
+    <form method="get" action="{{ url_for('products') }}" class="filter-form">
+      <input type="search" name="search" placeholder="Pesquisar produto..." value="{{ request.args.get('search', '') }}">
+      <select name="status">
+        <option value="">Todos</option>
+        <option value="Ativo" {% if request.args.get('status')=='Ativo' %}selected{% endif %}>Ativo</option>
+        <option value="Inativo" {% if request.args.get('status')=='Inativo' %}selected{% endif %}>Inativo</option>
+      </select>
+      <button type="submit" class="menu-button">Filtrar</button>
+    </form>
 
-  <table class="catalog-table">
-    <thead>
-      <tr>
-        <th>Produto</th>
-        <th>Quantidade</th>
-        <th>Compra</th>
-        <th>Venda</th>
-        <th>Status</th>
-        <th style="text-align: center;">Opções</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for prod in products %}
-      <tr>
-        <td>{{ prod.name }}</td>
-        <td>{{ prod.quantity }}</td>
-        <td>R$ {{ "%.2f"|format(prod.purchase_price) }}</td>
-        <td>R$ {{ "%.2f"|format(prod.sale_price) }}</td>
-        <td>
-          <div class="options-container">
-            <span class="status-badge status-{{ prod.status|lower }}" onclick="toggleStatusMenu(this)">
-              {{ prod.status }} ▾
-            </span>
-            <div class="options-menu">
-              {% if prod.status != 'Ativo' %}
-              <a href="{{ url_for('toggle_product_status', product_id=prod.id, new_status='Ativo') }}">Ativo</a>
-              {% endif %}
-              {% if prod.status != 'Inativo' %}
-              <a href="{{ url_for('toggle_product_status', product_id=prod.id, new_status='Inativo') }}">Inativo</a>
-              {% endif %}
-            </div>
-          </div>
-        </td>
-        <td>
-          <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
-            <div class="options-container">
-              <button class="options-button" onclick="toggleMenu(this)">⋮</button>
-              <div class="options-menu">
-                <a href="#" onclick="openEditProductModal({{ prod.id | int }})">Editar</a>
-              </div>
-            </div>
+    <table class="catalog-table">
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>Quantidade</th>
+          <th>Compra</th>
+          <th>Venda</th>
+          <th>Status</th>
+          <th style="text-align:center;">Opções</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for prod in products %}
+        <tr>
+          <td>
+            <a href="{{ url_for('product_result', product_id=prod.id) }}" style="color: #2c3e50; text-decoration: underline; font-weight: 500;">
+              {{ prod.name }}
+            </a>
+          </td>
+          <td>{{ prod.quantity }}</td>
+          <td>R$ {{ "%.2f"|format(prod.purchase_price) }}</td>
+          <td>R$ {{ "%.2f"|format(prod.sale_price) }}</td>
+          <td>
+            <form method="post"
+              action="{{ url_for('toggle_product_status', product_id=prod.id, new_status='Ativo' if prod.status != 'Ativo' else 'Inativo') }}"
+              style="display:inline;">
+              <button type="submit" class="status-badge status-{{ prod.status|lower }}"
+                title="Clique para alternar o status">
+                {{ prod.status }}
+              </button>
+            </form>
+          </td>
+          <td style="text-align: center;">
             <form method="post" action="{{ url_for('delete_product', product_id=prod.id) }}"
               onsubmit="return confirm('Deseja realmente remover este produto?')" style="margin: 0;">
               <button type="submit" title="Remover Produto"
@@ -155,18 +275,18 @@
                 ×
               </button>
             </form>
-          </div>
-        </td>            
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      
+    </table>
+  </div>
 
-  <!-- MODAL: Cadastro de Produto (Novo Padrão com X) -->
+  <!-- MODAL: Cadastro de Produto -->
   <div id="addProductModal"
     style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000;">
     <div style="background:white; padding:20px; border-radius:10px; width:90%; max-width:500px; position:relative;">
-      <!-- Botão X no canto -->
       <button onclick="closeModal()" style="
       position: absolute;
       top: 10px;
@@ -181,7 +301,6 @@
     " onmouseover="this.style.color='#dd1b35';" onmouseout="this.style.color='#000000';">
         ×
       </button>
-
       <h2 style="text-align:center;">Cadastrar Produto</h2>
       <form method="post" action="{{ url_for('add_product_route') }}">
         <input type="text" name="name" placeholder="Nome do Produto" required
@@ -192,7 +311,6 @@
           style="width: 95%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px;">
         <input type="number" name="sale_price" placeholder="Preço de Venda" step="0.01" required
           style="width: 95%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px;">
-
         <button type="submit" class="menu-button" style="width: 100%;">Salvar</button>
       </form>
     </div>
@@ -202,7 +320,6 @@
   <div id="editProductModal"
     style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000;">
     <div style="background:white; padding:30px; border-radius:10px; width:90%; max-width:500px; position:relative;">
-      <!-- Botão X no topo -->
       <button onclick="closeEditProductModal()" style="
       position: absolute;
       top: 10px;
@@ -217,10 +334,7 @@
     " onmouseover="this.style.color='#dd1b35';" onmouseout="this.style.color='#000000';">
         ×
       </button>
-
       <h2 style="text-align:center; margin-top: 10px;">Editar Produto</h2>
-
-      <!-- Formulário com ID para setar action via JS -->
       <form method="post" id="editProductForm">
         <input type="text" name="code" placeholder="Código" required
           style="width: 97%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px;">
@@ -232,12 +346,10 @@
           style="width: 97%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px;">
         <input type="number" name="sale_price" placeholder="Preço de Venda" step="0.01" required
           style="width: 97%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px;">
-
         <button type="submit" class="menu-button" style="width: 100%;">Salvar Alterações</button>
       </form>
     </div>
   </div>
-
 
   <script>
     function openEditProductModal(productId) {
@@ -249,19 +361,12 @@
     function closeEditProductModal() {
       document.getElementById('editProductModal').style.display = 'none';
     }
+
     function toggleMenu(button) {
       document.querySelectorAll('.options-menu').forEach(menu => {
         if (menu !== button.nextElementSibling) menu.style.display = 'none';
       });
       const menu = button.nextElementSibling;
-      if (menu) menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-    }
-
-    function toggleStatusMenu(span) {
-      document.querySelectorAll('.options-menu').forEach(menu => {
-        if (menu !== span.nextElementSibling) menu.style.display = 'none';
-      });
-      const menu = span.nextElementSibling;
       if (menu) menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
     }
 

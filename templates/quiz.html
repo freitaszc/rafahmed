@@ -216,7 +216,7 @@
             {
                 type: "radio",
                 question: "Nas últimas 2 semanas, você se sentiu desanimado(a), deprimido(a) ou sem esperança?",
-                key: "depressao",
+                key: "depressao_raw",
                 options: ["Quase todos os dias", "Alguns dias", "Poucos dias", "Quase nunca"]
             },
             {
@@ -432,39 +432,63 @@
                 "Nunca": 1
             };
 
-            // 2) Cálculo dos escores
-            const ansiedadeScore = (freqMap[answers.nervosismo] || 0)
-                + (freqMap[answers.preocupacao] || 0);
-            const depressaoScore = (freqMap[answers.interesse] || 0)
-                + (freqMap[answers.depressao] || 0);
-            const estresseScore = (freqMap[answers.estresse] || 0)
-                + (extraMap[answers.hora_extra] || 0);
-            const qualidadeVidaScore = (sonoMap[answers.sono] || 0)
-                + (atividadeMap[answers.atividade_fisica] || 0);
+            // 2) Cálculo dos escores (usando a chave depressao_raw)
+            const ansiedadeScore =
+                (freqMap[answers.nervosismo] || 0) +
+                (freqMap[answers.preocupacao] || 0);
+
+            const depressaoScore =
+                (freqMap[answers.interesse] || 0) +
+                (freqMap[answers.depressao_raw] || 0);
+
+            const estresseScore =
+                (freqMap[answers.estresse] || 0) +
+                (extraMap[answers.hora_extra] || 0);
+
+            const qualidadeVidaScore =
+                (sonoMap[answers.sono] || 0) +
+                (atividadeMap[answers.atividade_fisica] || 0);
 
             // 3) Geração das classificações
             const ansiedadeClass = getClassificacao(ansiedadeScore, 8);
             const depressaoClass = getClassificacao(depressaoScore, 8);
             const estresseClass = getClassificacao(estresseScore, 8);
             const qualidadeClass = getClassificacao(qualidadeVidaScore, 10);
+
             const scoreTotal = ansiedadeScore + depressaoScore + estresseScore + qualidadeVidaScore;
             const riscoPrincipal = getClassificacao(scoreTotal, 34);
 
             // 4) Monta recomendação
             let recomendacao = "";
-            if (riscoPrincipal.nivel === "BAIXO") recomendacao = "Sua saúde mental aparenta estar preservada. Continue cuidando de si!";
-            else if (riscoPrincipal.nivel === "NORMAL/LEVE") recomendacao = "Há alguns sinais que merecem atenção. Considere práticas de autocuidado.";
-            else if (riscoPrincipal.nivel === "MODERADO") recomendacao = "Identificamos sinais importantes. Recomendamos acompanhamento psicológico.";
-            else recomendacao = "Indica necessidade urgente de suporte. Busque ajuda profissional.";
+            if (riscoPrincipal.nivel === "BAIXO") {
+                recomendacao = "Sua saúde mental aparenta estar preservada. Continue cuidando de si!";
+            } else if (riscoPrincipal.nivel === "NORMAL/LEVE") {
+                recomendacao = "Há alguns sinais que merecem atenção. Considere práticas de autocuidado.";
+            } else if (riscoPrincipal.nivel === "MODERADO") {
+                recomendacao = "Identificamos sinais importantes. Recomendamos acompanhamento psicológico.";
+            } else {
+                recomendacao = "Indica necessidade urgente de suporte. Busque ajuda profissional.";
+            }
 
             // 5) Injeção dos resultados em `answers` e envio
-            const adminId = getAdminIdFromURL();
             answers.ansiedade = ansiedadeClass.nivel;
-            answers.depressao = depressaoClass.nivel;
-            answers.estresse = estresseClass.nivel;
-            answers.qualidade = qualidadeClass.nivel;
-            answers.risco = riscoPrincipal.nivel;
+            answers.ansiedade_cor = ansiedadeClass.cor;
 
+            answers.depressao = depressaoClass.nivel;
+            answers.depressao_cor = depressaoClass.cor;
+
+            answers.estresse = estresseClass.nivel;
+            answers.estresse_cor = estresseClass.cor;
+
+            answers.qualidade = qualidadeClass.nivel;
+            answers.qualidade_cor = qualidadeClass.cor;
+
+            answers.risco = riscoPrincipal.nivel;
+            answers.risco_cor = riscoPrincipal.cor;
+
+            answers.recomendacao = recomendacao;
+
+            const adminId = getAdminIdFromURL();
             fetch(`/submit_quiz?admin=${adminId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

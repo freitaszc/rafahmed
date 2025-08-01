@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{ patient.name }} - RafahMed</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #f4f6fa;
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .top-menu {
+            background-color: white;
+            padding: 10px 0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            border-bottom: 1px solid #eee;
+            position: relative;
+        }
+
+        .top-menu a {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+            color: #000000;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: 0.3s;
+        }
+
+        .top-menu a:hover {
+            background-color: #dd1b35;
+            color: white;
+        }
+
+        .logo-container {
+            position: absolute;
+            left: 20px;
+            top: 6px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+        }
+
+        .center-logo {
+            display: flex;
+            justify-content: center;
+            margin-top: 38px;
+            margin-bottom: 8px;
+        }
+
+        .patient-container {
+            max-width: 620px;
+            margin: 0 auto 40px auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 18px 0 rgba(32, 33, 36, 0.10);
+            padding: 38px 34px 30px 34px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            flex: 1 1 220px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 14px;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        input,
+        textarea {
+            border: 1.5px solid #e6e6e6;
+            border-radius: 7px;
+            padding: 9px 12px;
+            font-size: 15px;
+            color: #222;
+            font-family: inherit;
+            transition: border .2s;
+            background: #fafbfc;
+            resize: none;
+        }
+
+        input:focus,
+        textarea:focus {
+            border-color: #dd1b35;
+            background: #fff;
+            outline: none;
+        }
+
+        textarea {
+            min-height: 62px;
+        }
+
+        .section-actions {
+            margin-top: 32px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            justify-content: center;
+        }
+
+        .action-btn,
+        .nav-btn {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            border: 2px solid #dd1b35;
+            background: white;
+            color: #dd1b35;
+            border-radius: 6px;
+            padding: 9px 25px;
+            cursor: pointer;
+            transition: .18s;
+            text-decoration: none;
+            margin-bottom: 6px;
+            outline: none;
+        }
+
+        .action-btn:hover,
+        .nav-btn:hover {
+            background: #dd1b35;
+            color: #fff;
+        }
+
+        @media (max-width: 600px) {
+            .patient-container {
+                padding: 14px 6vw;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top-menu">
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" style="height: 40px;">
+        </div>
+        <a href="{{ url_for('index') }}">Início</a>
+        <a href="{{ url_for('upload') }}">Ponza Lab</a>
+        <a href="{{ url_for('quiz_results') }}">Autoavaliações</a>
+        <a href="{{ url_for('quote_index') }}">Cotações</a>
+        <a href="{{ url_for('catalog') }}">Pacientes</a>
+        <a href="{{ url_for('products') }}">Estoque</a>
+        <a href="{{ url_for('agenda') }}">Agenda</a>
+        <a href="{{ url_for('logout') }}">Sair</a>
+    </div>
+
+    <div class="center-logo">
+        <img src="{{ url_for('static', filename='images/flatlogo.svg') }}" alt="Logo RafahMed" style="height: 100px;">
+    </div>
+
+    <div class="patient-container">
+        <form id="patientForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="name">Nome</label>
+                    <input id="name" name="name" type="text" value="{{ patient.name or '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="age">Idade</label>
+                    <input id="age" name="age" type="number" value="{{ patient.age or '' }}" min="0" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="cpf">CPF</label>
+                    <input id="cpf" name="cpf" type="text" value="{{ patient.cpf or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="gender">Sexo</label>
+                    <input id="gender" name="gender" type="text" value="{{ patient.gender or '' }}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="phone">Telefone</label>
+                    <input id="phone" name="phone" type="text" value="{{ patient.phone or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <input id="status" name="status" type="text" value="{{ patient.status or '' }}" readonly>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="prescription">Prescrição</label>
+                <textarea id="prescription" name="prescription">{{ patient.prescription or '' }}</textarea>
+                <div class="section-actions">
+                    <button type="button" class="action-btn" onclick="savePatient()">Salvar Alterações</button>
+                    <a href="{{ url_for('catalog') }}" class="nav-btn">Voltar ao Catálogo</a>
+                    {% if patient.cpf %}
+                    <a href="{{ url_for('download_pdf', patient_id=patient.id) }}" class="action-btn"
+                        style="background: #f6f7fb; color:#4a9c2c; border-color: #4a9c2c;" download>
+                        Baixar PDF
+                    </a>
+                    {% endif %}
+                    {% if patient.quiz_result_id %}
+                    <a href="{{ url_for('quiz_patient', quiz_id=patient.quiz_result_id) }}" class="action-btn"
+                        style="background: #f6f7fb; color:#2955c4; border-color: #2955c4;">
+                        Ver Autoavaliação
+                    </a>
+                    {% endif %}
+                </div>
+        </form>
+    </div>
+
+    <script>
+        function savePatient() {
+            const data = {
+                name: document.getElementById("name").value.trim(),
+                age: document.getElementById("age").value.trim(),
+                cpf: document.getElementById("cpf").value.trim(),
+                gender: document.getElementById("gender").value.trim(),
+                phone: document.getElementById("phone").value.trim(),
+                prescription: document.getElementById("prescription").value.trim(),
+                status: document.getElementById("status").value.trim()
+            };
+            fetch("{{ url_for('edit_patient_api', patient_id=patient.id) }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            })
+                .then(resp => resp.json())
+                .then(r => {
+                    alert(r.success ? "Paciente atualizado com sucesso!" : "Erro ao salvar.");
+                    if (r.success) location.reload();
+                });
+        }
+    </script>
+</body>
+
+</html>
