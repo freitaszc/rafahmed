@@ -13,15 +13,17 @@
       font-family: 'Montserrat', sans-serif;
       background-color: #f9f9f9;
     }
+
     h2 {
       font-size: 36px;
       font-weight: 700;
       text-align: center;
       color: #2c3e50;
       margin-bottom: 40px;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       position: relative;
     }
+
     .top-menu {
       background-color: white;
       padding: 10px 0;
@@ -30,6 +32,7 @@
       gap: 20px;
       border-bottom: 1px solid #eee;
     }
+
     .top-menu a {
       font-family: 'Montserrat', sans-serif;
       font-weight: 500;
@@ -40,25 +43,30 @@
       border-radius: 6px;
       transition: 0.3s;
     }
+
     .top-menu a:hover {
       background-color: #dd1b35;
       color: white;
     }
+
     .content {
       max-width: 1000px;
       margin: 0 auto;
       padding: 20px;
       text-align: center;
     }
+
     .logo-img {
       width: 100px;
       display: block;
       margin: 0 auto 20px auto;
     }
+
     .header {
       text-align: center;
       margin-bottom: 20px;
     }
+
     .menu-button {
       font-family: 'Montserrat', sans-serif;
       font-size: 14px;
@@ -72,10 +80,12 @@
       transition: 0.3s ease;
       cursor: pointer;
     }
+
     .menu-button:hover {
       background-color: #dd1b35;
       color: white;
     }
+
     .catalog-table {
       width: 100%;
       max-width: 900px;
@@ -86,21 +96,25 @@
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
       margin-top: 20px;
     }
+
     .catalog-table th,
     .catalog-table td {
       padding: 12px 14px;
       border-bottom: 1px solid #ddd;
       text-align: center;
     }
+
     .catalog-table th {
       background-color: #f5f5f5;
       font-weight: 600;
       color: #2c3e50;
     }
+
     .catalog-table tr:hover {
       background-color: #f4fcfd;
       cursor: pointer;
     }
+
     .delete-button {
       background: none;
       border: none;
@@ -110,15 +124,18 @@
       cursor: pointer;
       line-height: 1;
     }
+
     .delete-button:hover {
       color: #c53030;
     }
+
     .label {
       display: block;
       font-size: 12px;
       font-weight: 500;
       color: #777;
     }
+
     .value {
       font-size: 14px;
       font-weight: 600;
@@ -129,7 +146,7 @@
 <body>
   <div class="top-menu">
     <div style="position: absolute; left: 20px;">
-        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" style="height: 40px;">
+      <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" style="height: 40px;">
     </div>
     <a href="{{ url_for('index') }}">Início</a>
     <a href="{{ url_for('upload') }}">Ponza Lab</a>
@@ -167,7 +184,7 @@
         {% for result in results %}
         <tr>
           <td onclick="window.open('{{ url_for('quiz_patient', quiz_id=result.id) }}', '_blank')"
-              style="cursor:pointer;">
+            style="cursor:pointer;">
             {{ result.nome }}
             <span class="label">Idade: {{ result.idade }}</span>
           </td>
@@ -193,8 +210,9 @@
           </td>
           <td>{{ result.data }}</td>
           <td>
-            <form method="post" action="{{ url_for('delete_quiz_result', patient_id=result.id) }}"
-                  onsubmit="return confirm('Deseja realmente remover este resultado?')" style="margin: 0;">
+            <form method="post" action="{{ url_for('delete_quiz_result') }}"
+              onsubmit="return confirm('Deseja realmente remover este resultado?')" style="margin: 0;">
+              <input type="hidden" name="quiz_id" value="{{ result.id }}">
               <button type="submit" class="delete-button" title="Deletar Resultado">×</button>
             </form>
           </td>
@@ -207,4 +225,5 @@
     {% endif %}
   </div>
 </body>
+
 </html>
