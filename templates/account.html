@@ -384,7 +384,7 @@
     }
 
     .form-input {
-      width: 100%;
+      width: 90%;
       padding: 12px 16px;
       border: 2px solid #e9ecef;
       border-radius: 12px;
@@ -575,6 +575,7 @@
     <a href="{{ url_for('products') }}" class="menu-item"><i class="fa fa-archive"></i> Estoque</a>
     <a href="{{ url_for('agenda') }}" class="menu-item"><i class="fa fa-calendar"></i> Agenda</a>
     <a href="{{ url_for('purchase') }}" class="menu-item"><i class="fa fa-credit-card"></i> Pagamentos</a>
+    <a href="{{ url_for('logout') }}" class="menu-item" style="color:#888;"><i class="fa fa-sign-out"></i> Sair</a>
   </div>
 
   <div class="content">
@@ -590,7 +591,7 @@
 
       <!-- Formulário Informações Pessoais -->
       <form method="post" enctype="multipart/form-data" action="{{ url_for('update_personal_info') }}">
-        <h3 class="section-title">👤 Informações Pessoais</h3>
+        <h3 class="section-title">Informações Pessoais</h3>
 
         <!-- Foto de Perfil -->
         <div class="profile-picture-section">
@@ -599,7 +600,7 @@
 
           <div>
             <label for="profile_image" class="file-input-label">
-              📷 Alterar Foto de Perfil
+              Alterar Foto de Perfil
             </label>
             <input type="file" id="profile_image" name="profile_image" accept="image/*" class="file-input">
           </div>
@@ -632,10 +633,10 @@
         </div>
 
         <div class="button-group">
-          <button type="submit" class="rafah-button">💾 Salvar Informações</button>
+          <button type="submit" class="rafah-button"> Salvar </button>
           <form method="post" action="{{ url_for('remove_profile_image') }}"
             onsubmit="return confirm('Tem certeza que deseja remover sua foto de perfil?')" style="display: inline;">
-            <button type="submit" class="file-input-label" style="margin: 0;">🗑️ Remover Foto</button>
+            <button type="submit" class="file-input-label" style="margin: 0;">Remover Foto</button>
           </form>
         </div>
       </form>
@@ -644,7 +645,7 @@
 
       <!-- Seção: Senha -->
       <form method="post" action="{{ url_for('update_password') }}">
-        <h3 class="section-title">🔐 Alterar Senha</h3>
+        <h3 class="section-title">Alterar Senha</h3>
 
         <div class="form-group" style="text-align: center; margin-bottom: 25px;">
           <label for="current_password" class="form-label">SENHA ATUAL</label>
@@ -664,7 +665,7 @@
         </div>
 
         <div class="button-group">
-          <button type="submit" class="rafah-button">🔑 Alterar Senha</button>
+          <button type="submit" class="rafah-button">Alterar Senha</button>
         </div>
       </form>
     </div>

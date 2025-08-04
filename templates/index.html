@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <title>RafahMed - Início</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='web.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
   <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
     rel="stylesheet">
@@ -26,76 +26,76 @@
     {% endfor %}
       ]);
 
-      const options = {
-        title: '',
-        titleTextStyle: {
+    const options = {
+      title: '',
+      titleTextStyle: {
+        color: '#333',
+        fontName: 'Montserrat',
+        fontSize: 16,
+        bold: true
+      },
+      seriesType: 'bars',
+      series: {
+        0: {
+          color: '#dd1b35',
+          type: 'bars'
+        },
+        1: {
+          type: 'line',
+          color: '#2c3e50',
+          lineWidth: 4,
+          pointSize: 8,
+          pointShape: 'circle'
+        }
+      },
+      legend: {
+        position: 'bottom',
+        textStyle: {
           color: '#333',
           fontName: 'Montserrat',
-          fontSize: 16,
+          fontSize: 13,
           bold: true
-        },
-        seriesType: 'bars',
-        series: { 
-          0: { 
-            color: '#dd1b35',
-            type: 'bars'
-          },
-          1: { 
-            type: 'line', 
-            color: '#2c3e50',
-            lineWidth: 4,
-            pointSize: 8,
-            pointShape: 'circle'
-          } 
-        },
-        legend: { 
-          position: 'bottom',
-          textStyle: {
-            color: '#333',
-            fontName: 'Montserrat',
-            fontSize: 13,
-            bold: true
-          }
-        },
-        vAxis: { 
-          minValue: 0,
-          textStyle: {
-            color: '#666',
-            fontName: 'Montserrat',
-            fontSize: 12
-          },
-          gridlines: {
-            color: '#f0f0f0',
-            count: 5
-          }
-        },
-        hAxis: {
-          textStyle: {
-            color: '#666',
-            fontName: 'Montserrat',
-            fontSize: 12,
-            bold: true
-          }
-        },
-        backgroundColor: 'transparent',
-        chartArea: {
-          left: 60,
-          top: 20,
-          width: '85%',
-          height: '75%'
-        },
-        bar: {
-          groupWidth: '60%'
-        },
-        animation: {
-          duration: 1000,
-          easing: 'out',
-          startup: true
         }
-      };
+      },
+      vAxis: {
+        minValue: 0,
+        textStyle: {
+          color: '#666',
+          fontName: 'Montserrat',
+          fontSize: 12
+        },
+        gridlines: {
+          color: '#f0f0f0',
+          count: 5
+        }
+      },
+      hAxis: {
+        textStyle: {
+          color: '#666',
+          fontName: 'Montserrat',
+          fontSize: 12,
+          bold: true
+        }
+      },
+      backgroundColor: 'transparent',
+      chartArea: {
+        left: 60,
+        top: 20,
+        width: '85%',
+        height: '75%'
+      },
+      bar: {
+        groupWidth: '60%'
+      },
+      animation: {
+        duration: 1000,
+        easing: 'out',
+        startup: true
+      }
+    };
 
-      const chart = new google.visualization.ComboChart(document.getElementById('curve_chart'));
-      chart.draw(data, options);
+    const chart = new google.visualization.ComboChart(document.getElementById('curve_chart'));
+    chart.draw(data, options);
     }
 
     function drawDonutChart() {
@@ -104,14 +104,14 @@
         ['Usado', pacotes_usados],
         ['Disponível', pacotes_comprados - pacotes_usados]
       ]);
-      
+
       const options = {
         pieHole: 0.65,
         pieSliceText: 'none',
         colors: ['#dd1b35', '#e8e8e8'],
         legend: 'none',
-        chartArea: { 
-          width: '95%', 
+        chartArea: {
+          width: '95%',
           height: '95%',
           top: 5,
           left: 5
@@ -128,7 +128,7 @@
           startup: true
         }
       };
-      
+
       const chart = new google.visualization.PieChart(document.getElementById('donut_chart'));
       chart.draw(data, options);
 
@@ -145,7 +145,7 @@
       const total = pacotes_comprados > 0 ? pacotes_comprados : 1;
       const percentage = Math.round((pacotes_usados / total) * 100);
       document.getElementById('donut_label').innerText = percentage + '%';
-      
+
       // Animação do número central
       animateNumber('donut_label', 0, percentage, 1000);
     }
@@ -153,21 +153,21 @@
     function animateNumber(elementId, start, end, duration) {
       const element = document.getElementById(elementId);
       const startTime = performance.now();
-      
+
       function update(currentTime) {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        
+
         const easeOutQuart = 1 - Math.pow(1 - progress, 4);
         const current = Math.round(start + (end - start) * easeOutQuart);
-        
+
         element.innerText = current + '%';
-        
+
         if (progress < 1) {
           requestAnimationFrame(update);
         }
       }
-      
+
       requestAnimationFrame(update);
     }
 
@@ -178,28 +178,56 @@
 
     function closeModal() {
       const modal = document.getElementById('detailsModal');
-        modal.style.display = 'none';
+      modal.style.display = 'none';
     }
   </script>
   <style>
     @keyframes modalFadeIn {
-      from { opacity: 0; transform: scale(0.9); }
-      to { opacity: 1; transform: scale(1); }
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
-    
+
     @keyframes modalFadeOut {
-      from { opacity: 1; transform: scale(1); }
-      to { opacity: 0; transform: scale(0.9); }
+      from {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      to {
+        opacity: 0;
+        transform: scale(0.9);
+      }
     }
-    
+
     @keyframes chartSlideIn {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
-    
+
     @keyframes pulseGlow {
-      0%, 100% { box-shadow: 0 0 20px rgba(221, 27, 53, 0.3); }
-      50% { box-shadow: 0 0 30px rgba(221, 27, 53, 0.6); }
+
+      0%,
+      100% {
+        box-shadow: 0 0 20px rgba(221, 27, 53, 0.3);
+      }
+
+      50% {
+        box-shadow: 0 0 30px rgba(221, 27, 53, 0.6);
+      }
     }
 
     body {
@@ -218,14 +246,14 @@
       border-right: 2px solid #e9ecef;
       height: 100vh;
       box-sizing: border-box;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
     }
 
     .sidebar img {
       width: 200px;
       display: block;
       margin: 0 auto 30px auto;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
     }
 
     .sidebar a.menu-item {
@@ -288,7 +316,7 @@
       text-align: center;
       color: #2c3e50;
       margin-bottom: 40px;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       position: relative;
     }
 
@@ -344,17 +372,17 @@
       list-style: none;
       padding: 12px 0;
       min-width: 200px;
-      z-index: 1000;
-      opacity: 0;
-      transform: translateY(-20px) scale(0.95);
+      z-index: 99999;
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       backdrop-filter: blur(20px);
+      opacity: 0;
+      pointer-events: none;
     }
 
     .dropdown-menu.show {
       display: block;
       opacity: 1;
-      transform: translateY(0) scale(1);
+      pointer-events: auto;
     }
 
     .dropdown-menu::before {
@@ -430,7 +458,7 @@
       background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
       padding: 30px;
       border-radius: 20px;
-      box-shadow: 
+      box-shadow:
         0 10px 30px rgba(0, 0, 0, 0.1),
         0 0 0 1px rgba(255, 255, 255, 0.5) inset;
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -455,7 +483,7 @@
 
     .chart-container:hover {
       transform: translateY(-8px) scale(1.02);
-      box-shadow: 
+      box-shadow:
         0 20px 50px rgba(0, 0, 0, 0.15),
         0 0 0 1px rgba(221, 27, 53, 0.1) inset;
     }
@@ -491,7 +519,7 @@
       background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
       padding: 25px;
       border-radius: 20px;
-      box-shadow: 
+      box-shadow:
         0 10px 30px rgba(0, 0, 0, 0.1),
         0 0 0 1px rgba(255, 255, 255, 0.5) inset;
       text-align: center;
@@ -513,7 +541,7 @@
 
     .donut-container:hover {
       transform: translateY(-8px) scale(1.05);
-      box-shadow: 
+      box-shadow:
         0 20px 50px rgba(0, 0, 0, 0.15),
         0 0 0 1px rgba(221, 27, 53, 0.1) inset;
     }
@@ -544,7 +572,7 @@
       font-weight: 900;
       color: #dd1b35;
       pointer-events: none;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       font-family: 'Montserrat', sans-serif;
     }
 
@@ -618,7 +646,7 @@
       background: rgba(0, 0, 0, 0.6) !important;
     }
 
-    #detailsModal > div {
+    #detailsModal>div {
       background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%) !important;
       border-radius: 20px !important;
       box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25) !important;
@@ -667,144 +695,209 @@
       transform: translateY(-2px) scale(1.05) !important;
       box-shadow: 0 8px 25px rgba(221, 27, 53, 0.4) !important;
     }
+
+    .sidebar {
+      width: 250px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+      padding: 30px 20px 20px 20px;
+      border-right: 2px solid #e9ecef;
+      height: 100vh;
+      box-sizing: border-box;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-profile {
+      background: linear-gradient(135deg, #fff 60%, #ffe6e6 100%);
+      border-radius: 16px;
+      padding: 18px 10px 14px 10px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 10px rgba(221, 27, 53, 0.04);
+      text-align: center;
+    }
+
+    .sidebar-profile img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 3px solid #dd1b35;
+      box-shadow: 0 2px 8px rgba(221, 27, 53, 0.08);
+      background: #fff;
+      margin-bottom: 10px;
+      transition: box-shadow 0.3s, border-color 0.3s;
+    }
+
+    .sidebar-profile img:hover {
+      box-shadow: 0 4px 16px rgba(221, 27, 53, 0.17);
+      border-color: #ff6b8a;
+    }
+
+    .sidebar-profile .username {
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 4px;
+      font-size: 15px;
+      word-break: break-all;
+    }
+
+    .sidebar-profile .profile-link {
+      color: #dd1b35;
+      font-size: 13px;
+      text-decoration: none;
+      font-weight: 500;
+      display: inline-block;
+      margin-bottom: 2px;
+      transition: color 0.2s;
+    }
+
+    .sidebar-profile .profile-link:hover {
+      color: #ff6b8a;
+    }
+
+    /* MENU */
+    .sidebar a.menu-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 14px;
+      padding: 12px 18px;
+      border-radius: 10px;
+      color: #333;
+      text-decoration: none;
+      margin-bottom: 6px;
+      font-weight: 500;
+      transition: background 0.2s, color 0.2s, transform 0.12s;
+    }
+
+    .sidebar a.menu-item:hover {
+      background: #fff2f4;
+      color: #dd1b35 !important;
+      transform: translateX(4px);
+    }
+
+    .sidebar a.menu-item i {
+      width: 21px;
+      text-align: center;
+    }
+
+    /* Seção admin */
+    .sidebar .sidebar-admin-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #999;
+      margin: 15px 0 7px 8px;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+
+    .sidebar .sidebar-admin-divider {
+      margin: 18px 0 8px 0;
+      border-top: 1px solid #eee;
+    }
+
+    .sidebar a.menu-item.admin {
+      color: #c62e3a;
+    }
+
+    .sidebar a.menu-item.logout {
+      color: #888;
+      margin-top: 28px;
+    }
+
+    /* Para o logo no topo da sidebar */
+    .sidebar-logo {
+      width: 200px;
+      display: block;
+      margin: 0 auto 26px auto;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.09));
+    }
+
+    .top-profile {
+      position: fixed;
+      top: 18px;
+      right: 28px;
+      z-index: 1001;
+      background: none;
+      box-shadow: none;
+      /* Remove borda e fundo para não poluir o visual */
+    }
+
+    .top-profile img {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px solid #dd1b35;
+      box-shadow: 0 2px 8px rgba(221, 27, 53, 0.10);
+      background: #fff;
+      margin-bottom: 6px;
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+
+    .top-profile img:hover {
+      box-shadow: 0 4px 16px rgba(221, 27, 53, 0.13);
+      border-color: #ff6b8a;
+    }
+
+    .top-profile span {
+      font-size: 13px;
+      color: #dd1b35;
+      font-weight: 500;
+      letter-spacing: 0.1px;
+      transition: color 0.2s;
+    }
+
+    .top-profile a:hover span {
+      color: #ff6b8a;
+    }
+
+    @media (max-width: 700px) {
+      .top-profile {
+        right: 10px;
+        top: 8px;
+      }
+    }
   </style>
 </head>
 
-<!-- Modal melhorado -->
-<div id="detailsModal"
-  style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center;">
-  <div style="position: relative; background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; font-family: 'Montserrat', sans-serif;">
-
-    <!-- Botão X dentro do container -->
-    <button onclick="closeModal()" style="
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: none;
-      border: none;
-      font-size: 22px;
-      font-weight: bold;
-      color: #999;
-      cursor: pointer;
-      transition: color 0.3s ease;
-    " onmouseover="this.style.color='#dd1b35';" onmouseout="this.style.color='#999';">
-      ×
-    </button>
-
-    <h3 style="margin-top: 10px; color: #2c3e50;">Detalhes do Pacote</h3>
-
-    <div style="background: rgba(221, 27, 53, 0.05); padding: 20px; border-radius: 12px; margin: 20px 0;">
-      <p><strong>Pacotes Totais:</strong> {{ used + remaining }}</p>
-      <p><strong>Usadas:</strong> <span style="color: #dd1b35;">{{ used }}</span></p>
-      <p><strong>Disponíveis:</strong> <span style="color: #2c3e50;">{{ remaining }}</span></p>
-    </div>
-
-    <button type="button" onclick="window.location.href='{{ url_for('purchase') }}'" style="
-      background: linear-gradient(135deg, #dd1b35 0%, #ff6b8a 100%);
-      color: #ffffff;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 25px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 14px;
-      font-family: 'Montserrat', sans-serif;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 10px rgba(221, 27, 53, 0.2);
-    " onmouseover="this.style.background='linear-gradient(135deg, #ff6b8a 0%, #dd1b35 100%)';"
-       onmouseout="this.style.background='linear-gradient(135deg, #dd1b35 0%, #ff6b8a 100%)';">
-      Comprar Pacotes
-    </button>
-
-  </div>
-</div>
-
-
 <body>
-  <div class="user-menu">
-    <div class="dropdown">
-      <img class="user-avatar" src="{{ url_for('static', filename=(user.profile_image or 'images/user-icon.png')) }}"
-        alt="Minha Conta" onclick="toggleDropdown()" />
-      <ul id="userDropdown" class="dropdown-menu">
-        <li>
-          <a href="{{ url_for('account') }}" class="dropdown-item">
-            <i class="fa fa-user"></i>
-            Meu Perfil
-          </a>
-        </li>
-        {% if session.username and session.username.lower() == 'admin' %}
-        <li>
-          <div class="dropdown-separator"></div>
-        </li>
-        <li>
-          <a href="{{ url_for('admin_companies') }}" class="dropdown-item">
-            <i class="fa fa-cog"></i>
-            Admin
-          </a>
-        </li>
-        {% endif %}
-        <li>
-          <div class="dropdown-separator"></div>
-        </li>
-        <li>
-          <a href="{{ url_for('logout') }}" class="dropdown-item">
-            <i class="fa fa-sign-out"></i>
-            Sair
-          </a>
-        </li>
-      </ul>
-    </div>
+  <!-- Perfil no topo direito fixo -->
+  <div class="top-profile">
+    <a href="{{ url_for('account') }}"
+      style="display: flex; flex-direction: column; align-items: center; text-decoration: none;">
+      <img src="{{ url_for('static', filename=(user.profile_image or 'images/user-icon.png')) }}" alt="Minha Conta"
+        style="width:48px; height:48px; border-radius:50%; border:2px solid #dd1b35; box-shadow:0 2px 8px rgba(221,27,53,0.10); background:#fff; margin-bottom:6px;">
+      <span style="font-size:13px; color:#dd1b35; font-weight:500;">Meu Perfil</span>
+    </a>
   </div>
 
-  <script>
-    const avatar = document.querySelector('.user-avatar');
-    const dropdown = document.getElementById('userDropdown');
-  
-    // Alterna menu ao clicar no avatar
-    avatar.addEventListener('click', function (e) {
-      e.stopPropagation(); // Não deixa o click subir pra window!
-      dropdown.classList.toggle('show');
-    });
-  
-    // Fecha ao clicar fora
-    window.addEventListener('click', function (e) {
-      if (!dropdown.contains(e.target) && e.target !== avatar) {
-        dropdown.classList.remove('show');
-      }
-    });
-  
-    // Fecha com ESC
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') {
-        dropdown.classList.remove('show');
-      }
-    });
-  </script>
-  
-
-  <script>
-    function toggleDropdown() {
-      const dropdown = document.getElementById('userDropdown');
-      dropdown.classList.toggle('show');
-    }
-
-    window.addEventListener('click', function (e) {
-      if (!e.target.closest('.dropdown')) {
-        document.getElementById('userDropdown').classList.remove('show');
-      }
-    });
-
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') {
-        document.getElementById('userDropdown').classList.remove('show');
-      }
-    });
-  </script>
+  <!-- Modal melhorado -->
+  <div id="detailsModal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center;">
+    <div
+      style="position: relative; background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; font-family: 'Montserrat', sans-serif;">
+      <button onclick="closeModal()"
+        style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 22px; font-weight: bold; color: #999; cursor: pointer; transition: color 0.3s ease;"
+        onmouseover="this.style.color='#dd1b35';" onmouseout="this.style.color='#999';">×</button>
+      <h3 style="margin-top: 10px; color: #2c3e50;">Detalhes do Pacote</h3>
+      <div style="background: rgba(221, 27, 53, 0.05); padding: 20px; border-radius: 12px; margin: 20px 0;">
+        <p><strong>Pacotes Totais:</strong> {{ used + remaining }}</p>
+        <p><strong>Usadas:</strong> <span style="color: #dd1b35;">{{ used }}</span></p>
+        <p><strong>Disponíveis:</strong> <span style="color: #2c3e50;">{{ remaining }}</span></p>
+      </div>
+      <button type="button" onclick="window.location.href='{{ url_for('purchase') }}'"
+        style="background: linear-gradient(135deg, #dd1b35 0%, #ff6b8a 100%); color: #ffffff; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: 600; font-size: 14px; font-family: 'Montserrat', sans-serif; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(221, 27, 53, 0.2);"
+        onmouseover="this.style.background='linear-gradient(135deg, #ff6b8a 0%, #dd1b35 100%)';"
+        onmouseout="this.style.background='linear-gradient(135deg, #dd1b35 0%, #ff6b8a 100%)';">Comprar Pacotes</button>
+    </div>
+  </div>
 
   <div class="sidebar">
-    <a href="{{ url_for('index') }}">
-      <img src="{{ url_for('static', filename='images/logocompleta.svg') }}">
-    </a>
+    <!-- Logo no topo -->
+    <img src="{{ url_for('static', filename='images/logocompleta.svg') }}" class="sidebar-logo" alt="Logo RafahMed"
+      style="margin-bottom: 20px;">
+    <!-- Menu padrão -->
+    <a href="{{ url_for('index') }}" class="menu-item"><i class="fa fa-home"></i> Início</a>
     <a href="{{ url_for('upload') }}" class="menu-item"><i class="fa fa-upload"></i> Ponza Lab</a>
     <a href="{{ url_for('quiz_results') }}" class="menu-item"><i class="fa fa-list-alt"></i> Autoavaliações</a>
     <a href="{{ url_for('quote_index') }}" class="menu-item"><i class="fa fa-file-text-o"></i> Cotações</a>
@@ -812,27 +905,37 @@
     <a href="{{ url_for('products') }}" class="menu-item"><i class="fa fa-archive"></i> Estoque</a>
     <a href="{{ url_for('agenda') }}" class="menu-item"><i class="fa fa-calendar"></i> Agenda</a>
     <a href="{{ url_for('purchase') }}" class="menu-item"><i class="fa fa-credit-card"></i> Pagamentos</a>
+
+    <!-- Menu Admin, só aparece se for admin -->
+    {% if username and username|lower == 'admin' %}
+    <div style="margin:18px 0 8px 0; border-top:1px solid #eee;"></div>
+    <div style="font-size:11px; text-transform:uppercase; color:#999; margin:0 0 7px 8px; letter-spacing:1px;">
+      Administração</div>
+    <a href="{{ url_for('admin_companies') }}" class="menu-item" style="color:#c62e3a;"><i class="fa fa-cog"></i>
+      Admin</a>
+    {% endif %}
+
+    <!-- Sair sempre no final -->
+    <div style="margin-top:auto; margin-bottom:18px;">
+      <a href="{{ url_for('logout') }}" class="menu-item" style="color:#888;"><i class="fa fa-sign-out"></i> Sair</a>
+    </div>
   </div>
 
   <div class="content">
     <h2>Bem-vindo(a), {{ username }}</h2>
-    <div style="display: flex; justify-content: center; align-items: flex-start; flex-wrap: wrap; gap: 40px; margin-top: 30px;">
-
-      <!-- Gráfico de barras + linha melhorado -->
+    <div
+      style="display: flex; justify-content: center; align-items: flex-start; flex-wrap: wrap; gap: 40px; margin-top: 30px;">
       <div class="chart-container" style="flex: 1; min-width: 600px;">
         <h3>Autoavaliações Preenchidas nos Últimos 7 Dias</h3>
         <div id="curve_chart" style="width: 100%; height: 450px;"></div>
       </div>
-
-      <!-- Gráfico de Donut melhorado -->
       <div class="donut-container">
-        <h3 style="color: #2c3e50; font-weight: 700; font-size: 16px; margin-bottom: 20px;">Pacotes de Análise Usados</h3>
-        
+        <h3 style="color: #2c3e50; font-weight: 700; font-size: 16px; margin-bottom: 20px;">Pacotes de Análise Usados
+        </h3>
         <div class="donut-chart-wrapper">
           <div id="donut_chart" style="width: 180px; height: 180px;"></div>
           <div id="donut_label"></div>
         </div>
-      
         <button onclick="openModal()" class="details-button">
           Ver Detalhes Completos
         </button>

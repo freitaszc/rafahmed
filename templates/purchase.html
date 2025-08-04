@@ -573,44 +573,63 @@
         transform: rotate(360deg);
       }
     }
+
+    .top-profile {
+      position: fixed;
+      top: 18px;
+      right: 28px;
+      z-index: 1001;
+      background: none;
+      box-shadow: none;
+    }
+
+    .top-profile img {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px solid #dd1b35;
+      box-shadow: 0 2px 8px rgba(221, 27, 53, 0.10);
+      background: #fff;
+      margin-bottom: 6px;
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+
+    .top-profile img:hover {
+      box-shadow: 0 4px 16px rgba(221, 27, 53, 0.13);
+      border-color: #ff6b8a;
+    }
+
+    .top-profile span {
+      font-size: 13px;
+      color: #dd1b35;
+      font-weight: 500;
+      letter-spacing: 0.1px;
+      transition: color 0.2s;
+    }
+
+    .top-profile a:hover span {
+      color: #ff6b8a;
+    }
+
+    @media (max-width: 700px) {
+      .top-profile {
+        right: 10px;
+        top: 8px;
+      }
+    }
   </style>
 </head>
 
 <body>
-  <div class="user-menu">
-    <div class="dropdown">
-      <img class="user-avatar"
+  <div class="top-profile">
+    <a href="{{ url_for('account') }}"
+      style="display: flex; flex-direction: column; align-items: center; text-decoration: none;">
+      <img
         src="{{ url_for('static', filename=(user.get('profile_image', 'images/user-icon.png') if user else 'images/user-icon.png')) }}"
-        alt="Minha Conta" onclick="toggleDropdown(event)" />
-      <ul id="userDropdown" class="dropdown-menu">
-        <li>
-          <a href="{{ url_for('account') }}" class="dropdown-item">
-            <i class="fa fa-user"></i>
-            Meu Perfil
-          </a>
-        </li>
-        {% if session.username and session.username.lower() == 'admin' %}
-        <li>
-          <div class="dropdown-separator"></div>
-        </li>
-        <li>
-          <a href="{{ url_for('admin_companies') }}" class="dropdown-item">
-            <i class="fa fa-cog"></i>
-            Admin
-          </a>
-        </li>
-        {% endif %}
-        <li>
-          <div class="dropdown-separator"></div>
-        </li>
-        <li>
-          <a href="{{ url_for('logout') }}" class="dropdown-item">
-            <i class="fa fa-sign-out"></i>
-            Sair
-          </a>
-        </li>
-      </ul>
-    </div>
+        alt="Minha Conta"
+        style="width:48px; height:48px; border-radius:50%; border:2px solid #dd1b35; box-shadow:0 2px 8px rgba(221,27,53,0.10); background:#fff; margin-bottom:6px;">
+      <span style="font-size:13px; color:#dd1b35; font-weight:500;">Meu Perfil</span>
+    </a>
   </div>
 
   <script>
@@ -688,6 +707,7 @@
     <a href="{{ url_for('products') }}" class="menu-item"><i class="fa fa-archive"></i> Estoque</a>
     <a href="{{ url_for('agenda') }}" class="menu-item"><i class="fa fa-calendar"></i> Agenda</a>
     <a href="{{ url_for('purchase') }}" class="menu-item"><i class="fa fa-credit-card"></i> Pagamentos</a>
+    <a href="{{ url_for('logout') }}" class="menu-item" style="color:#888;"><i class="fa fa-sign-out"></i> Sair</a>
   </div>
 
   <div class="content">
