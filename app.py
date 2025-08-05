@@ -6,7 +6,6 @@ from sqlalchemy import func, cast, Date
 from functools import wraps
 from datetime import datetime, timedelta
 from collections import defaultdict
-from flask_migrate import Migrate
 from flask import (
     Flask,
     render_template,
@@ -110,7 +109,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = secrets.token_hex(32)
 
 db.init_app(app)
-migrate = Migrate(app, db)
 
 def get_logged_user():
     uid = session.get('user_id')
