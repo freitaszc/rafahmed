@@ -6,6 +6,7 @@ from sqlalchemy import func, cast, Date
 from functools import wraps
 from datetime import datetime, timedelta
 from collections import defaultdict
+from flask_migrate import Migrate
 from flask import (
     Flask,
     render_template,
@@ -39,6 +40,11 @@ from mercado_pago import generate_payment_link
 from email_utils import send_email_quote
 
 from records import (
+    get_suppliers_by_user,
+    add_supplier_db,
+    update_supplier_db,
+    delete_supplier_db,
+    update_product,
     get_product_by_id,
     get_products,
     save_products,
@@ -104,6 +110,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = secrets.token_hex(32)
 
 db.init_app(app)
+migrate = Migrate(app, db)
 
 def get_logged_user():
     uid = session.get('user_id')
@@ -111,7 +118,6 @@ def get_logged_user():
         return None
     return User.query.get(uid)
 
-@app.before_first_request
 def create_tables():
     db.create_all()
 
@@ -614,30 +620,10 @@ def purchase():
         return redirect(link or url_for('pagamento_falha'))
     return render_template('purchase.html')
 
-@app.route('/quote_index')
-@login_required
-def quote_index():
-    return render_template('quote_index.html')
-
 @app.route('/agenda')
 @login_required
 def agenda():
     return render_template('agenda.html')
-
-@app.route('/create_quote')
-@login_required
-def create_quote():
-    return render_template('create_quote.html')
-
-@app.route('/suppliers')
-@login_required
-def suppliers():
-    return render_template('suppliers.html')
-
-@app.route('/add_supplier')
-@login_required
-def add_supplier():
-    return render_template('add_supplier.html')
 
 @app.route('/doctors')
 @login_required
@@ -930,6 +916,7 @@ def api_get_patients():
 # ==============================================
 # PRODUCT MANAGEMENT
 # ==============================================
+
 @app.route('/products')
 @login_required
 def products():
@@ -937,7 +924,7 @@ def products():
     if not user:
         return redirect(url_for('login'))
 
-    produtos           = get_products()
+    produtos           = get_products(user.id)  # <-- agora filtrando!
     category_filter    = request.args.get('category', '')
     via_filter         = request.args.get('application_route', '')
     status_filter      = request.args.get('status', '')
@@ -1032,36 +1019,42 @@ def stock_view(product_id):
     return render_template('stock_view.html', product=product)
 
 
-@app.route('/stock_edit/<int:product_id>', methods=['GET','POST'])
+@app.route('/stock_edit/<int:product_id>', methods=['GET', 'POST'])
+@login_required
 def stock_edit(product_id):
     user = get_logged_user()
     if not user:
         return redirect(url_for('login'))
 
-    produtos = get_products()
-    product  = next(
-        (p for p in produtos if p['id'] == product_id and p.get('doctor_id') == user.id),
-        None
-    )
+    # Busca produto só do usuário logado
+    product = get_product_by_id(product_id, user.id)
     if not product:
-        abort(404)
+        abort(404, description="Produto não encontrado ou sem permissão")
 
     if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        code = request.form.get('code', '').strip()
         try:
-            product['quantity']       = int(request.form['quantity'])
-            product['purchase_price'] = float(request.form['purchase_price'])
-            product['sale_price']     = float(request.form['sale_price'])
+            quantity = int(request.form.get('quantity', 0))
+            purchase_price = float(request.form.get('purchase_price', 0))
+            sale_price = float(request.form.get('sale_price', 0))
         except ValueError:
             flash('Valores inválidos.', 'warning')
             return redirect(url_for('stock_edit', product_id=product_id))
 
-        product['name'] = request.form['name'].strip() or product['name']
-        save_products(produtos)
+        update_product(
+            product_id=product_id,
+            doctor_id=user.id,
+            name=name,
+            code=code,
+            purchase_price=purchase_price,
+            sale_price=sale_price,
+            quantity=quantity
+        )
         flash('Produto atualizado com sucesso.', 'success')
         return redirect(url_for('products'))
 
     return render_template('stock_edit.html', product=product)
-
 
 @app.route('/delete_product/<int:product_id>', methods=['POST'])
 def delete_product(product_id):
@@ -1078,10 +1071,264 @@ def delete_product(product_id):
     flash('Produto removido.', 'info')
     return redirect(url_for('products'))
 
+# ==============================================
+# SUPPLIERS
+# ==============================================
+
+@app.route('/suppliers')
+@login_required
+def suppliers():
+    user = get_logged_user()
+    if not user:
+        return redirect(url_for('login'))
+    suppliers = get_suppliers_by_user(user.id)
+    return render_template('suppliers.html', suppliers=suppliers)
+
+@app.route('/add_supplier', methods=['POST'])
+@login_required
+def add_supplier():
+    user = get_logged_user()
+    if not user:
+        flash('Usuário não autenticado.', 'danger')
+        return redirect(url_for('login'))
+    name = request.form.get('name', '').strip()
+    phone = request.form.get('phone', '').strip()
+    email = request.form.get('email', '').strip()
+    if not (name and phone and email):
+        flash('Preencha todos os campos.', 'warning')
+        return redirect(url_for('suppliers'))
+    add_supplier_db(name, phone, email, user.id)
+    flash('Fornecedor cadastrado!', 'success')
+    return redirect(url_for('suppliers'))
+
+@app.route('/update_supplier/<int:supplier_id>', methods=['POST'])
+@login_required
+def update_supplier(supplier_id):
+    user = get_logged_user()
+    name = request.form.get('name', '').strip()
+    phone = request.form.get('phone', '').strip()
+    email = request.form.get('email', '').strip()
+    if not user:
+        flash('Usuário não autenticado.', 'danger')
+        return redirect(url_for('login'))
+    supplier = update_supplier_db(supplier_id, name, phone, email, user.id)
+    if supplier:
+        flash('Fornecedor atualizado!', 'success')
+    else:
+        flash('Fornecedor não encontrado ou sem permissão!', 'danger')
+    return redirect(url_for('suppliers'))
+
+@app.route('/delete_supplier/<int:supplier_id>', methods=['POST'])
+@login_required
+def delete_supplier(supplier_id):
+    user = get_logged_user()
+    if not user:
+        flash('Usuário não autenticado.', 'danger')
+        return redirect(url_for('login'))
+    ok = delete_supplier_db(supplier_id, user.id)
+    if ok:
+        flash('Fornecedor removido.', 'info')
+    else:
+        flash('Fornecedor não encontrado ou sem permissão.', 'danger')
+    return redirect(url_for('suppliers'))
+
+@app.route('/create_quote', methods=['GET', 'POST'])
+@login_required
+def create_quote():
+    user = get_logged_user()
+    if not user:
+        flash('Usuário não autenticado.', 'danger')
+        return redirect(url_for('login'))
+
+    suppliers = get_suppliers_by_user(user.id)
+    if request.method == 'POST':
+        title = request.form['title']
+        items_raw = request.form['items']
+        supplier_ids = request.form.getlist('supplier_ids')
+
+        # Salva IDs como string separada por vírgula
+        suppliers_str = ",".join(supplier_ids)
+
+        # Cria cotação e salva no banco
+        quote = Quote(title=title, items=items_raw, suppliers=suppliers_str)
+        db.session.add(quote)
+        db.session.commit()
+
+        # ENVIO WHATSAPP + EMAIL
+        items_list = [i.strip() for i in items_raw.split('\n') if i.strip()]
+        items_text = "\n".join([f"• {item}" for item in items_list])
+
+        for s in suppliers:
+            if str(s.id) not in supplier_ids:
+                continue
+
+            # Link para responder (ajuste se necessário)
+            response_url = url_for('respond_quote', quote_id=quote.id, supplier_id=s.id, _external=True)
+            # WhatsApp
+            if s.phone:
+                try:
+                    send_quote_whatsapp(
+                        supplier_name=s.name,
+                        phone=s.phone,
+                        quote_title=title,
+                        quote_items=items_list,
+                        response_url=response_url
+                    )
+                except Exception as e:
+                    print(f"[Erro WhatsApp - {s.name}] {e}")
+            # E-mail
+            if s.email:
+                try:
+                    email_subject = f"Cotação RafahMed: {title}"
+                    email_body = f"""
+Olá {s.name},
+
+Você recebeu uma nova cotação da plataforma RafahMed.
+
+Título: {title}
+Itens:
+{items_text}
+
+Responda acessando o link abaixo:
+{response_url}
+
+Atenciosamente,
+Equipe RafahMed
+"""
+                    send_email_quote(s.email, email_subject, email_body)
+                except Exception as e:
+                    print(f"Erro ao enviar e-mail para {s.email}: {e}")
+
+        flash('Cotação criada e notificada aos fornecedores!', 'success')
+        return redirect(url_for('quote_index'))
+
+    return render_template('create_quote.html', suppliers=suppliers)
+
+@app.route('/quote_index')
+@login_required
+def quote_index():
+    user = get_logged_user()
+    if not user:
+        return redirect(url_for('login'))
+
+    quotes = Quote.query.order_by(Quote.created_at.desc()).all()
+    suppliers_all = {str(s.id): s.name for s in get_suppliers_by_user(user.id)}
+
+    for quote in quotes:
+        if quote.suppliers:
+            quote.supplier_list = [suppliers_all.get(sid, f"ID {sid}") for sid in quote.suppliers.split(',') if sid]
+        else:
+            quote.supplier_list = []
+        quote.responses = QuoteResponse.query.filter_by(quote_id=quote.id).all()
+
+    return render_template('quote_index.html', quotes=quotes)
+
+@app.route('/quote/<int:quote_id>/supplier/<int:supplier_id>', methods=['GET', 'POST'])
+def respond_quote(quote_id, supplier_id):
+    quote = Quote.query.get_or_404(quote_id)
+    supplier_ids = quote.suppliers.split(",") if quote.suppliers else []
+    if str(supplier_id) not in supplier_ids:
+        return "Cotação inválida ou fornecedor não autorizado.", 403
+
+    items = [i.strip() for i in quote.items.split('\n') if i.strip()]
+
+    if request.method == 'POST':
+        prices = []
+        for idx in range(len(items)):
+            price = request.form.get(f'price_{idx}')
+            deadline = request.form.get(f'deadline_{idx}')
+            prices.append({"price": price, "deadline": deadline})
+
+        response = QuoteResponse(
+            quote_id=quote.id,
+            supplier_id=supplier_id,
+            answers=json.dumps(prices)
+        )
+        db.session.add(response)
+        db.session.commit()
+
+        return render_template(
+            'quote_response.html',
+            quote=quote,
+            items=list(enumerate(items)),
+            success=True
+        )
+
+    return render_template(
+        'quote_response.html',
+        quote=quote,
+        items=list(enumerate(items)),
+        success=False
+    )
+
+@app.route('/quote_results/<int:quote_id>')
+@login_required
+def quote_results(quote_id):
+    # 1. Busca cotação e respostas do banco
+    quote = Quote.query.get_or_404(quote_id)
+    responses = QuoteResponse.query.filter_by(quote_id=quote_id).all()
+    # 2. Monta lista de fornecedores (em ordem)
+    supplier_ids = [int(x) for x in (quote.suppliers or '').split(',') if x]
+    supplier_objs = Supplier.query.filter(Supplier.id.in_(supplier_ids)).all()
+    # Mantém a ordem original dos IDs
+    supplier_map = {s.id: s.name for s in supplier_objs}
+    supplier_names = [supplier_map.get(sid, f'Fornecedor {sid}') for sid in supplier_ids]
+    quote_suppliers = supplier_ids
+
+    # 3. Monta lista de produtos
+    quote_items = list(enumerate([item.strip() for item in (quote.items or '').split('\n') if item.strip()]))
+
+    # 4. Map de respostas (id -> resposta com lista de answers)
+    quote_responses = {}
+    for r in responses:
+        try:
+            answers = json.loads(r.answers)
+        except Exception:
+            answers = []
+        quote_responses[r.supplier_id] = {'answers': answers}
+
+    # 5. Melhor fornecedor para cada produto
+    best_per_item = {}
+    for idx, _ in quote_items:
+        min_price = float('inf')
+        best_supplier = None
+        for sid in quote_suppliers:
+            resp = quote_responses.get(sid)
+            if resp and idx < len(resp['answers']):
+                try:
+                    price = float(resp['answers'][idx]['price'])
+                    if price < min_price:
+                        min_price = price
+                        best_supplier = sid
+                except Exception:
+                    continue
+        best_per_item[idx] = best_supplier
+
+    # 6. Renderiza o template usando exatamente o padrão do seu HTML novo
+    return render_template(
+        'quote_results.html',
+        quote=quote,
+        supplier_names=supplier_names,    # lista de nomes dos fornecedores (header)
+        quote_items=quote_items,          # lista de tuplas (idx, nome do produto)
+        quote_suppliers=quote_suppliers,  # lista de ids (ordem dos fornecedores)
+        quote_responses=quote_responses,  # dict: fornecedor_id -> {'answers': [ ... ]}
+        best_per_item=best_per_item       # dict: idx_produto -> id_fornecedor_com_menor_preco
+    )
+
+@app.route('/delete_quote/<int:quote_id>', methods=['POST'])
+@login_required
+def delete_quote(quote_id):
+    user = get_logged_user()
+    quote = Quote.query.get_or_404(quote_id)
+    db.session.delete(quote)
+    db.session.commit()
+    flash('Cotação excluída com sucesso!', 'success')
+    return redirect(url_for('quote_index'))
 
 # ==============================================
 # API & CONSULT ROUTES
 # ==============================================
+
 @app.route('/api/add_consult', methods=['POST'])
 def api_add_consult():
     user = get_logged_user()

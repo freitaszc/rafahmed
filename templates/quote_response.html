@@ -2,47 +2,17 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Resultado da Cotação - RafahMed</title>
+  <title>Responder Cotação - RafahMed</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
-  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
   <style>
     body {
-      margin: 0;
       font-family: 'Montserrat', sans-serif;
       background-color: #f9f9f9;
-    }
-
-    .top-menu {
-      background-color: white;
-      padding: 10px 0;
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      border-bottom: 1px solid #eee;
-    }
-
-    .top-menu a {
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 500;
-      font-size: 14px;
-      color: #000000;
-      text-decoration: none;
-      padding: 8px 12px;
-      border-radius: 6px;
-      transition: 0.3s;
-    }
-
-    .top-menu a:hover {
-      background-color: #dd1b35;
-      color: white;
-    }
-
-    .content {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 20px;
-      text-align: center;
+      padding: 30px;
+      margin: 0;
+      color: #333;
     }
 
     .logo-img {
@@ -52,23 +22,26 @@
     }
 
     h2 {
+      text-align: center;
+      margin-bottom: 30px;
       font-size: 24px;
       color: #2c3e50;
-      margin-bottom: 30px;
     }
 
     table {
       width: 100%;
+      max-width: 800px;
+      margin: 0 auto 30px auto;
       border-collapse: collapse;
       background: #fff;
-      border-radius: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
       overflow: hidden;
-      margin-bottom: 40px;
     }
 
     th, td {
-      padding: 14px;
-      border: 1px solid #ccc;
+      padding: 12px;
+      border: 1px solid #ddd;
       text-align: center;
       font-size: 14px;
     }
@@ -78,60 +51,77 @@
       font-weight: 600;
     }
 
-    .highlight {
-      background-color: #d9f7f9;
-      font-weight: bold;
+    input[type="number"], input[type="text"] {
+      width: 90%;
+      padding: 6px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .submit-btn {
+      display: block;
+      margin: 30px auto 0 auto;
+      padding: 12px 20px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      color: #3498db;
+      background-color: white;
+      border: 2px solid #3498db;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    .submit-btn:hover {
+      background-color: #3498db;
+      color: white;
+    }
+
+    .success-message {
+      text-align: center;
+      color: green;
+      font-weight: 500;
+      margin-bottom: 20px;
     }
   </style>
 </head>
 <body>
 
-  <div class="top-menu">
-    <div style="position: absolute; left: 20px;">
-        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" style="height: 40px;">
-    </div>
-    <a href="{{ url_for('index') }}">Início</a>
-    <a href="{{ url_for('upload') }}">Ponza Lab</a>
-    <a href="{{ url_for('quiz_results') }}">Autoavaliações</a>
-    <a href="{{ url_for('quote_index') }}">Cotações</a>
-    <a href="{{ url_for('catalog') }}">Pacientes</a>
-    <a href="{{ url_for('products') }}">Estoque</a>
-    <a href="{{ url_for('agenda') }}">Agenda</a>
-    <a href="{{ url_for('logout') }}">Sair</a>
-  </div>
+  <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo-img">
+  <h2>{{ quote.title }}</h2>
 
-  <div class="content">
-    <h2>{{ quote.title }}</h2>
+  {% if success %}
+    <p class="success-message">Resposta enviada com sucesso!</p>
+  {% endif %}
 
+  <form method="post">
     <table>
       <thead>
         <tr>
           <th>Item</th>
-          {% for name in supplier_names %}
-            <th>{{ name }}</th>
-          {% endfor %}
+          <th>Preço (R$)</th>
+          <th>Prazo (dias)</th>
         </tr>
       </thead>
       <tbody>
-        {% for idx_item in quote_items %}
-          <tr>
-            <td>{{ idx_item[1] }}</td>
-            {% for sid in quote.suppliers %}
-              {% set answer = quote.responses.get(sid, {}).get("answers", []) %}
-              {% if answer and answer[idx_item[0]] %}
-                <td class="{% if best_per_item[idx_item[0]] == sid %}highlight{% endif %}">
-                  R$ {{ answer[idx_item[0]]["price"] }}<br>
-                  {{ answer[idx_item[0]]["deadline"] }} dias
-                </td>
-              {% else %}
-                <td>-</td>
-              {% endif %}
-            {% endfor %}
-          </tr>
+        {% for idx, item in quote_items %}
+        <tr>
+          <td>{{ item }}</td>
+          <td>
+            <input type="number" step="0.01" name="price_{{ idx }}" required>
+          </td>
+          <td>
+            <input type="text" name="deadline_{{ idx }}" placeholder="Ex: 7" required>
+          </td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
-  </div>
+    <input type="hidden" name="total_items" value="{{ quote_items|length }}">
+    <button type="submit" class="submit-btn">Enviar Resposta</button>
+  </form>
 
 </body>
 </html>

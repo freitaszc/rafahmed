@@ -162,10 +162,18 @@
       {% for quote in quotes %}
       <tr>
         <td onclick="window.location='{{ url_for('quote_results', quote_id=quote.id) }}'">{{ quote.title }}</td>
-        <td onclick="window.location='{{ url_for('quote_results', quote_id=quote.id) }}'">{{ quote.created_at }}</td>
-        <td onclick="window.location='{{ url_for('quote_results', quote_id=quote.id) }}'">{{ quote.suppliers | length }}
+        <td onclick="window.location='{{ url_for('quote_results', quote_id=quote.id) }}'">{{ quote.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+        <td onclick="window.location='{{ url_for('quote_results', quote_id=quote.id) }}'">
+          {{ quote.supplier_list | length }}
+          <span style="color: #bbb; font-size: 11px;">
+            {% if quote.supplier_list %}
+              <br>
+              {{ quote.supplier_list | join(', ') }}
+            {% endif %}
+          </span>
         </td>
-        <td onclick="window.location='{{ url_for('quote_results', quote_id=quote.id) }}'">{{ quote.responses | length }}
+        <td onclick="window.location='{{ url_for('quote_results', quote_id=quote.id) }}'">
+          {{ quote.responses | length }}
         </td>
         <td>
           <form method="post" action="{{ url_for('delete_quote', quote_id=quote.id) }}"
@@ -176,7 +184,7 @@
         </td>
       </tr>
       {% endfor %}
-    </tbody>
+    </tbody>    
   </table>
 
   {% else %}

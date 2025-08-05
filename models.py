@@ -43,15 +43,19 @@ class Company(db.Model):
 
 class Supplier(db.Model):
     __tablename__ = 'suppliers'
-    id    = db.Column(db.Integer, primary_key=True)
-    name  = db.Column(db.String(120), nullable=False)
-    email = db.Column(db.String(120))
-    phone = db.Column(db.String(20))
+    id      = db.Column(db.Integer, primary_key=True)
+    name    = db.Column(db.String(120), nullable=False)
+    email   = db.Column(db.String(120))
+    phone   = db.Column(db.String(20))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False) 
 
-    def __init__(self, name: str, email: Optional[str] = None, phone: Optional[str] = None):
-        self.name  = name
-        self.email = email
-        self.phone = phone
+    user    = db.relationship('User', backref='suppliers')
+
+    def __init__(self, name: str, email: Optional[str] = None, phone: Optional[str] = None, user_id: Optional[int] = None):
+        self.name    = name
+        self.email   = email
+        self.phone   = phone
+        self.user_id = user_id
 
 class Quote(db.Model):
     __tablename__ = 'quotes'

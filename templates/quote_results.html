@@ -2,17 +2,16 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Responder Cotação - RafahMed</title>
+  <title>{{ quote.title }} - Respostas</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
-  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
   <style>
     body {
       margin: 0;
       font-family: 'Montserrat', sans-serif;
       background-color: #f9f9f9;
     }
-
     .top-menu {
       background-color: white;
       padding: 10px 0;
@@ -20,8 +19,9 @@
       justify-content: center;
       gap: 20px;
       border-bottom: 1px solid #eee;
+      position: relative;
+      z-index: 2;
     }
-
     .top-menu a {
       font-family: 'Montserrat', sans-serif;
       font-weight: 500;
@@ -32,69 +32,60 @@
       border-radius: 6px;
       transition: 0.3s;
     }
-
     .top-menu a:hover {
       background-color: #dd1b35;
       color: white;
     }
-
     .content {
       max-width: 1000px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 30px 10px 0 10px;
       text-align: center;
     }
-
     .logo-img {
       width: 100px;
       display: block;
       margin: 0 auto 20px auto;
     }
-
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
     h2 {
-      font-size: 24px;
+      font-size: 28px;
+      font-weight: 700;
+      text-align: center;
       color: #2c3e50;
-      margin-bottom: 30px;
-      text-align: center;
+      margin-bottom: 40px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.06);
+      position: relative;
     }
-
-    table {
+    .catalog-table {
       width: 100%;
+      max-width: 900px;
+      margin: 30px auto 30px auto;
       border-collapse: collapse;
-      margin-bottom: 30px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      overflow: hidden;
     }
-
-    th, td {
-      padding: 12px;
-      border: 1px solid #ccc;
+    .catalog-table th,
+    .catalog-table td {
+      padding: 14px 14px;
+      border-bottom: 1px solid #eee;
       text-align: center;
       font-size: 14px;
     }
-
-    th {
-      background-color: #f0f0f0;
+    .catalog-table th {
+      background-color: #f5f5f5;
       font-weight: 600;
+      color: #2c3e50;
     }
-
-    input[type="number"] {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 14px;
+    .catalog-table tr:hover {
+      background-color: #f4fcfd;
     }
-
-    .menu-button {
+    .highlight {
+      background-color: #e3f7f8 !important;
+      font-weight: bold;
+    }
+    .menu-btn {
       font-family: 'Montserrat', sans-serif;
       font-size: 14px;
       font-weight: 500;
@@ -106,20 +97,31 @@
       text-decoration: none;
       transition: 0.3s ease;
       cursor: pointer;
-      width: 100%;
+      width: 200px;
+      margin: 30px auto 0 auto;
+      display: block;
+      box-shadow: 0 2px 8px 0 rgba(221,27,53,0.04);
+      outline: none;
     }
-
-    .menu-button:hover {
+    .menu-btn:hover {
       background-color: #dd1b35;
       color: white;
+    }
+    @media (max-width: 700px) {
+      .catalog-table, .catalog-table th, .catalog-table td {
+        font-size: 12px;
+        padding: 8px 4px;
+      }
+      .content { padding: 18px 2px 0 2px; }
+      h2 { font-size: 19px; }
+      .menu-btn { width: 100%; font-size: 13px; }
     }
   </style>
 </head>
 <body>
-
   <div class="top-menu">
     <div style="position: absolute; left: 20px;">
-        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" style="height: 40px;">
+      <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" style="height: 40px;">
     </div>
     <a href="{{ url_for('index') }}">Início</a>
     <a href="{{ url_for('upload') }}">Ponza Lab</a>
@@ -130,34 +132,38 @@
     <a href="{{ url_for('agenda') }}">Agenda</a>
     <a href="{{ url_for('logout') }}">Sair</a>
   </div>
-
   <div class="content">
+    <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo-img">
     <h2>{{ quote.title }}</h2>
-
-    <div class="container">
-      <form method="post">
-        <table>
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Preço Unitário (R$)</th>
-              <th>Prazo (dias)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for idx, item in quote_items %}
-            <tr>
-              <td>{{ item }}</td>
-              <td><input type="number" name="price_{{ loop.index0 }}" step="0.01" min="0" required></td>
-              <td><input type="number" name="deadline_{{ loop.index0 }}" min="1" required></td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        <button type="submit" class="menu-button">Enviar Resposta</button>
-      </form>
-    </div>
+    <table class="catalog-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          {% for name in supplier_names %}
+            <th>{{ name }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for idx, item in quote_items %}
+        <tr>
+          <td><strong>{{ item }}</strong></td>
+          {% for sid in quote_suppliers %}
+            {% set response = quote_responses.get(sid) %}
+            {% if response and idx < response.answers|length %}
+              {% set answer = response.answers[idx] %}
+              <td class="{% if best_per_item[idx] == sid %}highlight{% endif %}">
+                R$ {{ answer.price }}<br>
+                {{ answer.deadline }} dias
+              </td>
+            {% else %}
+              <td style="color:#aaa;">—</td>
+            {% endif %}
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>    
+    </table>
   </div>
-
 </body>
 </html>

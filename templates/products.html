@@ -226,7 +226,8 @@
     <h2>Estoque</h2>
     <button class="menu-button" onclick="openModal()">Cadastrar Produto</button>
     <form method="get" action="{{ url_for('products') }}" class="filter-form">
-      <input type="search" name="search" placeholder="Pesquisar produto..." value="{{ request.args.get('search', '') }}">
+      <input type="search" name="search" placeholder="Pesquisar produto..."
+        value="{{ request.args.get('search', '') }}">
       <select name="status">
         <option value="">Todos</option>
         <option value="Ativo" {% if request.args.get('status')=='Ativo' %}selected{% endif %}>Ativo</option>
@@ -250,9 +251,12 @@
         {% for prod in products %}
         <tr>
           <td>
-            <a href="{{ url_for('product_result', product_id=prod.id) }}" style="color: #2c3e50; text-decoration: underline; font-weight: 500;">
+            <span style="color: #2c3e50; text-decoration: underline; font-weight: 500; cursor:pointer;"
+              onclick="editProduct(this)" data-id="{{ prod.id }}" data-code="{{ prod.code }}"
+              data-name="{{ prod.name }}" data-quantity="{{ prod.quantity }}"
+              data-purchase_price="{{ prod.purchase_price }}" data-sale_price="{{ prod.sale_price }}">
               {{ prod.name }}
-            </a>
+            </span>
           </td>
           <td>{{ prod.quantity }}</td>
           <td>R$ {{ "%.2f"|format(prod.purchase_price) }}</td>
@@ -279,7 +283,7 @@
         </tr>
         {% endfor %}
       </tbody>
-      
+
     </table>
   </div>
 
@@ -352,6 +356,18 @@
   </div>
 
   <script>
+    function editProduct(el) {
+      // Preenche os campos do modal com os dados do produto
+      document.querySelector('#editProductForm').action = `/stock_edit/${el.dataset.id}`;
+      document.querySelector('#editProductForm [name="code"]').value = el.dataset.code || '';
+      document.querySelector('#editProductForm [name="name"]').value = el.dataset.name || '';
+      document.querySelector('#editProductForm [name="quantity"]').value = el.dataset.quantity || '';
+      document.querySelector('#editProductForm [name="purchase_price"]').value = el.dataset.purchase_price || '';
+      document.querySelector('#editProductForm [name="sale_price"]').value = el.dataset.sale_price || '';
+      // Exibe o modal
+      document.getElementById('editProductModal').style.display = 'flex';
+    }
+
     function openEditProductModal(productId) {
       const form = document.getElementById('editProductForm');
       form.action = `/stock_edit/${productId}`;

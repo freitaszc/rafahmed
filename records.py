@@ -317,41 +317,93 @@ def update_package_usage(user_id: int, new_used: int) -> None:
 #
 # ── PRODUCT MANAGEMENT (JSON fallback) ─────────────────────────────────────────
 #
-def get_products() -> List[dict]:
+def get_products(doctor_id: Optional[int] = None) -> List[dict]:
     if not os.path.exists(PRODUCTS_FILE):
         return []
     with open(PRODUCTS_FILE, 'r', encoding='utf-8') as f:
-        return json.load(f)
+        products = json.load(f)
+    if doctor_id is not None:
+        products = [p for p in products if p.get('doctor_id') == doctor_id]
+    return products
 
 def save_products(products: List[dict]) -> None:
     with open(PRODUCTS_FILE, 'w', encoding='utf-8') as f:
         json.dump(products, f, indent=4, ensure_ascii=False)
 
-def update_product_status(product_id: int, new_status: str) -> None:
+def update_product_status(product_id: int, doctor_id: int, new_status: str) -> None:
     products = get_products()
+    updated = False
     for p in products:
-        if p.get('id') == product_id:
+        if p.get('id') == product_id and p.get('doctor_id') == doctor_id:
             p['status'] = new_status
+            updated = True
             break
+    if not updated:
+        abort(404, description="Produto não encontrado ou sem permissão")
     save_products(products)
 
-def add_product(name: str, purchase_price: float, sale_price: float, quantity: int) -> dict:
+def add_product(name: str, code: str, purchase_price: float, sale_price: float, quantity: int, doctor_id: int) -> dict:
     products = get_products()
     new_id = max((p.get('id', 0) for p in products), default=0) + 1
     prod = {
         "id": new_id,
         "name": name,
+        "code": code,
         "purchase_price": purchase_price,
         "sale_price": sale_price,
         "quantity": quantity,
-        "status": "Ativo"
+        "status": "Ativo",
+        "doctor_id": doctor_id
     }
     products.append(prod)
     save_products(products)
     return prod
 
-def get_product_by_id(product_id):
-    product = Product.query.get(product_id)
-    if not product:
-        abort(404, description="Produto não encontrado")
-    return product
+def get_product_by_id(product_id: int, doctor_id: Optional[int] = None) -> Optional[dict]:
+    products = get_products()
+    for p in products:
+        if p.get('id') == product_id:
+            if doctor_id is None or p.get('doctor_id') == doctor_id:
+                return p
+    abort(404, description="Produto não encontrado ou sem permissão")
+
+def update_product(product_id: int, doctor_id: int, name, code, purchase_price, sale_price, quantity) -> dict:
+    products = get_products()
+    for p in products:
+        if p.get('id') == product_id and p.get('doctor_id') == doctor_id:
+            p['name'] = name
+            p['code'] = code
+            p['purchase_price'] = purchase_price
+            p['sale_price'] = sale_price
+            p['quantity'] = quantity
+            save_products(products)
+            return p 
+    abort(404, description="Produto não encontrado ou sem permissão")
+
+def get_suppliers_by_user(user_id: int):
+    return Supplier.query.filter_by(user_id=user_id).order_by(Supplier.name).all()
+
+def add_supplier_db(name: str, phone: str, email: str, user_id: int):
+    supplier = Supplier(name=name, phone=phone, email=email, user_id=user_id)
+    db.session.add(supplier)
+    db.session.commit()
+    return supplier
+
+def update_supplier_db(supplier_id: int, name: str, phone: str, email: str, user_id: int):
+    supplier = Supplier.query.filter_by(id=supplier_id, user_id=user_id).first()
+    if supplier:
+        supplier.name = name
+        supplier.phone = phone
+        supplier.email = email
+        db.session.commit()
+        return supplier
+    return None
+
+def delete_supplier_db(supplier_id: int, user_id: int):
+    supplier = Supplier.query.filter_by(id=supplier_id, user_id=user_id).first()
+    if supplier:
+        db.session.delete(supplier)
+        db.session.commit()
+        return True
+    return False
+

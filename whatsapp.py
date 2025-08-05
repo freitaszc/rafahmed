@@ -94,7 +94,7 @@ def send_quote_whatsapp(supplier_name, phone, quote_title, quote_items, response
         "to": phone,
         "type": "template",
         "template": {
-            "name": "cotacao_BioO3",  # <- você precisa configurar esse template no WhatsApp Business
+            "name": "cotacao_rafahmed",  # <- você precisa configurar esse template no WhatsApp Business
             "language": {"code": "pt_BR"},
             "components": [
                 {
