@@ -3,51 +3,33 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Política de Privacidade - RafahMed</title>
+  <title>Termos de Uso - RafahMed</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
+    :root {
+      --bg-deep: #080b12;
+      --bg-dark: #0b1220;
+      --bg-elev: #111827;
+      --bg-elev-2: #0f172a;
+      --text: #e5e7eb;
+      --text-dim: #cbd5e1;
+      --muted: #94a3b8;
+      --stroke: #1f2937;
+      --red: #dd1b35;
+      --red-dark: #b81429;
+    }
+
     body {
       font-family: 'Montserrat', sans-serif;
-      background-color: #f9fafb;
-      color: #333;
-    }
-
-    :root {
-      --rafahmed-red: #dd1b35;
-    }
-
-    .privacy-container {
-      max-width: 800px;
-      margin: 5rem auto 3rem auto;
-      background-color: #ffffff;
-      padding: 2.5rem;
-      border-radius: 1rem;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-    }
-
-    .privacy-container h2 {
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: var(--rafahmed-red);
-      margin-bottom: 1.5rem;
-      text-align: center;
-    }
-
-    .privacy-container h3 {
-      font-size: 1.125rem;
-      font-weight: 600;
-      margin-top: 1.5rem;
-      margin-bottom: 0.5rem;
-      color: #111827;
-    }
-
-    .privacy-container p {
-      font-size: 0.95rem;
-      line-height: 1.7;
-      color: #4b5563;
+      background:
+        radial-gradient(1000px 600px at 10% 0%, #0b1428 0%, transparent 50%),
+        radial-gradient(900px 600px at 90% 10%, #0a0f1f 0%, transparent 50%),
+        linear-gradient(135deg, var(--bg-deep) 0%, var(--bg-dark) 100%);
+      color: var(--text);
+      margin: 0;
     }
 
     .logo-topo {
@@ -59,54 +41,102 @@
     .logo-topo img {
       width: 120px;
       cursor: pointer;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .45));
+    }
+
+    /* Mesmo visual do container de Privacidade */
+    .terms-container {
+      max-width: 800px;
+      margin: 5rem auto 3rem auto;
+      background: linear-gradient(145deg, var(--bg-elev) 0%, var(--bg-elev-2) 100%);
+      padding: 2.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .45);
+      border: 1px solid rgba(255, 255, 255, .06);
+    }
+
+    .terms-container h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--red);
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .terms-container h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-top: 1.5rem;
+      margin-bottom: .5rem;
+      color: #fff;
+    }
+
+    .terms-container p {
+      font-size: .98rem;
+      line-height: 1.8;
+      color: var(--text-dim);
+    }
+
+    a {
+      color: #93c5fd;
     }
   </style>
 </head>
 
 <body>
-  <!-- Logo com link para home -->
   <div class="logo-topo">
     <a href="{{ url_for('hero') }}">
       <img src="{{ url_for('static', filename='images/logocompleta.svg') }}" alt="Logo RafahMed">
     </a>
   </div>
 
-  <!-- Conteúdo -->
-  <div class="privacy-container">
-    <h2>Política de Privacidade</h2>
+  <div class="terms-container">
+    <h2>Termos e Condições de Uso</h2>
 
-    <p>A RafahMed valoriza a privacidade de seus usuários. Este documento esclarece como suas informações são coletadas, utilizadas, armazenadas e protegidas ao utilizar nossos serviços.</p>
+    <p>A RafahMed oferece uma plataforma digital voltada para a intermediação entre pacientes, profissionais e empresas
+      do setor da saúde. Ao acessar este site ou qualquer funcionalidade da plataforma, o usuário declara estar ciente e
+      de acordo com todos os termos descritos a seguir.</p>
 
-    <h3>1. Informações Coletadas</h3>
-    <p>Coletamos informações fornecidas diretamente por você, tais como nome, e-mail, telefone, dados profissionais e histórico de uso da plataforma.</p>
+    <h3>1. Aceitação e Atualizações</h3>
+    <p>Estes termos podem ser revisados a qualquer momento pela RafahMed, a seu critério. Sempre que atualizados, será
+      publicada a nova versão no site. O uso contínuo da plataforma implica em aceitação plena das novas condições.</p>
 
-    <h3>2. Utilização dos Dados</h3>
-    <p>Os dados são usados exclusivamente para:</p>
-    <ul class="list-disc list-inside text-sm text-gray-600 mt-2">
-      <li>Gerenciar seu acesso à plataforma</li>
-      <li>Agendar e acompanhar consultas</li>
-      <li>Fornecer suporte e comunicação</li>
-      <li>Melhorar continuamente nossos serviços</li>
-    </ul>
+    <h3>2. Cadastro de Usuários</h3>
+    <p>O acesso à plataforma exige o fornecimento de informações pessoais e profissionais. O usuário é o único
+      responsável pela veracidade dos dados informados, bem como pela guarda de seu login e senha de acesso.</p>
 
-    <h3>3. Armazenamento e Segurança</h3>
-    <p>Seus dados são armazenados em ambientes seguros, protegidos por criptografia e outras práticas recomendadas pela LGPD. Monitoramos continuamente para prevenir acessos não autorizados.</p>
+    <h3>3. Perfil e Atividades Permitidas</h3>
+    <p>A plataforma é destinada a maiores de 18 anos ou menores com autorização formal de seus responsáveis legais.
+      Estão vedadas práticas ilegais, antiéticas ou ofensivas durante o uso da plataforma.</p>
 
-    <h3>4. Compartilhamento</h3>
-    <p>As informações não são compartilhadas com terceiros, exceto quando necessário para o funcionamento da plataforma ou exigido por lei.</p>
+    <h3>4. Pagamentos e Reembolsos</h3>
+    <p>As sessões e serviços podem ser pagos por cartão, convênio ou terceiros. Cancelamentos com pelo menos 24 horas de
+      antecedência garantem reembolso. A não utilização do serviço agendado no horário não garante devolução do valor.
+    </p>
 
-    <h3>5. Direitos do Usuário</h3>
-    <p>Você pode acessar, corrigir ou excluir suas informações entrando em contato conosco. Também é possível revogar o consentimento para uso de dados.</p>
+    <h3>5. Atendimento Online</h3>
+    <p>A RafahMed disponibiliza agendamento e consultas através de sala virtual, com suporte para vídeo, áudio e chat. O
+      comparecimento é essencial e eventuais ausências devem ser justificadas conforme regras internas.</p>
 
-    <h3>6. Cookies</h3>
-    <p>Utilizamos cookies para melhorar sua experiência. Você pode desativá-los nas configurações do seu navegador, mas isso pode limitar funcionalidades.</p>
+    <h3>6. Privacidade e Proteção de Dados</h3>
+    <p>A RafahMed respeita a LGPD e protege os dados dos usuários com tecnologias de criptografia e protocolos de
+      segurança. Nenhuma gravação de sessões é permitida sem consentimento expresso das partes envolvidas.</p>
 
-    <h3>7. Alterações na Política</h3>
-    <p>Reservamo-nos o direito de atualizar esta política periodicamente. A versão atual estará sempre disponível nesta página.</p>
+    <h3>7. Responsabilidades do Usuário</h3>
+    <p>É proibido realizar qualquer tipo de engenharia reversa, invadir sistemas, acessar contas de terceiros ou
+      utilizar a plataforma para veiculação de conteúdo ofensivo, ilegal ou malicioso.</p>
 
-    <h3>8. Contato</h3>
-    <p>Em caso de dúvidas ou solicitações sobre seus dados pessoais, envie um e-mail para:</p>
-    <p class="mt-1 font-semibold text-[var(--rafahmed-red)]">contato@rafahmed.com.br</p>
+    <h3>8. Direitos Autorais</h3>
+    <p>Todo o material disponibilizado pela RafahMed é protegido por direitos autorais. A utilização indevida de textos,
+      logos ou imagens sem autorização configura infração legal.</p>
+
+    <h3>9. Encerramento de Conta</h3>
+    <p>O usuário pode solicitar a exclusão de sua conta a qualquer momento por meio de contato com o suporte. O
+      cancelamento também pode ocorrer por descumprimento de qualquer item deste termo.</p>
+
+    <h3>10. Contato</h3>
+    <p>Para esclarecimentos, dúvidas ou solicitações relacionadas a estes termos, entre em contato pelo e-mail:</p>
+    <p class="mt-1 font-semibold" style="color:#fda4af;">contato.rafahmed@gmail.com.br</p>
   </div>
 </body>
 

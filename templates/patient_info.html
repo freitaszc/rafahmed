@@ -2,259 +2,392 @@
 <html lang="pt-br">
 
 <head>
-    <meta charset="UTF-8">
-    <title>{{ patient.name }} - RafahMed</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
-    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>
-        body {
-            background: #f4f6fa;
-            font-family: 'Montserrat', sans-serif;
-            margin: 0;
-            padding: 0;
-        }
+  <meta charset="UTF-8">
+  <title>{{ patient.name }} - RafahMed</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <style>
+    :root {
+      --bg-deep: #080c14;
+      --bg-dark: #0d1624;
+      --elev: #1a2435;
+      --panel: #0f1929;
+      --text: #e5e7eb;
+      --muted: #cbd5e1;
+      --line: #1f2937;
+      --red: #dd1b35;
+      --red-dark: #b81429;
+      --input-bg: #0f1a2a;
+      --input-bd: #283447
+    }
 
-        .top-menu {
-            background-color: white;
-            padding: 10px 0;
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            border-bottom: 1px solid #eee;
-            position: relative;
-        }
+    * {
+      box-sizing: border-box;
+      font-family: 'Montserrat', sans-serif;
+    }
 
-        .top-menu a {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 500;
-            font-size: 14px;
-            color: #000000;
-            text-decoration: none;
-            padding: 8px 12px;
-            border-radius: 6px;
-            transition: 0.3s;
-        }
+    body {
+      margin: 0;
+      display: flex;
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--bg-deep), var(--bg-dark));
+      color: var(--text)
+    }
 
-        .top-menu a:hover {
-            background-color: #dd1b35;
-            color: white;
-        }
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 250px;
+      background: linear-gradient(180deg, #0b111c 0%, #0a0f1a 100%);
+      padding: 30px 20px;
+      border-right: 1px solid var(--line);
+      box-shadow: 2px 0 14px rgba(0, 0, 0, .35);
+      display: flex;
+      flex-direction: column;
+      transition: width 180ms ease;
+      z-index: 1000
+    }
 
-        .logo-container {
-            position: absolute;
-            left: 20px;
-            top: 6px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-        }
+    .sidebar-toggle {
+      align-self: flex-end;
+      background: rgba(255, 255, 255, .03);
+      border: 1px solid rgba(255, 255, 255, .08);
+      color: #e5e7eb;
+      padding: 6px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 14px;
+      font-size: 14px;
+      font-weight: 700
+    }
 
-        .center-logo {
-            display: flex;
-            justify-content: center;
-            margin-top: 38px;
-            margin-bottom: 8px;
-        }
+    .sidebar-toggle i {
+      transition: transform 180ms ease
+    }
 
-        .patient-container {
-            max-width: 620px;
-            margin: 0 auto 40px auto;
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 4px 18px 0 rgba(32, 33, 36, 0.10);
-            padding: 38px 34px 30px 34px;
-        }
+    .sidebar-logo {
+      width: 200px;
+      display: block;
+      margin: 0 auto 20px;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .35));
+      transition: width 180ms ease, margin 180ms ease
+    }
 
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-        }
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 14px;
+      padding: 12px 18px;
+      border-radius: 10px;
+      color: var(--muted);
+      text-decoration: none;
+      margin-bottom: 8px;
+      font-weight: 500;
+      transition: background .2s, color .2s, transform .12s
+    }
 
-        .form-row {
-            display: flex;
-            gap: 18px;
-            flex-wrap: wrap;
-        }
+    .menu-item i {
+      width: 21px;
+      text-align: center;
+      flex: 0 0 21px
+    }
 
-        .form-group {
-            flex: 1 1 220px;
-            display: flex;
-            flex-direction: column;
-        }
+    .menu-item:hover {
+      background: rgba(221, 27, 53, .12);
+      color: var(--red);
+      transform: translateX(4px)
+    }
 
-        label {
-            font-size: 14px;
-            color: #555;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
+    .menu-item.logout {
+      color: #94a3b8;
+      margin-top: auto
+    }
 
-        input,
-        textarea {
-            border: 1.5px solid #e6e6e6;
-            border-radius: 7px;
-            padding: 9px 12px;
-            font-size: 15px;
-            color: #222;
-            font-family: inherit;
-            transition: border .2s;
-            background: #fafbfc;
-            resize: none;
-        }
+    .menu-item.admin {
+      color: #f87171
+    }
 
-        input:focus,
-        textarea:focus {
-            border-color: #dd1b35;
-            background: #fff;
-            outline: none;
-        }
+    .sidebar.is-collapsed {
+      width: 76px
+    }
 
-        textarea {
-            min-height: 62px;
-        }
+    .sidebar.is-collapsed+.content {
+      margin-left: 76px
+    }
 
-        .section-actions {
-            margin-top: 32px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 14px;
-            justify-content: center;
-        }
+    .sidebar.is-collapsed .sidebar-logo {
+      width: 44px;
+      margin: 0 auto 24px
+    }
 
-        .action-btn,
-        .nav-btn {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 15px;
-            font-weight: 600;
-            border: 2px solid #dd1b35;
-            background: white;
-            color: #dd1b35;
-            border-radius: 6px;
-            padding: 9px 25px;
-            cursor: pointer;
-            transition: .18s;
-            text-decoration: none;
-            margin-bottom: 6px;
-            outline: none;
-        }
+    .sidebar.is-collapsed .menu-item {
+      justify-content: center;
+      gap: 0;
+      padding: 12px 0
+    }
 
-        .action-btn:hover,
-        .nav-btn:hover {
-            background: #dd1b35;
-            color: #fff;
-        }
+    .sidebar.is-collapsed .menu-item .label {
+      display: none
+    }
 
-        @media (max-width: 600px) {
-            .patient-container {
-                padding: 14px 6vw;
-            }
+    .sidebar.is-collapsed .sidebar-toggle i {
+      transform: rotate(180deg)
+    }
 
-            .form-row {
-                flex-direction: column;
-                gap: 0;
-            }
-        }
-    </style>
+    .content {
+      margin-left: 250px;
+      flex: 1;
+      padding: 28px 28px 40px;
+      transition: margin-left 180ms ease
+    }
+
+    .card {
+      max-width: 760px;
+      margin: 0 auto 40px;
+      background: linear-gradient(145deg, var(--elev), #223049);
+      border-radius: 16px;
+      padding: 28px 26px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, .45), 0 0 0 1px rgba(255, 255, 255, .04) inset
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px
+    }
+
+    .row {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap
+    }
+
+    .col {
+      flex: 1 1 220px;
+      display: flex;
+      flex-direction: column
+    }
+
+    label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: .5px
+    }
+
+    input,
+    textarea,
+    select {
+      border: 2px solid var(--input-bd);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--input-bg);
+      outline: none;
+      transition: .2s
+    }
+
+    input::placeholder,
+    textarea::placeholder,
+    select::placeholder {
+      font-family: 'Montserrat', sans-serif;
+      color: var(--muted);
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(221, 27, 53, .12)
+    }
+
+    .actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+      background: var(--red);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: .25s;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background: var(--red-dark);
+      transform: translateY(-1px)
+    }
+
+    .btn.alt {
+      background: #4a9c2c
+    }
+
+    .btn.alt:hover {
+      background: #3e8725
+    }
+
+    .btn.blue {
+      background: #2955c4
+    }
+
+    .btn.blue:hover {
+      background: #1f46a4
+    }
+  </style>
+  <script>
+    function toggleSidebar() {
+      const s = document.querySelector('.sidebar');
+      s.classList.toggle('is-collapsed');
+      localStorage.setItem('sidebarCollapsed', s.classList.contains('is-collapsed') ? '1' : '0');
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem('sidebarCollapsed') === '1') {
+        document.querySelector('.sidebar')?.classList.add('is-collapsed');
+      }
+    });
+  </script>
 </head>
 
 <body>
-    <div class="top-menu">
-        <div class="logo-container">
-            <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" style="height: 40px;">
+  <!-- Sidebar padronizado -->
+  <div class="sidebar">
+    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Minimizar/Maximizar menu">
+      <i class="fa fa-angle-double-left"></i>
+    </button>
+
+    <img src="{{ url_for('static', filename='images/logocompleta.svg') }}" class="sidebar-logo" alt="Logo RafahMed">
+
+    <a href="{{ url_for('index') }}" class="menu-item" title="Início"><i class="fa fa-home"></i> <span
+        class="label">Início</span></a>
+    <a href="{{ url_for('upload') }}" class="menu-item" title="Ponza Lab"><i class="fa fa-upload"></i> <span
+        class="label">Ponza Lab</span></a>
+    <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-list-alt"></i>
+      <span class="label">Autoavaliações</span></a>
+    <a href="{{ url_for('quote_index') }}" class="menu-item" title="Cotações"><i class="fa fa-file-text-o"></i> <span
+        class="label">Cotações</span></a>
+    <a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-users"></i> <span
+        class="label">Pacientes</span></a>
+    <a href="{{ url_for('products') }}" class="menu-item" title="Estoque"><i class="fa fa-archive"></i> <span
+        class="label">Estoque</span></a>
+    <a href="{{ url_for('agenda') }}" class="menu-item" title="Agenda"><i class="fa fa-calendar"></i> <span
+        class="label">Agenda</span></a>
+    <a href="{{ url_for('purchase') }}" class="menu-item" title="Pagamentos"><i class="fa fa-credit-card"></i> <span
+        class="label">Pagamentos</span></a>
+    <a href="{{ url_for('training') }}" class="menu-item" title="Treinamento"><i class="fa fa-play-circle"></i> <span
+        class="label">Treinamento</span></a>
+
+    {% if username and username|lower == 'admin' %}
+    <div style="margin:18px 0 8px 0; border-top:1px solid #1f2937;"></div>
+    <a href="{{ url_for('admin_companies') }}" class="menu-item admin" title="Admin"><i class="fa fa-cog"></i> <span
+        class="label">Admin</span></a>
+    {% endif %}
+
+    <a href="{{ url_for('logout') }}" class="menu-item logout" title="Sair"><i class="fa fa-sign-out"></i> <span
+        class="label">Sair</span></a>
+  </div>
+
+  <div class="content">
+    <div class="card">
+      <form id="patientForm">
+        <div class="row">
+          <div class="col">
+            <label for="name">NOME</label>
+            <input id="name" name="name" type="text" value="{{ patient.name or '' }}" required>
+          </div>
+          <div class="col">
+            <label for="age">IDADE</label>
+            <input id="age" name="age" type="number" value="{{ patient.age or '' }}" min="0" required>
+          </div>
         </div>
-        <a href="{{ url_for('index') }}">Início</a>
-        <a href="{{ url_for('upload') }}">Ponza Lab</a>
-        <a href="{{ url_for('quiz_results') }}">Autoavaliações</a>
-        <a href="{{ url_for('quote_index') }}">Cotações</a>
-        <a href="{{ url_for('catalog') }}">Pacientes</a>
-        <a href="{{ url_for('products') }}">Estoque</a>
-        <a href="{{ url_for('agenda') }}">Agenda</a>
-        <a href="{{ url_for('logout') }}">Sair</a>
-    </div>
 
-    <div class="center-logo">
-        <img src="{{ url_for('static', filename='images/flatlogo.svg') }}" alt="Logo RafahMed" style="height: 100px;">
-    </div>
+        <div class="row">
+          <div class="col">
+            <label for="cpf">CPF</label>
+            <input id="cpf" name="cpf" type="text" value="{{ patient.cpf or '' }}">
+          </div>
+          <div class="col">
+            <label for="gender">SEXO</label>
+            <input id="gender" name="gender" type="text" value="{{ patient.gender or '' }}">
+          </div>
+        </div>
 
-    <div class="patient-container">
-        <form id="patientForm">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="name">Nome</label>
-                    <input id="name" name="name" type="text" value="{{ patient.name or '' }}" required>
-                </div>
-                <div class="form-group">
-                    <label for="age">Idade</label>
-                    <input id="age" name="age" type="number" value="{{ patient.age or '' }}" min="0" required>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="cpf">CPF</label>
-                    <input id="cpf" name="cpf" type="text" value="{{ patient.cpf or '' }}">
-                </div>
-                <div class="form-group">
-                    <label for="gender">Sexo</label>
-                    <input id="gender" name="gender" type="text" value="{{ patient.gender or '' }}">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="phone">Telefone</label>
-                    <input id="phone" name="phone" type="text" value="{{ patient.phone or '' }}">
-                </div>
-                <div class="form-group">
-                    <label for="status">Status</label>
-                    <input id="status" name="status" type="text" value="{{ patient.status or '' }}" readonly>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="prescription">Prescrição</label>
-                <textarea id="prescription" name="prescription">{{ patient.prescription or '' }}</textarea>
-                <div class="section-actions">
-                    <button type="button" class="action-btn" onclick="savePatient()">Salvar Alterações</button>
-                    <a href="{{ url_for('catalog') }}" class="nav-btn">Voltar ao Catálogo</a>
-                    {% if patient.cpf %}
-                    <a href="{{ url_for('download_pdf', patient_id=patient.id) }}" class="action-btn"
-                        style="background: #f6f7fb; color:#4a9c2c; border-color: #4a9c2c;" download>
-                        Baixar PDF
-                    </a>
-                    {% endif %}
-                    {% if patient.quiz_result_id %}
-                    <a href="{{ url_for('quiz_patient', quiz_id=patient.quiz_result_id) }}" class="action-btn"
-                        style="background: #f6f7fb; color:#2955c4; border-color: #2955c4;">
-                        Ver Autoavaliação
-                    </a>
-                    {% endif %}
-                </div>
-        </form>
-    </div>
+        <div class="row">
+          <div class="col">
+            <label for="phone">TELEFONE</label>
+            <input id="phone" name="phone" type="text" value="{{ patient.phone or '' }}">
+          </div>
+          <div class="col">
+            <label for="status">STATUS</label>
+            <input id="status" name="status" type="text" value="{{ patient.status or '' }}" readonly>
+          </div>
+        </div>
 
-    <script>
-        function savePatient() {
-            const data = {
-                name: document.getElementById("name").value.trim(),
-                age: document.getElementById("age").value.trim(),
-                cpf: document.getElementById("cpf").value.trim(),
-                gender: document.getElementById("gender").value.trim(),
-                phone: document.getElementById("phone").value.trim(),
-                prescription: document.getElementById("prescription").value.trim(),
-                status: document.getElementById("status").value.trim()
-            };
-            fetch("{{ url_for('edit_patient_api', patient_id=patient.id) }}", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data)
-            })
-                .then(resp => resp.json())
-                .then(r => {
-                    alert(r.success ? "Paciente atualizado com sucesso!" : "Erro ao salvar.");
-                    if (r.success) location.reload();
-                });
-        }
-    </script>
+        <div class="col">
+          <label for="prescription">PRESCRIÇÃO</label>
+          <textarea id="prescription" name="prescription">{{ patient.prescription or '' }}</textarea>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn" onclick="savePatient()">Salvar Alterações</button>
+          <a href="{{ url_for('catalog') }}" class="btn">Voltar ao Catálogo</a>
+          {% if patient.cpf %}
+          <a href="{{ url_for('download_pdf', patient_id=patient.id) }}" class="btn alt" download>Baixar PDF</a>
+          {% endif %}
+          {% if patient.quiz_result_id %}
+          <a href="{{ url_for('quiz_patient', quiz_id=patient.quiz_result_id) }}" class="btn blue">Ver Autoavaliação</a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function savePatient() {
+      const data = {
+        name: document.getElementById("name").value.trim(),
+        age: document.getElementById("age").value.trim(),
+        cpf: document.getElementById("cpf").value.trim(),
+        gender: document.getElementById("gender").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
+        prescription: document.getElementById("prescription").value.trim(),
+        status: document.getElementById("status").value.trim()
+      };
+      fetch("{{ url_for('edit_patient_api', patient_id=patient.id) }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+        .then(resp => resp.json())
+        .then(r => {
+          alert(r.success ? "Paciente atualizado com sucesso!" : "Erro ao salvar.");
+          if (r.success) location.reload();
+        });
+    }
+  </script>
 </body>
 
 </html>

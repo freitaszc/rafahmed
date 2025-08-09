@@ -1,78 +1,107 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <title>Resultado - RafahMed (PDF)</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/pdf.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
     <style>
+        /* PDF: mantém tipografia padrão mas ajusta para tema escuro */
+        :root {
+            --bg: #0b1220;
+            --panel: #0f172a;
+            --text: #e5e7eb;
+            --muted: #cbd5e1;
+            --red: #dd1b35;
+        }
+
         body {
             margin: 1cm 0.5cm;
             font-family: "Times New Roman", serif;
             font-size: 14px;
+            color: var(--text);
+            background: var(--bg);
         }
+
         .header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             padding: 10px 20px;
+            background: var(--panel);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 8px;
         }
+
         .patient-info {
             text-align: left;
             white-space: pre-wrap;
             max-width: 60%;
+            color: var(--muted);
         }
+
         .logo {
             width: 150px;
             margin-top: -10px;
+            filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .45));
         }
+
         .result-section {
             padding: 0 20px;
         }
+
         .result-title {
             text-align: center;
             font-size: 20px;
             font-weight: bold;
-            margin: 40px 0 20px;
+            margin: 40px 0 12px;
+            color: #fff;
         }
+
         pre {
             white-space: pre-wrap;
             font-family: "Times New Roman", serif;
             font-size: 14px;
+            background: var(--panel);
+            color: var(--text);
+            border: 1px solid rgba(255, 255, 255, .08);
+            padding: 12px;
+            border-radius: 8px;
         }
+
         .signature-block {
             text-align: center;
-            margin-top: 60px;
+            margin-top: 50px;
+            color: var(--muted);
         }
+
         .signature-line {
             display: inline-block;
-            border-top: 1px solid #000;
+            border-top: 1px solid #fff;
             width: 300px;
             margin-top: 10px;
         }
     </style>
 </head>
+
 <body>
     <div class="header">
         <div class="patient-info">{{ patient_info.strip() }}</div>
-        <div>
-            <img src="{{ logo_path }}" class="logo">
-        </div>
+        <div><img src="{{ logo_path }}" class="logo"></div>
     </div>
 
     <div class="result-section">
         <div class="result-title">Resultado da Análise</div>
         <pre>{{ diagnostic_text }}</pre>
 
-        <div class="result-title" style="margin-top: 30px;">Prescrição</div>
+        <div class="result-title" style="margin-top: 26px;">Prescrição</div>
         <pre>{{ prescription_text }}</pre>
     </div>
 
     <div class="signature-block">
         <div class="signature-line"></div>
-        <div style="margin-top: 6px;">
-            {{ doctor_name }}
-        </div>
+        <div style="margin-top: 6px; color:#fff;">{{ doctor_name }}</div>
     </div>
 </body>
+
 </html>

@@ -4,148 +4,189 @@
 <head>
   <meta charset="UTF-8">
   <title>Pagamentos - RafahMed</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
-  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet">
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <script>
+    // === Minimizador da barra lateral (com persistência) ===
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      sidebar.classList.toggle('is-collapsed');
+      localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('is-collapsed') ? '1' : '0');
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem('sidebarCollapsed') === '1') {
+        document.querySelector('.sidebar')?.classList.add('is-collapsed');
+      }
+    });
+  </script>
+
   <style>
-    @keyframes modalFadeIn {
-      from {
-        opacity: 0;
-        transform: scale(0.9);
-      }
-
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
+    :root {
+      --bg-deep: #080b12;
+      --bg-dark: #0b1220;
+      --bg-elev: #111827;
+      --bg-elev-2: #0f172a;
+      --text: #e5e7eb;
+      --muted: #cbd5e1;
+      --text-dim: #cbd5e1;
+      --line: #1f2937;
+      --red: #dd1b35;
+      --red-dark: #b81429;
     }
 
-    @keyframes modalFadeOut {
-      from {
-        opacity: 1;
-        transform: scale(1);
-      }
-
-      to {
-        opacity: 0;
-        transform: scale(0.9);
-      }
-    }
-
-    @keyframes chartSlideIn {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes pulseGlow {
-
-      0%,
-      100% {
-        box-shadow: 0 0 20px rgba(221, 27, 53, 0.3);
-      }
-
-      50% {
-        box-shadow: 0 0 30px rgba(221, 27, 53, 0.6);
-      }
+    * {
+      box-sizing: border-box
     }
 
     body {
       margin: 0;
       display: flex;
-      font-family: 'Montserrat', sans-serif;
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      color: #000000;
       min-height: 100vh;
+      font-family: 'Montserrat', sans-serif;
+      background: radial-gradient(1000px 600px at 10% 0%, #0b1428 0%, transparent 50%),
+        radial-gradient(900px 600px at 90% 10%, #0a0f1f 0%, transparent 50%),
+        linear-gradient(135deg, var(--bg-deep) 0%, var(--bg-dark) 100%);
+      color: var(--text);
     }
 
+    /* Sidebar (padrão index) */
     .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100%;
       width: 250px;
-      background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+      background: linear-gradient(180deg, #0b111c 0%, #0a0f1a 100%);
       padding: 30px 20px;
-      border-right: 2px solid #e9ecef;
+      border-right: 1px solid var(--line);
       height: 100vh;
       box-sizing: border-box;
-      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+      box-shadow: 2px 0 14px rgba(0, 0, 0, .35);
+      display: flex;
+      flex-direction: column;
+      transition: width 180ms ease;
     }
 
-    .sidebar img {
+    .sidebar-logo {
       width: 200px;
       display: block;
-      margin: 0 auto 30px auto;
-      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+      margin: 0 auto 20px;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .35));
+      transition: width 180ms ease, margin 180ms ease;
     }
 
-    .sidebar a.menu-item {
-      display: block;
-      margin-bottom: 16px;
-      color: #333333;
-      text-decoration: none;
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
       font-size: 14px;
-      font-weight: 500;
-      font-family: 'Montserrat', sans-serif;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      padding: 12px 16px;
-      border-radius: 12px;
-      position: relative;
-      overflow: hidden;
+      padding: 12px 18px;
+      border-radius: 10px;
+      color: var(--text-dim);
+      text-decoration: none;
+      margin-bottom: 8px;
+      font-weight: 501;
+      transition: background 0.2s, color 0.2s, transform 0.12s;
     }
 
-    .sidebar a.menu-item::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(221, 27, 53, 0.1), transparent);
-      transition: left 0.5s ease;
-    }
-
-    .sidebar a.menu-item i {
-      margin-right: 12px;
-      width: 20px;
+    .menu-item i {
+      width: 21px;
       text-align: center;
-      transition: transform 0.3s ease;
+      flex: 0 0 21px;
     }
 
-    .sidebar a.menu-item:hover {
-      color: #dd1b35;
-      background: rgba(221, 27, 53, 0.05);
-      transform: translateX(8px);
-      box-shadow: 0 4px 12px rgba(221, 27, 53, 0.15);
+    .menu-item:hover {
+      background: rgba(221, 27, 53, .12);
+      color: var(--red);
+      transform: translateX(4px);
     }
 
-    .sidebar a.menu-item:hover::before {
-      left: 100%;
+    .menu-item.logout {
+      color: #94a3b8;
+      margin-top: auto;
     }
 
-    .sidebar a.menu-item:hover i {
-      transform: scale(1.2);
+    .admin-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin: 0 0 7px 8px;
+      letter-spacing: 1px;
+    }
+
+    .divider {
+      margin: 18px 0 8px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .sidebar-toggle {
+      align-self: flex-end;
+      background: rgba(255, 255, 255, .03);
+      border: 1px solid rgba(255, 255, 255, .08);
+      color: #e5e7eb;
+      padding: 6px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 14px;
+      transition: background .2s, border-color .2s, transform .12s;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .sidebar-toggle:hover {
+      background: rgba(221, 27, 53, .10);
+      border-color: rgba(221, 27, 53, .35);
+      transform: translateY(-1px);
+    }
+
+    .sidebar-toggle i {
+      transition: transform 180ms ease;
+    }
+
+    .sidebar.is-collapsed {
+      width: 76px;
+    }
+
+    .sidebar.is-collapsed+.content {
+      margin-left: 76px;
+    }
+
+    .sidebar.is-collapsed .sidebar-logo {
+      width: 44px;
+      margin: 0 auto 24px;
+    }
+
+    .sidebar.is-collapsed .menu-item {
+      justify-content: center;
+      gap: 0;
+      padding: 12px 0;
+    }
+
+    .sidebar.is-collapsed .menu-item .label {
+      display: none;
+    }
+
+    .sidebar.is-collapsed .sidebar-toggle i {
+      transform: rotate(180deg);
     }
 
     .content {
-      margin-left: 220px;
-      flex-grow: 1;
+      margin-left: 250px;
+      flex: 1;
       padding: 40px;
       position: relative;
     }
 
     h2 {
-      font-size: 36px;
+      font-size: 34px;
       font-weight: 700;
       text-align: center;
-      color: #2c3e50;
-      margin-bottom: 40px;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      margin: 0 0 26px;
+      color: var(--text);
+      text-shadow: 0 2px 6px rgba(0, 0, 0, .35);
       position: relative;
     }
 
@@ -157,570 +198,162 @@
       transform: translateX(-50%);
       width: 80px;
       height: 4px;
-      background: linear-gradient(90deg, #dd1b35, #ff6b8a);
+      background: linear-gradient(90deg, var(--red), #ff6b8a);
       border-radius: 2px;
+      box-shadow: 0 0 12px rgba(221, 27, 53, .35);
     }
 
-    .user-menu {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-    }
-
-    .user-menu .user-avatar {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      border: 3px solid #dd1b35;
-      cursor: pointer;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 4px 16px rgba(221, 27, 53, 0.25);
-      background: #ffffff;
-    }
-
-    .user-menu .user-avatar:hover {
-      transform: scale(1.1) rotate(5deg);
-      box-shadow: 0 8px 25px rgba(221, 27, 53, 0.4);
-      border-color: #ff6b8a;
-    }
-
-    .dropdown {
-      position: relative;
-      display: inline-block;
-    }
-
-    .dropdown-menu {
-      display: none;
-      position: absolute;
-      right: 0;
-      top: 100%;
-      margin-top: 8px;
-      background: #ffffff;
-      border: 1px solid #e9ecef;
-      border-radius: 16px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-      list-style: none;
-      padding: 12px 0;
-      min-width: 200px;
-      z-index: 9999;
-      opacity: 0;
-      transform: translateY(-10px) scale(0.95);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      backdrop-filter: blur(20px);
-      pointer-events: none;
-    }
-
-    .dropdown-menu.show {
-      display: block;
-      opacity: 1;
-      transform: translateY(0) scale(1);
-      pointer-events: auto;
-    }
-
-
-    .dropdown-menu::before {
-      content: '';
-      position: absolute;
-      top: -10px;
-      right: 24px;
-      width: 0;
-      height: 0;
-      border-left: 10px solid transparent;
-      border-right: 10px solid transparent;
-      border-bottom: 10px solid #ffffff;
-      filter: drop-shadow(0 -3px 6px rgba(0, 0, 0, 0.1));
-    }
-
-    .dropdown-item {
-      display: block;
-      padding: 14px 24px;
-      color: #333333;
-      text-decoration: none;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 14px;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      border-radius: 12px;
-      margin: 3px 12px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .dropdown-item::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(221, 27, 53, 0.1), transparent);
-      transition: left 0.5s ease;
-    }
-
-    .dropdown-item:hover {
-      background: linear-gradient(90deg, rgba(221, 27, 53, 0.05), rgba(221, 27, 53, 0.1));
-      color: #dd1b35;
-      transform: translateX(6px);
-    }
-
-    .dropdown-item:hover::before {
-      left: 100%;
-    }
-
-    .dropdown-item i {
-      margin-right: 12px;
-      width: 18px;
-      text-align: center;
-      opacity: 0.8;
-      transition: all 0.3s ease;
-    }
-
-    .dropdown-item:hover i {
-      opacity: 1;
-      transform: scale(1.2);
-    }
-
-    .dropdown-separator {
-      height: 2px;
-      background: linear-gradient(90deg, transparent, #dd1b35, transparent);
-      margin: 12px 20px;
-      border-radius: 1px;
-    }
-
-    .payment-container {
-      background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-      padding: 40px;
+    .payment {
+      background: linear-gradient(145deg, var(--bg-elev) 0%, var(--bg-elev-2) 100%);
+      padding: 28px;
       border-radius: 20px;
-      box-shadow:
-        0 10px 30px rgba(0, 0, 0, 0.1),
-        0 0 0 1px rgba(255, 255, 255, 0.5) inset;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      max-width: 700px;
-      width: 100%;
+      max-width: 720px;
       margin: 0 auto;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, .45), 0 0 0 1px rgba(255, 255, 255, .04) inset;
       position: relative;
       overflow: hidden;
-      animation: chartSlideIn 0.8s ease-out;
-    }
-
-    .payment-container::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(221, 27, 53, 0.03), transparent);
-      transition: left 0.8s ease;
-    }
-
-    .payment-container:hover {
-      transform: translateY(-4px);
-      box-shadow:
-        0 20px 50px rgba(0, 0, 0, 0.15),
-        0 0 0 1px rgba(221, 27, 53, 0.1) inset;
-    }
-
-    .payment-container:hover::before {
-      left: 100%;
     }
 
     .section-title {
-      color: #2c3e50;
-      font-weight: 700;
-      font-size: 24px;
-      margin-bottom: 30px;
       text-align: center;
-      position: relative;
+      font-size: 22px;
+      margin: 0 0 18px;
     }
 
-    .section-title::after {
-      content: '';
-      position: absolute;
-      bottom: -10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60px;
-      height: 3px;
-      background: linear-gradient(90deg, #dd1b35, #ff6b8a);
-      border-radius: 2px;
-    }
-
-    .package-selector {
-      margin-bottom: 30px;
-      text-align: center;
-    }
-
-    .package-label {
-      display: block;
-      margin-bottom: 15px;
-      font-weight: 600;
-      color: #2c3e50;
-      font-size: 16px;
-    }
-
-    .package-select {
+    .select {
       width: 100%;
-      max-width: 400px;
-      padding: 15px 20px;
-      border: 2px solid #e9ecef;
-      border-radius: 15px;
-      font-size: 16px;
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 600;
-      background: #ffffff;
-      color: #2c3e50;
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-
-    .package-select:focus {
-      border-color: #dd1b35;
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(221, 27, 53, 0.1);
-    }
-
-    .package-benefits {
-      background: rgba(221, 27, 53, 0.05);
-      border: 1px solid rgba(221, 27, 53, 0.1);
-      border-radius: 15px;
-      padding: 25px;
-      margin: 30px 0;
-    }
-
-    .benefits-title {
+      max-width: 420px;
+      padding: 12px 14px;
+      border: 2px solid #283447;
+      border-radius: 12px;
+      background: #0f1a2a;
+      color: var(--text);
       font-weight: 700;
-      color: #2c3e50;
-      margin-bottom: 15px;
-      text-align: center;
-      font-size: 18px;
-    }
-
-    .benefits-list {
-      display: grid;
-      gap: 12px;
+      outline: none;
+      display: block;
+      margin: 0 auto 16px;
+      transition: .2s;
+      font-family: 'Montserrat', sans-serif;
       font-size: 14px;
     }
 
-    .benefit-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    .select:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(221, 27, 53, .12);
     }
 
-    .benefit-icon {
-      color: #dd1b35;
-      font-weight: bold;
+    .benefits {
+      background: rgba(221, 27, 53, .08);
+      border: 1px solid rgba(221, 27, 53, .2);
+      border-radius: 14px;
+      padding: 18px;
+      margin: 18px 0;
     }
 
-    .payment-methods {
-      margin: 30px 0;
-    }
-
-    .methods-title {
-      font-weight: 700;
-      color: #2c3e50;
-      margin-bottom: 20px;
+    .benefits h4 {
       text-align: center;
-      font-size: 18px;
+      margin: 0 0 10px;
     }
 
-    .methods-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 15px;
+    .benefits ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
     }
 
-    .method-item {
-      padding: 20px;
-      background: #ffffff;
-      border: 2px solid #e9ecef;
-      border-radius: 15px;
-      text-align: center;
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-
-    .method-item:hover {
-      border-color: rgba(221, 27, 53, 0.3);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(221, 27, 53, 0.1);
-    }
-
-    .method-icon {
-      font-size: 28px;
-      margin-bottom: 8px;
-    }
-
-    .method-name {
-      font-size: 12px;
-      font-weight: 600;
-      color: #2c3e50;
-    }
-
-    .rafah-button {
-      background: linear-gradient(135deg, #dd1b35 0%, #ff6b8a 100%);
-      color: #ffffff;
-      border: none;
-      padding: 16px 40px;
-      border-radius: 25px;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 16px;
+    /* Botões padronizados */
+    button,
+    .btn {
       font-family: 'Montserrat', sans-serif;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 4px 15px rgba(221, 27, 53, 0.3);
-      position: relative;
-      overflow: hidden;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .btn {
+      display: block;
       width: 100%;
       max-width: 300px;
       margin: 0 auto;
-      display: block;
+      border: none;
+      border-radius: 28px;
+      padding: 14px 24px;
+      background: linear-gradient(135deg, var(--red), var(--red-dark));
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 28px rgba(221, 27, 53, .35);
+      transition: .25s;
     }
 
-    .rafah-button::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transition: left 0.5s ease;
+    .btn:hover {
+      transform: translateY(-2px) scale(1.03);
     }
 
-    .rafah-button:hover {
-      background: linear-gradient(135deg, #ff6b8a 0%, #dd1b35 100%);
-      transform: translateY(-2px) scale(1.05);
-      box-shadow: 0 8px 25px rgba(221, 27, 53, 0.4);
-    }
-
-    .rafah-button:hover::before {
-      left: 100%;
-    }
-
-    .rafah-button:active {
-      transform: translateY(0) scale(0.98);
-    }
-
-    .rafah-button:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-
-    .security-info {
-      margin-top: 30px;
-      padding: 20px;
-      background: rgba(46, 204, 113, 0.05);
-      border: 1px solid rgba(46, 204, 113, 0.2);
-      border-radius: 15px;
+    .security {
+      margin-top: 18px;
+      padding: 14px;
+      background: rgba(46, 204, 113, .08);
+      border: 1px solid rgba(46, 204, 113, .25);
+      border-radius: 14px;
       text-align: center;
     }
 
-    .security-title {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-bottom: 10px;
-      font-weight: 700;
-      color: #2c3e50;
-    }
-
-    .security-description {
-      font-size: 14px;
-      color: #666;
-    }
-
-    .package-warning {
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      border-radius: 15px;
-      padding: 20px;
-      margin-bottom: 30px;
+    .warning {
+      background: rgba(239, 68, 68, .12);
+      border: 1px solid rgba(239, 68, 68, .35);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 18px;
       text-align: center;
-      color: #dc2626;
-    }
-
-    .warning-title {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-bottom: 10px;
-      font-weight: 700;
-    }
-
-    .loading-button {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-    }
-
-    .spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      border-top-color: white;
-      animation: spin 1s ease-in-out infinite;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    .top-profile {
-      position: fixed;
-      top: 18px;
-      right: 28px;
-      z-index: 1001;
-      background: none;
-      box-shadow: none;
-    }
-
-    .top-profile img {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      border: 2px solid #dd1b35;
-      box-shadow: 0 2px 8px rgba(221, 27, 53, 0.10);
-      background: #fff;
-      margin-bottom: 6px;
-      transition: box-shadow 0.2s, border-color 0.2s;
-    }
-
-    .top-profile img:hover {
-      box-shadow: 0 4px 16px rgba(221, 27, 53, 0.13);
-      border-color: #ff6b8a;
-    }
-
-    .top-profile span {
-      font-size: 13px;
-      color: #dd1b35;
-      font-weight: 500;
-      letter-spacing: 0.1px;
-      transition: color 0.2s;
-    }
-
-    .top-profile a:hover span {
-      color: #ff6b8a;
-    }
-
-    @media (max-width: 700px) {
-      .top-profile {
-        right: 10px;
-        top: 8px;
-      }
     }
   </style>
 </head>
 
 <body>
-  <div class="top-profile">
-    <a href="{{ url_for('account') }}"
-      style="display: flex; flex-direction: column; align-items: center; text-decoration: none;">
-      <img
-        src="{{ url_for('static', filename=(user.get('profile_image', 'images/user-icon.png') if user else 'images/user-icon.png')) }}"
-        alt="Minha Conta"
-        style="width:48px; height:48px; border-radius:50%; border:2px solid #dd1b35; box-shadow:0 2px 8px rgba(221,27,53,0.10); background:#fff; margin-bottom:6px;">
-      <span style="font-size:13px; color:#dd1b35; font-weight:500;">Meu Perfil</span>
-    </a>
-  </div>
-
-  <script>
-    function toggleDropdown(event) {
-      event.stopPropagation();
-      const dropdown = document.getElementById('userDropdown');
-      const isVisible = dropdown.classList.contains('show');
-
-      // Fechar todos os dropdowns abertos
-      document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-        menu.classList.remove('show');
-      });
-
-      // Se não estava visível, mostrar
-      if (!isVisible) {
-        dropdown.classList.add('show');
-      }
-    }
-
-    // Fechar dropdown ao clicar fora
-    document.addEventListener('click', function (event) {
-      const dropdown = document.querySelector('.dropdown');
-      if (!dropdown.contains(event.target)) {
-        document.getElementById('userDropdown').classList.remove('show');
-      }
-    });
-
-    // Fechar dropdown com ESC
-    document.addEventListener('keydown', function (event) {
-      if (event.key === 'Escape') {
-        document.getElementById('userDropdown').classList.remove('show');
-      }
-    });
-
-    // Prevenir que cliques no dropdown o fechem
-    document.getElementById('userDropdown').addEventListener('click', function (event) {
-      event.stopPropagation();
-    });
-
-    function simulatePayment() {
-      const button = document.getElementById('paymentButton');
-      const select = document.getElementById('packageSelect');
-
-      if (!select.value) {
-        alert('Por favor, selecione um pacote.');
-        return false;
-      }
-
-      button.disabled = true;
-      button.innerHTML = `
-    <div class="loading-button">
-      <div class="spinner"></div>
-      Processando...
-    </div>
-  `;
-
-      setTimeout(() => {
-        alert('Pagamento gerado com sucesso! Redirecionando...');
-        button.disabled = false;
-        button.innerHTML = '<span></span> Gerar Pagamento';
-      }, 3000);
-
-      return false;
-    }
-  </script>
-
+  <!-- Sidebar -->
   <div class="sidebar">
-    <a href="{{ url_for('index') }}">
-      <img src="{{ url_for('static', filename='images/logocompleta.svg') }}">
+    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Minimizar/Maximizar menu">
+      <i class="fa fa-angle-double-left"></i>
+    </button>
+
+    <img src="{{ url_for('static', filename='images/logocompleta.svg') }}" class="sidebar-logo" alt="Logo RafahMed">
+
+    <a href="{{ url_for('index') }}" class="menu-item"><i class="fa fa-home"></i> <span class="label">Início</span></a>
+    <a href="{{ url_for('upload') }}" class="menu-item"><i class="fa fa-upload"></i> <span class="label">Ponza
+        Lab</span></a>
+    <a href="{{ url_for('quiz_results') }}" class="menu-item"><i class="fa fa-list-alt"></i> <span
+        class="label">Autoavaliações</span></a>
+    <a href="{{ url_for('quote_index') }}" class="menu-item"><i class="fa fa-file-text-o"></i> <span
+        class="label">Cotações</span></a>
+    <a href="{{ url_for('catalog') }}" class="menu-item"><i class="fa fa-users"></i> <span
+        class="label">Pacientes</span></a>
+    <a href="{{ url_for('products') }}" class="menu-item"><i class="fa fa-archive"></i> <span
+        class="label">Estoque</span></a>
+    <a href="{{ url_for('agenda') }}" class="menu-item"><i class="fa fa-calendar"></i> <span
+        class="label">Agenda</span></a>
+    <a href="{{ url_for('purchase') }}" class="menu-item"><i class="fa fa-credit-card"></i> <span
+        class="label">Pagamentos</span></a>
+    <a href="{{ url_for('training') }}" class="menu-item" title="Treinamento">
+      <i class="fa fa-play-circle"></i> <span class="label">Treinamento</span>
     </a>
-    <a href="{{ url_for('upload') }}" class="menu-item"><i class="fa fa-upload"></i> Ponza Lab</a>
-    <a href="{{ url_for('quiz_results') }}" class="menu-item"><i class="fa fa-list-alt"></i> Autoavaliações</a>
-    <a href="{{ url_for('quote_index') }}" class="menu-item"><i class="fa fa-file-text-o"></i> Cotações</a>
-    <a href="{{ url_for('catalog') }}" class="menu-item"><i class="fa fa-users"></i> Pacientes</a>
-    <a href="{{ url_for('products') }}" class="menu-item"><i class="fa fa-archive"></i> Estoque</a>
-    <a href="{{ url_for('agenda') }}" class="menu-item"><i class="fa fa-calendar"></i> Agenda</a>
-    <a href="{{ url_for('purchase') }}" class="menu-item"><i class="fa fa-credit-card"></i> Pagamentos</a>
-    <a href="{{ url_for('logout') }}" class="menu-item" style="color:#888;"><i class="fa fa-sign-out"></i> Sair</a>
+
+    {% if username and username|lower == 'admin' %}
+    <div class="divider"></div>
+    <div class="admin-label">Administração</div>
+    <a href="{{ url_for('admin_companies') }}" class="menu-item" style="color:#f87171;"><i class="fa fa-cog"></i> <span
+        class="label">Admin</span></a>
+    {% endif %}
+
+    <a href="{{ url_for('logout') }}" class="menu-item logout"><i class="fa fa-sign-out"></i> <span
+        class="label">Sair</span></a>
   </div>
 
   <div class="content">
     <h2>Pagamentos</h2>
-
-    <div class="payment-container">
+    <div class="payment">
       {% if request.args.get('message') == 'pacote' %}
-      <div class="package-warning">
-        <div class="warning-title">
-          <i class="fa fa-exclamation-triangle"></i>
-          <strong>Pacote esgotado!</strong>
-        </div>
+      <div class="warning">
+        <div style="font-weight:800;margin-bottom:6px"><i class="fa fa-exclamation-triangle"></i> Pacote esgotado!</div>
         <p>Seu pacote de análises acabou. Por favor, adquira mais para continuar usando o Ponza Lab.</p>
       </div>
       {% endif %}
@@ -728,54 +361,32 @@
       <form method="post">
         <h3 class="section-title">Comprar Pacote de Análises</h3>
 
-        <!-- Package Selection -->
-        <div class="package-selector">
-          <label for="packageSelect" class="package-label">Selecione o Pacote</label>
-          <select name="package" id="packageSelect" class="package-select" required>
-            <option value="">Escolha seu pacote...</option>
-            <option value="50">50 Análises - R$ 120</option>
-            <option value="150">150 Análises - R$ 300</option>
-            <option value="500">500 Análises - R$ 950</option>
-          </select>
+        <label for="packageSelect"
+          style="display:block;text-align:center;margin-bottom:6px;font-weight:700;color:var(--muted)">
+          Selecione o Pacote
+        </label>
+        <select name="package" id="packageSelect" class="select" required>
+          <option value="">Escolha seu pacote...</option>
+          <option value="50">50 Análises - R$ 120</option>
+          <option value="150">150 Análises - R$ 300</option>
+          <option value="500">500 Análises - R$ 950</option>
+        </select>
+
+        <div class="benefits">
+          <h4>Benefícios Inclusos</h4>
+          <ul>
+            <li>Análises durante a validade do pacote</li>
+            <li>Relatórios detalhados em PDF</li>
+            <li>Suporte técnico prioritário</li>
+            <li>Backup automático dos dados</li>
+          </ul>
         </div>
 
-        <!-- Package Benefits -->
-        <div class="package-benefits">
-          <h4 class="benefits-title">Benefícios Inclusos</h4>
-          <div class="benefits-list">
-            <div class="benefit-item">
-              <span class="benefit-icon">✅</span>
-              <span>Análises ilimitadas durante a validade</span>
-            </div>
-            <div class="benefit-item">
-              <span class="benefit-icon">✅</span>
-              <span>Relatórios detalhados em PDF</span>
-            </div>
-            <div class="benefit-item">
-              <span class="benefit-icon">✅</span>
-              <span>Suporte técnico prioritário</span>
-            </div>
-            <div class="benefit-item">
-              <span class="benefit-icon">✅</span>
-              <span>Backup automático dos dados</span>
-            </div>
-          </div>
-        </div>
+        <button type="submit" id="paymentButton" class="btn">Gerar Pagamento</button>
 
-        <!-- Submit Button -->
-        <button type="submit" id="paymentButton" class="rafah-button">
-          <span></span> Gerar Pagamento
-        </button>
-
-        <!-- Security Info -->
-        <div class="security-info">
-          <div class="security-title">
-            <span>🔒</span>
-            <strong>Pagamento 100% Seguro</strong>
-          </div>
-          <p class="security-description">
-            Seus dados são protegidos com criptografia SSL de última geração.
-          </p>
+        <div class="security">
+          <div style="font-weight:800;margin-bottom:6px">🔒 Pagamento 100% Seguro</div>
+          <p style="color:var(--muted)">Seus dados são protegidos com criptografia SSL.</p>
         </div>
       </form>
     </div>

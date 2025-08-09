@@ -2,250 +2,328 @@
 <html lang="pt-br">
 
 <head>
-  <meta charset="UTF-8">
-  <title>Cotações - RafahMed</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
-  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <title>Cotações — RafahMed</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
   <style>
+    :root {
+      --bg-deep: #080b12;
+      --bg-dark: #0b1220;
+      --bg-elev: #111827;
+      --bg-elev-2: #0f172a;
+      --text: #e5e7eb;
+      --text-dim: #cbd5e1;
+      --muted: #94a3b8;
+      --line: #1f2937;
+      --red: #dd1b35;
+      --red-dark: #b81429;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
     body {
       margin: 0;
-      font-family: 'Montserrat', sans-serif;
-      background-color: #f9f9f9;
-    }
-
-    h2 {
-      font-size: 36px;
-      font-weight: 700;
-      text-align: center;
-      color: #2c3e50;
-      margin-bottom: 40px;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      position: relative;
-    }
-
-    .top-menu {
-      background-color: white;
-      padding: 10px 0;
       display: flex;
-      justify-content: center;
-      gap: 20px;
-      border-bottom: 1px solid #eee;
-    }
-
-    .top-menu a {
+      min-height: 100vh;
       font-family: 'Montserrat', sans-serif;
-      font-weight: 500;
-      font-size: 14px;
-      color: #000000;
-      text-decoration: none;
-      padding: 8px 12px;
-      border-radius: 6px;
-      transition: 0.3s;
+      color: var(--text);
+      background: radial-gradient(1000px 600px at 10% 0%, #0b1428 0%, transparent 50%),
+        radial-gradient(900px 600px at 90% 10%, #0a0f1f 0%, transparent 50%),
+        linear-gradient(135deg, var(--bg-deep), var(--bg-dark));
     }
 
-    .top-menu a:hover {
-      background-color: #dd1b35;
-      color: white;
+    /* Sidebar padronizada */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 250px;
+      background: linear-gradient(180deg, #0b111c 0%, #0a0f1a 100%);
+      padding: 30px 20px;
+      border-right: 1px solid var(--line);
+      box-shadow: 2px 0 14px rgba(0, 0, 0, .35);
+      display: flex;
+      flex-direction: column;
+      transition: width 180ms ease;
+      z-index: 1000
+    }
+
+    .sidebar-toggle {
+      align-self: flex-end;
+      background: rgba(255, 255, 255, .03);
+      border: 1px solid rgba(255, 255, 255, .08);
+      color: #e5e7eb;
+      padding: 6px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 14px;
+      font-size: 14px;
+      font-weight: 700
+    }
+
+    .sidebar-toggle i {
+      transition: transform 180ms ease
+    }
+
+    .sidebar-logo {
+      width: 200px;
+      display: block;
+      margin: 0 auto 20px;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .35));
+      transition: width 180ms ease, margin 180ms ease
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 14px;
+      padding: 12px 18px;
+      border-radius: 10px;
+      color: var(--text-dim);
+      text-decoration: none;
+      margin-bottom: 8px;
+      font-weight: 500;
+      transition: background .2s, color .2s, transform .12s
+    }
+
+    .menu-item i {
+      width: 21px;
+      text-align: center;
+      flex: 0 0 21px
+    }
+
+    .menu-item:hover {
+      background: rgba(221, 27, 53, .12);
+      color: var(--red);
+      transform: translateX(4px)
+    }
+
+    .menu-item.logout {
+      color: #94a3b8;
+      margin-top: auto
+    }
+
+    .menu-item.admin {
+      color: #f87171
+    }
+
+    .sidebar.is-collapsed {
+      width: 76px
+    }
+
+    .sidebar.is-collapsed+.content {
+      margin-left: 76px
+    }
+
+    .sidebar.is-collapsed .sidebar-logo {
+      width: 44px;
+      margin: 0 auto 24px
+    }
+
+    .sidebar.is-collapsed .menu-item {
+      justify-content: center;
+      gap: 0;
+      padding: 12px 0
+    }
+
+    .sidebar.is-collapsed .menu-item .label {
+      display: none
+    }
+
+    .sidebar.is-collapsed .sidebar-toggle i {
+      transform: rotate(180deg)
     }
 
     .content {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 20px;
+      margin-left: 250px;
+      flex: 1;
+      padding: 40px;
+      transition: margin-left 180ms ease
+    }
+
+    h2 {
+      font-size: 34px;
+      font-weight: 700;
       text-align: center;
+      margin: 0 0 26px;
+      position: relative
     }
 
-    .logo-img {
-      width: 100px;
-      display: block;
-      margin: 0 auto 20px auto;
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--red), #ff6b8a);
+      border-radius: 2px;
+      box-shadow: 0 0 12px rgba(221, 27, 53, .35)
     }
 
-    .header {
-      text-align: center;
-      margin-bottom: 20px;
+    .actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 14px
     }
 
-    .header h2 {
-      font-size: 26px;
-      color: #2c3e50;
-      margin: 0;
-    }
-
-    .menu-button {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 14px;
-      font-weight: 500;
-      color: #000000;
-      border: 2px solid #dd1b35;
-      background-color: white;
-      padding: 10px 16px;
-      border-radius: 6px;
-      text-decoration: none;
-      transition: 0.3s ease;
-      cursor: pointer;
-    }
-
-    .menu-button:hover {
-      background-color: #dd1b35;
-      color: white;
-    }
-
-    .catalog-table {
-      width: 100%;
-      max-width: 900px;
-      margin: 20px auto 0 auto;
-      border-collapse: collapse;
-      background-color: #fff;
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 18px;
       border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-      margin-top: 20px;
-    }
-
-    .catalog-table th,
-    .catalog-table td {
-      padding: 12px 14px;
-      border-bottom: 1px solid #ddd;
-      text-align: center;
-    }
-
-    .catalog-table th {
-      background-color: #f5f5f5;
-      font-weight: 600;
-      color: #2c3e50;
-    }
-
-    .catalog-table tr:hover {
-      background-color: #f4fcfd;
+      border: none;
+      background: var(--red);
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
       cursor: pointer;
+      transition: .25s;
+      text-decoration: none
+    }
+
+    .btn:hover {
+      background: var(--red-dark);
+      transform: translateY(-1px)
+    }
+
+    .table {
+      width: 100%;
+      max-width: 980px;
+      margin: 0 auto 10px;
+      border-collapse: collapse;
+      background: var(--bg-elev);
+      border: 1px solid rgba(255, 255, 255, .05);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, .35)
+    }
+
+    .table th,
+    .table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: center;
+      font-size: 14px
+    }
+
+    .table th {
+      background: var(--bg-elev-2);
+      font-weight: 700
+    }
+
+    .table tr:hover {
+      background: rgba(221, 27, 53, .08);
+      cursor: pointer
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 11px;
+      display: block;
+      margin-top: 4px
     }
   </style>
+  <script>
+    function toggleSidebar() { const s = document.querySelector('.sidebar'); s.classList.toggle('is-collapsed'); localStorage.setItem('sidebarCollapsed', s.classList.contains('is-collapsed') ? '1' : '0'); }
+    document.addEventListener('DOMContentLoaded', () => { if (localStorage.getItem('sidebarCollapsed') === '1') { document.querySelector('.sidebar')?.classList.add('is-collapsed'); } });
+  </script>
 </head>
 
 <body>
-  <div class="top-menu">
-    <div style="position: absolute; left: 20px;">
-        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" style="height: 40px;">
-    </div>
-    <a href="{{ url_for('index') }}">Início</a>
-    <a href="{{ url_for('upload') }}">Ponza Lab</a>
-    <a href="{{ url_for('quiz_results') }}">Autoavaliações</a>
-    <a href="{{ url_for('quote_index') }}">Cotações</a>
-    <a href="{{ url_for('catalog') }}">Pacientes</a>
-    <a href="{{ url_for('products') }}">Estoque</a>
-    <a href="{{ url_for('agenda') }}">Agenda</a>
-    <a href="{{ url_for('logout') }}">Sair</a>
+  <!-- Sidebar padronizada -->
+  <div class="sidebar">
+    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Minimizar/Maximizar menu">
+      <i class="fa fa-angle-double-left"></i>
+    </button>
+
+    <img src="{{ url_for('static', filename='images/logocompleta.svg') }}" class="sidebar-logo" alt="Logo RafahMed">
+
+    <a href="{{ url_for('index') }}" class="menu-item" title="Início"><i class="fa fa-home"></i> <span
+        class="label">Início</span></a>
+    <a href="{{ url_for('upload') }}" class="menu-item" title="Ponza Lab"><i class="fa fa-upload"></i> <span
+        class="label">Ponza Lab</span></a>
+    <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-list-alt"></i>
+      <span class="label">Autoavaliações</span></a>
+    <a href="{{ url_for('quote_index') }}" class="menu-item" title="Cotações"><i class="fa fa-file-text-o"></i> <span
+        class="label">Cotações</span></a>
+    <a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-users"></i> <span
+        class="label">Pacientes</span></a>
+    <a href="{{ url_for('products') }}" class="menu-item" title="Estoque"><i class="fa fa-archive"></i> <span
+        class="label">Estoque</span></a>
+    <a href="{{ url_for('agenda') }}" class="menu-item" title="Agenda"><i class="fa fa-calendar"></i> <span
+        class="label">Agenda</span></a>
+    <a href="{{ url_for('purchase') }}" class="menu-item" title="Pagamentos"><i class="fa fa-credit-card"></i> <span
+        class="label">Pagamentos</span></a>
+    <a href="{{ url_for('training') }}" class="menu-item" title="Treinamento"><i class="fa fa-play-circle"></i> <span
+        class="label">Treinamento</span></a>
+
+    {% if username and username|lower == 'admin' %}
+    <div style="margin:18px 0 8px 0; border-top:1px solid #1f2937;"></div>
+    <a href="{{ url_for('admin_companies') }}" class="menu-item admin" title="Admin"><i class="fa fa-cog"></i> <span
+        class="label">Admin</span></a>
+    {% endif %}
+
+    <a href="{{ url_for('logout') }}" class="menu-item logout" title="Sair"><i class="fa fa-sign-out"></i> <span
+        class="label">Sair</span></a>
   </div>
 
   <div class="content">
-      <h2>Cotações Criadas</h2>
-      <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-        <a href="{{ url_for('create_quote') }}" class="menu-button">Nova Cotação</a>
-        <a href="{{ url_for('suppliers') }}" class="menu-button">Gerenciar Fornecedores</a>
-      </div>
+    <h2>Cotações Criadas</h2>
+    <div class="actions">
+      <a href="{{ url_for('create_quote') }}" class="btn">Nova Cotação</a>
+      <a href="{{ url_for('suppliers') }}" class="btn">Gerenciar Fornecedores</a>
     </div>
+
+    {% if quotes %}
+    <table class="table" aria-label="Tabela de cotações">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Criada em</th>
+          <th>Fornecedores</th>
+          <th>Respostas</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for quote in quotes %}
+        <tr>
+          <td onclick="window.location='{{ url_for('quote_results', quote_id=quote.id) }}'">{{ quote.title }}</td>
+          <td onclick="window.location='{{ url_for('quote_results', quote_id=quote.id) }}'">{{
+            quote.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+          <td onclick="window.location='{{ url_for('quote_results', quote_id=quote.id) }}'">
+            {{ quote.supplier_list | length }}
+            {% if quote.supplier_list %}<span class="hint">{{ quote.supplier_list | join(', ') }}</span>{% endif %}
+          </td>
+          <td onclick="window.location='{{ url_for('quote_results', quote_id=quote.id) }}'">{{ quote.responses | length
+            }}</td>
+          <td>
+            <form method="post" action="{{ url_for('delete_quote', quote_id=quote.id) }}"
+              onsubmit="return confirm('Deseja realmente excluir esta cotação?')" style="display:inline;">
+              <button type="submit" title="Excluir" aria-label="Excluir"
+                style="background:none;border:none;font-size:18px;color:#9ca3af;cursor:pointer">×</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="text-align:center;color:var(--muted)">Nenhuma cotação encontrada.</p>
+    {% endif %}
   </div>
-
-  {% if quotes %}
-  <table class="catalog-table">
-    <thead>
-      <tr>
-        <th>Nome</th>
-        <th>Criada em</th>
-        <th>Fornecedores</th>
-        <th>Respostas</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for quote in quotes %}
-      <tr>
-        <td onclick="window.location='{{ url_for('quote_results', quote_id=quote.id) }}'">{{ quote.title }}</td>
-        <td onclick="window.location='{{ url_for('quote_results', quote_id=quote.id) }}'">{{ quote.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
-        <td onclick="window.location='{{ url_for('quote_results', quote_id=quote.id) }}'">
-          {{ quote.supplier_list | length }}
-          <span style="color: #bbb; font-size: 11px;">
-            {% if quote.supplier_list %}
-              <br>
-              {{ quote.supplier_list | join(', ') }}
-            {% endif %}
-          </span>
-        </td>
-        <td onclick="window.location='{{ url_for('quote_results', quote_id=quote.id) }}'">
-          {{ quote.responses | length }}
-        </td>
-        <td>
-          <form method="post" action="{{ url_for('delete_quote', quote_id=quote.id) }}"
-            onsubmit="return confirm('Deseja realmente excluir esta cotação?')" style="display:inline;">
-            <button type="submit" style="background:none; border:none; font-size:18px; color:#999; cursor:pointer;"
-              title="Excluir">×</button>
-          </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>    
-  </table>
-
-  {% else %}
-  <p style="text-align:center; color:#888;">Nenhuma cotação encontrada.</p>
-  {% endif %}
-  </div>
-  <!-- MODAL DE ADICIONAR FORNECEDOR -->
-  <div id="addSupplierModal"
-    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000;">
-    <div style="background:white; padding:20px; border-radius:10px; width:90%; max-width:320px; position:relative;">
-
-      <button onclick="closeSupplierModal()" style="
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: none;
-    border: none;
-    font-size: 22px;
-    font-weight: bold;
-    color: #000000;
-    cursor: pointer;
-    transition: color 0.3s ease;
-  " onmouseover="this.style.color='#dd1b35';" onmouseout="this.style.color='#000000';">
-        ×
-      </button>
-
-      <h2 style="text-align:center; margin-top: 10px;">Cadastrar Fornecedor</h2>
-      <form method="post" action="{{ url_for('add_supplier') }}">
-        <input type="text" name="name" placeholder="Nome do Fornecedor" required
-          style="width:93%; padding:10px; border:1px solid #ccc; border-radius:6px; margin-bottom:10px; font-size: 14px; font-family: 'Montserrat', sans-serif;">
-        <input type="email" name="email" placeholder="E-mail" required
-          style="width:93%; padding:10px; border:1px solid #ccc; border-radius:6px; margin-bottom:10px; font-size: 14px; font-family: 'Montserrat', sans-serif;">
-        <input type="text" name="phone" placeholder="Telefone" required
-          style="width:93%; padding:10px; border:1px solid #ccc; border-radius:6px; margin-bottom:10px; font-size: 14px; font-family: 'Montserrat', sans-serif;">
-        <div style="display:flex; justify-content:center;">
-          <button type="submit" class="menu-button" style="width: 100%;">Salvar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- SCRIPTS -->
-  <script>
-    function openSupplierModal() {
-      const modal = document.getElementById('addSupplierModal');
-      if (modal) modal.style.display = 'flex';
-    }
-
-    function closeSupplierModal() {
-      const modal = document.getElementById('addSupplierModal');
-      if (modal) modal.style.display = 'none';
-    }
-
-    // Fecha o modal ao clicar fora dele
-    window.addEventListener('click', function (e) {
-      const modal = document.getElementById('addSupplierModal');
-      if (modal && e.target === modal) {
-        closeSupplierModal();
-      }
-    });
-  </script>
 </body>
 
 </html>

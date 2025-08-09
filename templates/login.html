@@ -5,43 +5,103 @@
   <meta charset="UTF-8" />
   <title>Login - RafahMed</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     body {
       font-family: 'Montserrat', sans-serif;
-      background-color: white;
     }
 
     :root {
       --rafahmed-red: #dd1b35;
       --rafahmed-red-dark: #b81429;
+      --rafahmed-red-light: #ff3854;
+      --black-blue-1: #080b12;
+      /* base quase preta */
+      --black-blue-2: #0a0f1f;
+      /* azul bem escuro */
+      --black-blue-3: #0f172a;
+      /* elevação */
+      --text: #e5e7eb;
+      --text-dim: #cbd5e1;
+      --stroke: #1f2937;
     }
 
-    .footer a {
-      color: var(--rafahmed-red);
-      text-decoration: none;
-    }
-
-    .footer a:hover {
-      text-decoration: underline;
+    .hero-gradient {
+      background:
+        radial-gradient(1200px 600px at 10% 10%, #0a1430 0%, transparent 50%),
+        radial-gradient(900px 500px at 90% 0%, #0a1124 0%, transparent 55%),
+        linear-gradient(135deg, var(--black-blue-1) 0%, var(--black-blue-2) 100%);
     }
 
     .navbar-blur {
       backdrop-filter: blur(10px);
-      background: rgba(255, 255, 255, 0.95);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      background: rgba(8, 11, 18, 0.85);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .card {
+      background: linear-gradient(145deg, var(--black-blue-3) 0%, var(--black-blue-2) 100%);
+      border: 1px solid rgba(255, 255, 255, .06);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, .45);
+    }
+
+    .input {
+      width: 100%;
+      padding: .8rem 1rem;
+      border-radius: .75rem;
+      border: 2px solid var(--stroke);
+      background: var(--black-blue-2);
+      color: var(--text);
+      outline: none;
+      transition: .2s;
+    }
+
+    .input:focus {
+      border-color: var(--rafahmed-red);
+      box-shadow: 0 0 0 4px rgba(221, 27, 53, .12);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--rafahmed-red), var(--rafahmed-red-dark));
+      color: #fff;
+      border: 0;
+      border-radius: 999px;
+      padding: .9rem 1.2rem;
+      font-weight: 800;
+      box-shadow: 0 12px 30px rgba(221, 27, 53, .28);
+      transition: .25s;
+      width: 100%;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 18px 44px rgba(221, 27, 53, .38);
+    }
+
+    .btn-outline {
+      color: var(--rafahmed-red);
+      border: 1px solid var(--rafahmed-red);
+      border-radius: 999px;
+      padding: .6rem 1rem;
+      font-weight: 600;
+      transition: .25s;
+    }
+
+    .btn-outline:hover {
+      background: var(--rafahmed-red);
+      color: #fff;
     }
   </style>
 </head>
 
-<body class="text-gray-800">
+<body class="bg-[var(--black-blue-1)] text-[var(--text)]">
 
-  <!-- NAVBAR ATUALIZADA -->
+  <!-- NAVBAR -->
   <header class="navbar-blur py-4 px-6 fixed top-0 left-0 w-full z-50">
     <div class="max-w-7xl mx-auto flex items-center justify-between">
-      <!-- Logo -->
       <div class="flex items-center flex-shrink-0">
         <a href="{{ url_for('hero') }}">
           <img src="{{ url_for('static', filename='images/flatlogo.svg') }}" alt="Logo RafahMed"
@@ -49,82 +109,73 @@
         </a>
       </div>
 
-      <!-- Menu Centralizado -->
       <nav class="hidden md:flex space-x-8 text-sm font-medium">
         <a href="{{ url_for('hero') }}#quem-somos"
-          class="hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
+          class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
           Quem Somos
           <span
             class="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--rafahmed-red)] transition-all duration-300 group-hover:w-full"></span>
         </a>
         <a href="{{ url_for('hero') }}#psicologos"
-          class="hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
+          class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
           Para Psicólogos
           <span
             class="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--rafahmed-red)] transition-all duration-300 group-hover:w-full"></span>
         </a>
         <a href="{{ url_for('hero') }}#empresas"
-          class="hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
+          class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
           Para Empresas
           <span
             class="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--rafahmed-red)] transition-all duration-300 group-hover:w-full"></span>
         </a>
-        <a href="{{ url_for('hero') }}#agendar"
-          class="hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
+        <a href="{{ url_for('schedule_consultation') }}"
+          class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
           Agendar Consulta
           <span
             class="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--rafahmed-red)] transition-all duration-300 group-hover:w-full"></span>
         </a>
       </nav>
 
-      <!-- Botões à Direita -->
       <div class="hidden md:flex items-center space-x-4">
         <a href="/register"
-          class="text-sm font-semibold text-[var(--rafahmed-red)] hover:text-[var(--rafahmed-red-dark)] transition-colors duration-300 px-4 py-2 rounded-full border border-[var(--rafahmed-red)] hover:bg-[var(--rafahmed-red)] hover:text-white">
+          class="text-sm font-semibold text-[var(--rafahmed-red)] hover:text-[#ff5169] transition-colors duration-300 px-4 py-2 rounded-full border border-[var(--rafahmed-red)] hover:bg-[var(--rafahmed-red)] hover:text-white">
           Cadastrar
         </a>
         <a href="/login"
-          class="text-sm font-semibold text-[var(--rafahmed-red)] hover:text-[var(--rafahmed-red-dark)] transition-colors duration-300 px-4 py-2 rounded-full border border-[var(--rafahmed-red)] hover:bg-[var(--rafahmed-red)] hover:text-white">
+          class="text-sm font-semibold text-[var(--rafahmed-red)] hover:text-[#ff5169] transition-colors duration-300 px-4 py-2 rounded-full border border-[var(--rafahmed-red)] hover:bg-[var(--rafahmed-red)] hover:text-white">
           Entrar
         </a>
       </div>
     </div>
   </header>
 
-<!-- LOGIN FORM -->
-<main class="pt-32 min-h-screen flex flex-col items-center justify-start px-4">
-  <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-8 w-full max-w-md text-center">
-    <h2 class="text-2xl font-bold mb-6 text-[var(--rafahmed-red)]">Entrar</h2>
+  <!-- FORM LOGIN -->
+  <main class="hero-gradient min-h-screen pt-32 pb-16 px-4">
+    <div class="max-w-7xl mx-auto flex justify-center">
+      <div class="card rounded-2xl p-8 w-full max-w-md">
+        <h2 class="text-3xl font-bold mb-2 text-white text-center">Entrar</h2>
+        <p class="text-[var(--text-dim)] text-sm text-center mb-6">Acesse sua conta para continuar</p>
 
-    <form method="post" class="space-y-4">
-      <input
-        type="text"
-        name="login"
-        placeholder="E‑mail"
-        required
-        class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--rafahmed-red)]"
-      >
-      <input
-        type="password"
-        name="password"
-        placeholder="Senha"
-        required
-        class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--rafahmed-red)]"
-      >
-      <button
-        type="submit"
-        class="w-full bg-[var(--rafahmed-red)] text-white py-2 rounded-md font-semibold hover:bg-red-700 transition"
-      >
-        Entrar
-      </button>
-      {% if error %}
-        <p class="text-red-600 text-sm mt-4">{{ error }}</p>
-      {% endif %}
-    </form>
-  </div>
-</main>
+        <form method="post" novalidate class="space-y-4">
+          <input type="text" name="login" placeholder="E-mail" required class="input">
+          <input type="password" name="password" placeholder="Senha" required class="input">
+          <button type="submit" class="btn-primary">Entrar</button>
 
+          {% if error %}
+          <p class="text-center text-[#f87171] font-semibold mt-2">{{ error }}</p>
+          {% endif %}
+        </form>
 
+        <div class="text-center mt-6 text-sm">
+          <span class="text-[var(--text-dim)]">Ainda não tem conta?</span>
+          <a href="{{ url_for('register') }}"
+            class="text-[var(--rafahmed-red)] hover:text-[#ff5169] font-semibold ml-1">
+            Cadastre-se
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
 </body>
 
 </html>

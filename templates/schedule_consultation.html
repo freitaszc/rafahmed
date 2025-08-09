@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
   <meta charset="UTF-8">
   <title>Agendar Consulta - RafahMed</title>
@@ -11,110 +12,145 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
   <style>
+    :root {
+      --bg-deep: #080b12;
+      --bg-dark: #0b1220;
+      --bg-elev: #111827;
+      --bg-elev-2: #0f172a;
+      --text: #e5e7eb;
+      --text-dim: #cbd5e1;
+      --muted: #94a3b8;
+      --stroke: #1f2937;
+      --red: #dd1b35;
+      --red-dark: #b81429;
+    }
+
     body {
       font-family: 'Montserrat', sans-serif;
+      background:
+        radial-gradient(1000px 600px at 10% 0%, #0b1428 0%, transparent 50%),
+        radial-gradient(900px 600px at 90% 10%, #0a0f1f 0%, transparent 50%),
+        linear-gradient(135deg, var(--bg-deep) 0%, var(--bg-dark) 100%);
+      color: var(--text);
+      margin: 0;
+    }
+
+    .card {
+      background: linear-gradient(145deg, var(--bg-elev) 0%, var(--bg-elev-2) 100%);
+      border: 1px solid rgba(255, 255, 255, .06);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, .45);
+    }
+
+    label {
+      color: var(--text-dim);
+    }
+
+    .input,
+    .select {
+      width: 100%;
+      padding: .6rem .9rem;
+      border-radius: .5rem;
+      border: 1px solid var(--stroke);
+      background: var(--bg-elev-2);
+      color: var(--text);
+      outline: none;
+      transition: .2s;
+    }
+
+    .input:focus,
+    .select:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 4px rgba(221, 27, 53, .12);
+    }
+
+    .btn {
+      width: 100%;
+      padding: .85rem;
+      background: linear-gradient(135deg, var(--red), var(--red-dark));
+      color: #fff;
+      font-weight: 700;
+      border: 0;
+      border-radius: .6rem;
+      cursor: pointer;
+      transition: .25s;
+      box-shadow: 0 12px 30px rgba(221, 27, 53, .28);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 18px 44px rgba(221, 27, 53, .38);
+    }
+
+    a.link {
+      color: #93c5fd;
     }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
 
+<body>
   <div class="min-h-screen flex flex-col items-center justify-center px-4 pt-10">
-    <div class="bg-white rounded-xl shadow-md w-full max-w-md p-8">
-      <h1 class="text-2xl font-bold text-center text-[#dd1b35] mb-6">Agendar Consulta</h1>
+    <div class="card rounded-xl w-full max-w-md p-8">
+      <h1 class="text-2xl font-bold text-center mb-6" style="color:var(--red)">Agendar Consulta</h1>
 
-      <form action="{{ url_for('submit_patient_consultation') }}" method="POST" class="space-y-4" onsubmit="return validateCPFForm()">
+      <form action="{{ url_for('submit_patient_consultation') }}" method="POST" class="space-y-4"
+        onsubmit="return validateCPFForm()">
         <div>
           <label for="name" class="block text-sm font-medium">Nome completo</label>
-          <input type="text" name="name" id="name" required
-                 class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#dd1b35] focus:border-[#dd1b35]">
+          <input type="text" name="name" id="name" required class="input">
         </div>
 
         <div>
-            <label for="cpf" class="block text-sm font-medium">CPF</label>
-            <input type="text" name="cpf" id="cpf" required maxlength="14"
-                   class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#dd1b35] focus:border-[#dd1b35]"
-                   placeholder="000.000.000-00">
+          <label for="cpf" class="block text-sm font-medium">CPF</label>
+          <input type="text" name="cpf" id="cpf" required maxlength="14" class="input" placeholder="000.000.000-00">
         </div>
 
         <div>
           <label for="phone" class="block text-sm font-medium">Telefone para contato</label>
-          <input type="text" name="phone" id="phone" required maxlength="15"
-                 class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#dd1b35] focus:border-[#dd1b35]"
-                 placeholder="(00) 00000-0000">
+          <input type="text" name="phone" id="phone" required maxlength="15" class="input"
+            placeholder="(00) 00000-0000">
         </div>
 
         <div>
           <label for="date" class="block text-sm font-medium">Data desejada</label>
-          <input type="text" name="date" id="date" required
-                 class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#dd1b35] focus:border-[#dd1b35]"
-                 placeholder="dd/mm/aaaa">
+          <input type="text" name="date" id="date" required class="input" placeholder="dd/mm/aaaa">
         </div>
 
         <div>
           <label for="time" class="block text-sm font-medium">Horário desejado</label>
-          <select name="time" id="time" required
-                  class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#dd1b35] focus:border-[#dd1b35]">
+          <select name="time" id="time" required class="select">
             <option value="">Selecione um horário</option>
             {% for hour in range(8, 18) %}
-              <option value="{{ "%02d" % hour }}:00">{{ "%02d" % hour }}:00</option>
-              <option value="{{ "%02d" % hour }}:30">{{ "%02d" % hour }}:30</option>
+            <option value="{{ " %02d" % hour }}:00">{{ "%02d" % hour }}:00</option>
+            <option value="{{ " %02d" % hour }}:30">{{ "%02d" % hour }}:30</option>
             {% endfor %}
           </select>
         </div>
 
-        <div>
-          <button type="submit"
-                  class="w-full py-3 bg-[#dd1b35] text-white font-semibold rounded-md hover:bg-red-700 transition">
-            Confirmar Agendamento
-          </button>
-        </div>
+        <div><button type="submit" class="btn">Confirmar Agendamento</button></div>
       </form>
 
       <div class="mt-6 text-center">
-        <a href="{{ url_for('hero') }}" class="text-sm text-[#dd1b35] hover:underline">Voltar para a página inicial</a>
+        <a href="{{ url_for('hero') }}" class="link hover:underline">Voltar para a página inicial</a>
       </div>
     </div>
   </div>
 
   <script>
     function validateCPFForm() {
-      const cpfInput = document.getElementById("cpf");
-      const cpf = cpfInput.value.replace(/[^\d]+/g, '');
-    
-      if (!isValidCPF(cpf)) {
-        alert("CPF inválido. Verifique e tente novamente.");
-        return false;
-      }
-    
+      const cpf = document.getElementById("cpf").value.replace(/[^\d]+/g, '');
+      if (!isValidCPF(cpf)) { alert("CPF inválido. Verifique e tente novamente."); return false; }
       return true;
     }
-    
     function isValidCPF(cpf) {
       if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
-    
-      let sum = 0;
-      for (let i = 0; i < 9; i++) sum += parseInt(cpf[i]) * (10 - i);
-      let digit1 = (sum * 10) % 11;
-      if (digit1 === 10 || digit1 === 11) digit1 = 0;
-      if (digit1 !== parseInt(cpf[9])) return false;
-    
-      sum = 0;
-      for (let i = 0; i < 10; i++) sum += parseInt(cpf[i]) * (11 - i);
-      let digit2 = (sum * 10) % 11;
-      if (digit2 === 10 || digit2 === 11) digit2 = 0;
-      if (digit2 !== parseInt(cpf[10])) return false;
-    
+      let sum = 0; for (let i = 0; i < 9; i++) sum += parseInt(cpf[i]) * (10 - i);
+      let d1 = (sum * 10) % 11; if (d1 === 10 || d1 === 11) d1 = 0; if (d1 !== parseInt(cpf[9])) return false;
+      sum = 0; for (let i = 0; i < 10; i++) sum += parseInt(cpf[i]) * (11 - i);
+      let d2 = (sum * 10) % 11; if (d2 === 10 || d2 === 11) d2 = 0; if (d2 !== parseInt(cpf[10])) return false;
       return true;
     }
-    </script>
-
-  <script>
-    flatpickr("#date", {
-      dateFormat: "d/m/Y",
-      locale: "pt"
-    });
+    flatpickr("#date", { dateFormat: "d/m/Y", locale: "pt" });
   </script>
-
-
 </body>
+
 </html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Assistir Vídeo — RafahMed</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body{margin:0; font-family:'Montserrat',sans-serif; background:linear-gradient(135deg,#080b12,#0b1220); color:#e5e7eb; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;}
+    .wrap{width: min(1100px, 96vw);}
+    h3{text-align:center; margin:0 0 14px; font-size:22px;}
+    .player{background:#0f172a; border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:12px; box-shadow:0 14px 40px rgba(0,0,0,.35);}
+    video{width:100%; border-radius:12px; background:#000;}
+    .back{display:inline-block; margin:14px 0 0; text-decoration:none; color:#fff; font-weight:700; background:linear-gradient(135deg,#dd1b35,#b81429); padding:10px 16px; border-radius:999px;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h3>Assistindo vídeo</h3>
+    <div class="player">
+      <!-- HLS: use a URL Mux de playback HLS: https://stream.mux.com/{playback_id}.m3u8 -->
+      <video controls playsinline src="https://stream.mux.com/{{ playback_id }}.m3u8"></video>
+    </div>
+    <a class="back" href="{{ url_for('videos') }}">Voltar</a>
+  </div>
+</body>
+</html>

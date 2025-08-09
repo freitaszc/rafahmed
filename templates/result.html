@@ -9,63 +9,88 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <style>
+        :root {
+            --bg-deep: #080b12;
+            --bg-dark: #0b1220;
+            --bg-elev: #111827;
+            --bg-elev-2: #0f172a;
+            --text: #e5e7eb;
+            --text-dim: #cbd5e1;
+            --muted: #94a3b8;
+            --stroke: #1f2937;
+            --red: #dd1b35;
+            --red-dark: #b81429;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text);
+            background: radial-gradient(1000px 600px at 10% 0%, #0b1428 0%, transparent 50%),
+                radial-gradient(900px 600px at 90% 10%, #0a0f1f 0%, transparent 50%),
+                linear-gradient(135deg, var(--bg-deep) 0%, var(--bg-dark) 100%);
+            min-height: 100vh;
+        }
+
         .logo-img {
             width: 100px;
             display: block;
-            margin: 30px auto 10px auto;
+            margin: 30px auto 10px;
+            filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .45));
         }
 
         h2 {
-            font-family: 'Montserrat', sans-serif;
             font-size: 26px;
             text-align: center;
-            margin: 10px 0 30px;
-            color: #2c3e50;
+            margin: 10px 0 24px;
+            color: #fff;
         }
 
         .section-title {
-            font-family: 'Montserrat', sans-serif;
             font-size: 18px;
-            font-weight: 600;
+            font-weight: 700;
             text-align: center;
-            margin-top: 40px;
-            margin-bottom: 10px;
-            color: #dd1b35;
+            margin: 32px 0 10px;
+            color: var(--red);
         }
 
         pre {
             font-family: 'Montserrat', monospace;
             white-space: pre-wrap;
             text-align: left;
-            max-width: 600px;
+            max-width: 780px;
             margin: 0 auto;
             font-size: 14px;
-            color: #000000;
+            color: var(--text);
+            background: var(--bg-elev-2);
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, .06);
+            border-radius: 10px;
         }
 
         .menu-button {
             display: inline-block;
-            font-family: 'Montserrat', sans-serif;
             font-size: 14px;
-            font-weight: 500;
-            color: #000000;
+            font-weight: 700;
+            color: #fff;
             text-decoration: none;
             padding: 10px 14px;
-            border-radius: 6px;
-            background-color: white;
-            border: 2px solid #dd1b35;
-            transition: 0.3s ease;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--red), var(--red-dark));
+            border: 0;
+            transition: .25s;
             cursor: pointer;
+            box-shadow: 0 12px 30px rgba(221, 27, 53, .28);
         }
 
         .menu-button:hover {
-            background-color: #dd1b35;
-            color: white;
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 18px 44px rgba(221, 27, 53, .38);
         }
 
         .button-group {
             text-align: center;
-            margin-top: 30px;
+            margin: 26px 0 40px;
         }
 
         .button-group a {
@@ -76,9 +101,8 @@
 
 <body>
     <div>
-        <a href="{{ url_for('index') }}">
-            <img src="{{ url_for('static', filename='images/logo.svg') }}" class="logo-img">
-        </a>
+        <a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='images/logo.svg') }}" class="logo-img"
+                alt="Logo"></a>
     </div>
 
     <h2>Resultado da Análise</h2>

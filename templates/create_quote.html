@@ -4,168 +4,324 @@
 <head>
   <meta charset="UTF-8">
   <title>Criar Cotação - RafahMed</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
   <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
   <style>
+    input::placeholder,
+    textarea::placeholder {
+      font-family: 'Montserrat', sans-serif;
+      color: var(--muted);
+      /* opcional, para harmonizar com o resto */
+    }
+
+    :root {
+      --bg-deep: #080c14;
+      --bg-dark: #0d1624;
+      --bg-elev: #1a2435;
+      --bg-elev-2: #0f172a;
+      --text: #e5e7eb;
+      --text-dim: #cbd5e1;
+      --muted: #94a3b8;
+      --line: #1f2937;
+      --red: #dd1b35;
+      --red-dark: #b81429;
+      --input-bg: #0f1a2a;
+      --input-bd: #283447
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
     body {
       margin: 0;
-      font-family: 'Montserrat', sans-serif;
-      background-color: #f9f9f9;
-    }
-
-    .top-menu {
-      background-color: white;
-      padding: 10px 0;
       display: flex;
-      justify-content: center;
-      gap: 20px;
-      border-bottom: 1px solid #eee;
-    }
-
-    .top-menu a {
+      min-height: 100vh;
       font-family: 'Montserrat', sans-serif;
-      font-weight: 500;
-      font-size: 14px;
-      color: #000000;
-      text-decoration: none;
-      padding: 8px 12px;
-      border-radius: 6px;
-      transition: 0.3s;
+      color: var(--text);
+      background: linear-gradient(135deg, var(--bg-deep), var(--bg-dark))
     }
 
-    .top-menu a:hover {
-      background-color: #dd1b35;
-      color: white;
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 250px;
+      background: linear-gradient(180deg, #0b111c 0%, #0a0f1a 100%);
+      padding: 30px 20px;
+      border-right: 1px solid var(--line);
+      box-shadow: 2px 0 14px rgba(0, 0, 0, .35);
+      display: flex;
+      flex-direction: column;
+      transition: width 180ms ease;
+      z-index: 1000
+    }
+
+    .sidebar-toggle {
+      align-self: flex-end;
+      background: rgba(255, 255, 255, .03);
+      border: 1px solid rgba(255, 255, 255, .08);
+      color: #e5e7eb;
+      padding: 6px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 14px;
+      font-size: 14px;
+      font-weight: 700
+    }
+
+    .sidebar-toggle i {
+      transition: transform 180ms ease
+    }
+
+    .sidebar-logo {
+      width: 200px;
+      display: block;
+      margin: 0 auto 20px;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .35));
+      transition: width 180ms ease, margin 180ms ease
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 14px;
+      padding: 12px 18px;
+      border-radius: 10px;
+      color: var(--text-dim);
+      text-decoration: none;
+      margin-bottom: 8px;
+      font-weight: 500;
+      transition: background .2s, color .2s, transform .12s
+    }
+
+    .menu-item i {
+      width: 21px;
+      text-align: center;
+      flex: 0 0 21px
+    }
+
+    .menu-item:hover {
+      background: rgba(221, 27, 53, .12);
+      color: var(--red);
+      transform: translateX(4px)
+    }
+
+    .menu-item.logout {
+      color: #94a3b8;
+      margin-top: auto
+    }
+
+    .menu-item.admin {
+      color: #f87171
+    }
+
+    .sidebar.is-collapsed {
+      width: 76px
+    }
+
+    .sidebar.is-collapsed+.content {
+      margin-left: 76px
+    }
+
+    .sidebar.is-collapsed .sidebar-logo {
+      width: 44px;
+      margin: 0 auto 24px
+    }
+
+    .sidebar.is-collapsed .menu-item {
+      justify-content: center;
+      gap: 0;
+      padding: 12px 0
+    }
+
+    .sidebar.is-collapsed .menu-item .label {
+      display: none
+    }
+
+    .sidebar.is-collapsed .sidebar-toggle i {
+      transform: rotate(180deg)
     }
 
     .content {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 20px;
-      text-align: center;
+      margin-left: 250px;
+      flex: 1;
+      padding: 28px;
+      transition: margin-left 180ms ease
     }
 
-    .logo-img {
-      width: 100px;
+    .content h2 {
+      font-size: 28px;
+      margin: 6px 0 10px;
+      text-align: center
+    }
+
+    .content h2::after {
+      content: '';
       display: block;
-      margin: 0 auto 20px auto;
+      width: 80px;
+      height: 4px;
+      margin: 10px auto 0;
+      background: linear-gradient(90deg, var(--red), #ff6b8a);
+      border-radius: 2px;
+      box-shadow: 0 0 12px rgba(221, 27, 53, .35)
     }
 
     .container {
-      max-width: 600px;
+      max-width: 640px;
       margin: 0 auto;
-      background: #fff;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      background: linear-gradient(145deg, var(--bg-elev), #223049);
+      padding: 28px;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .45), 0 0 0 1px rgba(255, 255, 255, .03) inset
     }
 
-    h2 {
-      font-size: 24px;
-      color: #2c3e50;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-
-    input[type="checkbox"] {
-      accent-color: #dd1b35;
+    label {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text-dim);
+      display: block;
+      margin-bottom: 6px
     }
 
     input[type="text"],
     textarea {
       width: 96%;
       padding: 12px;
-      margin: 10px 0 20px 0;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 14px;
+      border-radius: 12px;
+      margin: 8px 0 16px;
+      border: 2px solid var(--input-bd);
+      background: var(--input-bg);
+      color: var(--text);
+      outline: none;
+      transition: .2s
     }
 
-    label {
-      font-weight: 500;
-      font-size: 14px;
-      display: block;
-      margin-bottom: 6px;
-      color: #000000;
+    input[type="text"]:focus,
+    textarea:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(221, 27, 53, .12)
+    }
+
+    input[type="checkbox"] {
+      accent-color: var(--red)
     }
 
     .supplier-list {
       text-align: left;
-      margin-bottom: 20px;
+      margin: 6px 0 18px
     }
 
     .supplier-list label {
       display: block;
       margin-bottom: 6px;
+      color: var(--text)
     }
 
-    .menu-button {
-      font-family: 'Montserrat', sans-serif;
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      background: var(--red);
+      color: #fff;
+      font-weight: 700;
       font-size: 14px;
-      font-weight: 500;
-      color: #000000;
-      border: 2px solid #dd1b35;
-      background-color: white;
-      padding: 10px 16px;
-      border-radius: 6px;
-      text-decoration: none;
-      transition: 0.3s ease;
       cursor: pointer;
+      transition: .25s;
       width: 100%;
+      font-family: 'Montserrat', sans-serif
     }
 
-    .menu-button:hover {
-      background-color: #dd1b35;
-      color: white;
+    .btn:hover {
+      background: var(--red-dark);
+      transform: translateY(-1px)
+    }
+
+    .btn-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 10px 0
     }
   </style>
+  <script>
+    function toggleSidebar() { const s = document.querySelector('.sidebar'); s.classList.toggle('is-collapsed'); localStorage.setItem('sidebarCollapsed', s.classList.contains('is-collapsed') ? '1' : '0'); }
+    document.addEventListener('DOMContentLoaded', () => { if (localStorage.getItem('sidebarCollapsed') === '1') { document.querySelector('.sidebar')?.classList.add('is-collapsed'); } });
+  </script>
 </head>
 
 <body>
 
-  <div class="top-menu">
-    <div style="position: absolute; left: 20px;">
-        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" style="height: 40px;">
-    </div>
-    <a href="{{ url_for('index') }}">Início</a>
-    <a href="{{ url_for('upload') }}">Ponza Lab</a>
-    <a href="{{ url_for('quiz_results') }}">Autoavaliações</a>
-    <a href="{{ url_for('quote_index') }}">Cotações</a>
-    <a href="{{ url_for('catalog') }}">Pacientes</a>
-    <a href="{{ url_for('products') }}">Estoque</a>
-    <a href="{{ url_for('agenda') }}">Agenda</a>
-    <a href="{{ url_for('logout') }}">Sair</a>
+  <!-- Sidebar padronizado -->
+  <div class="sidebar">
+    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Minimizar/Maximizar menu">
+      <i class="fa fa-angle-double-left"></i>
+    </button>
+
+    <img src="{{ url_for('static', filename='images/logocompleta.svg') }}" class="sidebar-logo" alt="Logo RafahMed">
+
+    <a href="{{ url_for('index') }}" class="menu-item" title="Início"><i class="fa fa-home"></i> <span
+        class="label">Início</span></a>
+    <a href="{{ url_for('upload') }}" class="menu-item" title="Ponza Lab"><i class="fa fa-upload"></i> <span
+        class="label">Ponza Lab</span></a>
+    <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-list-alt"></i>
+      <span class="label">Autoavaliações</span></a>
+    <a href="{{ url_for('quote_index') }}" class="menu-item" title="Cotações"><i class="fa fa-file-text-o"></i> <span
+        class="label">Cotações</span></a>
+    <a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-users"></i> <span
+        class="label">Pacientes</span></a>
+    <a href="{{ url_for('products') }}" class="menu-item" title="Estoque"><i class="fa fa-archive"></i> <span
+        class="label">Estoque</span></a>
+    <a href="{{ url_for('agenda') }}" class="menu-item" title="Agenda"><i class="fa fa-calendar"></i> <span
+        class="label">Agenda</span></a>
+    <a href="{{ url_for('purchase') }}" class="menu-item" title="Pagamentos"><i class="fa fa-credit-card"></i> <span
+        class="label">Pagamentos</span></a>
+    <a href="{{ url_for('training') }}" class="menu-item" title="Treinamento"><i class="fa fa-play-circle"></i> <span
+        class="label">Treinamento</span></a>
+
+    {% if username and username|lower == 'admin' %}
+    <div style="margin:18px 0 8px 0; border-top:1px solid #1f2937;"></div>
+    <a href="{{ url_for('admin_companies') }}" class="menu-item admin" title="Admin"><i class="fa fa-cog"></i> <span
+        class="label">Admin</span></a>
+    {% endif %}
+
+    <a href="{{ url_for('logout') }}" class="menu-item logout" title="Sair"><i class="fa fa-sign-out"></i> <span
+        class="label">Sair</span></a>
   </div>
 
   <div class="content">
     <h2>Criar Nova Cotação</h2>
-  </div>
+    <div class="container">
+      <form method="post">
+        <label for="title">Nome da Cotação</label>
+        <input type="text" name="title" id="title" placeholder="Ex: Reposição de Estoque de Suplementos" required>
 
-  <div class="container">
-    <form method="post">
-      <label for="title">Nome da Cotação</label>
-      <input type="text" name="title" id="title" placeholder="Ex: Reposição de Estoque de Suplementos" required>
-
-      <label for="items">Itens da Cotação</label>
-      <textarea name="items" id="items" rows="6"
-        placeholder="Um item por linha. Exemplo:
+        <label for="items">Itens da Cotação</label>
+        <textarea name="items" id="items" rows="6" placeholder="Um item por linha. Exemplo:
 Vitamina D 2000UI - 10 un.
 Magnésio Dimalato - 5 un." required></textarea>
 
-      <label>Fornecedores</label>
-      <div class="supplier-list">
-        {% for supplier in suppliers %}
-        <label>
-          <input type="checkbox" name="supplier_ids" value="{{ supplier.id }}">
-          {{ supplier.name }}
-        </label>
-        {% endfor %}
-      </div>
+        <label>Fornecedores</label>
+        <div class="supplier-list">
+          {% for supplier in suppliers %}
+          <label><input type="checkbox" name="supplier_ids" value="{{ supplier.id }}"> {{ supplier.name }}</label>
+          {% endfor %}
+        </div>
 
-      <button type="submit" class="menu-button">Criar Cotação</button>
-    </form>
+        <div class="btn-row">
+          <button type="submit" class="btn">Criar Cotação</button>
+        </div>
+      </form>
+    </div>
   </div>
 </body>
 

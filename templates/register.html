@@ -5,43 +5,129 @@
   <meta charset="UTF-8" />
   <title>Cadastro - RafahMed</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     body {
       font-family: 'Montserrat', sans-serif;
-      background-color: white;
     }
 
     :root {
       --rafahmed-red: #dd1b35;
       --rafahmed-red-dark: #b81429;
+      --rafahmed-red-light: #ff3854;
+      --black-blue-1: #080b12;
+      --black-blue-2: #0a0f1f;
+      --black-blue-3: #0f172a;
+      --text: #e5e7eb;
+      --text-dim: #cbd5e1;
+      --stroke: #1f2937;
+    }
+
+    .hero-gradient {
+      background:
+        radial-gradient(1200px 600px at 10% 10%, #0a1430 0%, transparent 50%),
+        radial-gradient(900px 500px at 90% 0%, #0a1124 0%, transparent 55%),
+        linear-gradient(135deg, var(--black-blue-1) 0%, var(--black-blue-2) 100%);
     }
 
     .navbar-blur {
       backdrop-filter: blur(10px);
-      background: rgba(255, 255, 255, 0.95);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      background: rgba(8, 11, 18, 0.85);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
 
-    .footer a {
+    .card {
+      background: linear-gradient(145deg, var(--black-blue-3) 0%, var(--black-blue-2) 100%);
+      border: 1px solid rgba(255, 255, 255, .06);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, .45);
+    }
+
+    .input,
+    .select {
+      width: 100%;
+      padding: .8rem 1rem;
+      border-radius: .75rem;
+      border: 2px solid var(--stroke);
+      background: var(--black-blue-2);
+      color: var(--text);
+      outline: none;
+      transition: .2s;
+      appearance: none;
+    }
+
+    .input:focus,
+    .select:focus {
+      border-color: var(--rafahmed-red);
+      box-shadow: 0 0 0 4px rgba(221, 27, 53, .12);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--rafahmed-red), var(--rafahmed-red-dark));
+      color: #fff;
+      border: 0;
+      border-radius: 999px;
+      padding: .9rem 1.2rem;
+      font-weight: 800;
+      box-shadow: 0 12px 30px rgba(221, 27, 53, .28);
+      transition: .25s;
+      width: 100%;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 18px 44px rgba(221, 27, 53, .38);
+    }
+
+    .btn-outline {
       color: var(--rafahmed-red);
-      text-decoration: none;
+      border: 1px solid var(--rafahmed-red);
+      border-radius: 999px;
+      padding: .6rem 1rem;
+      font-weight: 600;
+      transition: .25s;
     }
 
-    .footer a:hover {
-      text-decoration: underline;
+    .btn-outline:hover {
+      background: var(--rafahmed-red);
+      color: #fff;
+    }
+
+    .badge {
+      padding: .45rem .7rem;
+      border-radius: .6rem;
+      font-size: .85rem;
+      border: 1px solid;
+      display: inline-block;
+    }
+
+    .success {
+      background: rgba(34, 197, 94, .08);
+      color: #bbf7d0;
+      border-color: rgba(34, 197, 94, .35);
+    }
+
+    .warning {
+      background: rgba(234, 179, 8, .08);
+      color: #fde68a;
+      border-color: rgba(234, 179, 8, .35);
+    }
+
+    .danger {
+      background: rgba(239, 68, 68, .08);
+      color: #fecaca;
+      border-color: rgba(239, 68, 68, .35);
     }
   </style>
 </head>
 
-<body class="text-gray-800">
+<body class="bg-[var(--black-blue-1)] text-[var(--text)]">
 
-  <!-- NAVBAR ATUALIZADA -->
+  <!-- NAVBAR -->
   <header class="navbar-blur py-4 px-6 fixed top-0 left-0 w-full z-50">
     <div class="max-w-7xl mx-auto flex items-center justify-between">
-      <!-- Logo -->
       <div class="flex items-center flex-shrink-0">
         <a href="{{ url_for('hero') }}">
           <img src="{{ url_for('static', filename='images/flatlogo.svg') }}" alt="Logo RafahMed"
@@ -49,133 +135,120 @@
         </a>
       </div>
 
-      <!-- Menu Centralizado -->
       <nav class="hidden md:flex space-x-8 text-sm font-medium">
         <a href="{{ url_for('hero') }}#quem-somos"
-          class="hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
+          class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
           Quem Somos
           <span
             class="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--rafahmed-red)] transition-all duration-300 group-hover:w-full"></span>
         </a>
         <a href="{{ url_for('hero') }}#psicologos"
-          class="hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
+          class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
           Para Psicólogos
           <span
             class="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--rafahmed-red)] transition-all duration-300 group-hover:w-full"></span>
         </a>
         <a href="{{ url_for('hero') }}#empresas"
-          class="hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
+          class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
           Para Empresas
           <span
             class="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--rafahmed-red)] transition-all duration-300 group-hover:w-full"></span>
         </a>
-        <a href="{{ url_for('hero') }}#agendar"
-          class="hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
+        <a href="{{ url_for('schedule_consultation') }}"
+          class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
           Agendar Consulta
           <span
             class="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--rafahmed-red)] transition-all duration-300 group-hover:w-full"></span>
         </a>
       </nav>
 
-      <!-- Botões à Direita -->
       <div class="hidden md:flex items-center space-x-4">
         <a href="/register"
-          class="text-sm font-semibold text-[var(--rafahmed-red)] hover:text-[var(--rafahmed-red-dark)] transition-colors duration-300 px-4 py-2 rounded-full border border-[var(--rafahmed-red)] hover:bg-[var(--rafahmed-red)] hover:text-white">
+          class="text-sm font-semibold text-[var(--rafahmed-red)] hover:text-[#ff5169] transition-colors duration-300 px-4 py-2 rounded-full border border-[var(--rafahmed-red)] hover:bg-[var(--rafahmed-red)] hover:text-white">
           Cadastrar
         </a>
         <a href="/login"
-          class="text-sm font-semibold text-[var(--rafahmed-red)] hover:text-[var(--rafahmed-red-dark)] transition-colors duration-300 px-4 py-2 rounded-full border border-[var(--rafahmed-red)] hover:bg-[var(--rafahmed-red)] hover:text-white">
+          class="text-sm font-semibold text-[var(--rafahmed-red)] hover:text-[#ff5169] transition-colors duration-300 px-4 py-2 rounded-full border border-[var(--rafahmed-red)] hover:bg-[var(--rafahmed-red)] hover:text-white">
           Entrar
         </a>
       </div>
     </div>
   </header>
 
-  <!-- FORMULÁRIO DE CADASTRO -->
-  <main class="pt-32 min-h-screen flex flex-col items-center justify-start px-4">
-    <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-8 w-full max-w-md text-center">
-      <h2 class="text-2xl font-bold mb-6 text-[var(--rafahmed-red)]">Cadastro</h2>
+  <!-- FORM CADASTRO -->
+  <main class="hero-gradient min-h-screen pt-32 pb-16 px-4">
+    <div class="max-w-7xl mx-auto flex justify-center">
+      <div class="card rounded-2xl p-8 w-full max-w-md">
+        <h2 class="text-3xl font-bold mb-6 text-center" style="color: #fff">Cadastro</h2>
 
-      {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-      <div class="mb-4">
-        {% for category, message in messages %}
-        <div class="text-sm p-2 rounded 
-                    {% if category == 'success' %}bg-green-100 text-green-700 border border-green-300{% endif %}
-                    {% if category == 'warning' %}bg-yellow-100 text-yellow-700 border border-yellow-300{% endif %}
-                    {% if category == 'danger'  %}bg-red-100 text-red-700 border border-red-300{% endif %}">
-          {{ message }}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="mb-5 space-y-2 text-left">
+          {% for category, message in messages %}
+          <div
+            class="badge {% if category == 'success' %}success{% endif %}{% if category == 'warning' %} warning{% endif %}{% if category == 'danger' %} danger{% endif %}">
+            {{ message }}
+          </div><br />
+          {% endfor %}
         </div>
-        {% endfor %}
-      </div>
-      {% endif %}
-      {% endwith %}
+        {% endif %}
+        {% endwith %}
 
-      <form method="post" class="space-y-4 text-left" onsubmit="return validarEmpresa()">
-        <!-- Tipo de Cadastro -->
-        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Cadastro:</label>
-        <div class="relative">
-          <select id="account_type" name="account_type" required onchange="toggleEmpresaField()"
-            class="w-full px-4 py-2 pr-10 border rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--rafahmed-red)] appearance-none bg-white shadow-sm">
-            <option value="">Selecione...</option>
-            <option value="pessoal">Cadastro Pessoal</option>
-            <option value="empresa">Cadastro Empresarial</option>
-          </select>
-          <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
+        <form method="post" class="space-y-4 text-left" onsubmit="return validarEmpresa()">
+          <div>
+            <label class="block text-sm font-semibold text-[var(--text-dim)] mb-1">Tipo de Cadastro:</label>
+            <div class="relative">
+              <select id="account_type" name="account_type" required onchange="toggleEmpresaField()"
+                class="select pr-10">
+                <option value="">Selecione...</option>
+                <option value="pessoal">Cadastro Pessoal</option>
+                <option value="empresa">Cadastro Empresarial</option>
+              </select>
+              <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
           </div>
+
+          <input type="text" name="username" placeholder="Nome de usuário" required class="input">
+          <input type="email" name="email" placeholder="E-mail" required class="input">
+          <input type="password" name="password" placeholder="Senha" required class="input">
+          <p class="text-sm text-[var(--text-dim)] -mt-2">
+            Sua senha deve ter pelo menos 8 caracteres, incluindo uma letra, um número e um símbolo.
+          </p>
+          <input type="password" name="confirm_password" placeholder="Confirmar Senha" required class="input">
+
+          <div id="empresa_field" class="hidden">
+            <input type="text" id="company_code" name="company_code" placeholder="Código da empresa" class="input">
+          </div>
+
+          <button type="submit" class="btn-primary">Cadastrar</button>
+        </form>
+
+        <div class="text-center mt-6 text-sm">
+          <span class="text-[var(--text-dim)]">Já tem conta?</span>
+          <a href="{{ url_for('login') }}" class="text-[var(--rafahmed-red)] hover:text-[#ff5169] font-semibold ml-1">
+            Entrar
+          </a>
         </div>
-
-        <!-- Corrigido para username -->
-        <input type="text" name="username" placeholder="Nome de usuário" required
-          class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--rafahmed-red)]">
-        <input type="email" name="email" placeholder="E-mail" required
-          class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--rafahmed-red)]">
-        <input type="password" name="password" placeholder="Senha" required
-          class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--rafahmed-red)]">
-
-        <!-- Mensagem de ajuda -->
-        <p class="text-sm text-gray-500 -mt-2">
-          Sua senha deve ter pelo menos 8 caracteres, incluindo uma letra, um número e um símbolo.
-        </p>
-
-        <input type="password" name="confirm_password" placeholder="Confirmar Senha" required
-          class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--rafahmed-red)]">
-
-        <!-- Campo da Empresa (opcional apenas se selecionar empresarial) -->
-        <div id="empresa_field" class="hidden">
-          <input type="text" id="company_code" name="company_code" placeholder="Código da empresa"
-            class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--rafahmed-red)]">
-        </div>
-
-        <button type="submit"
-          class="w-full bg-[var(--rafahmed-red)] text-white py-2 rounded-md font-semibold hover:bg-red-700 transition">Cadastrar</button>
-      </form>
+      </div>
     </div>
   </main>
 
-  <!-- JS para controle do campo de empresa -->
   <script>
     function toggleEmpresaField() {
       const tipo = document.getElementById('account_type').value;
-      const campoEmpresa = document.getElementById('empresa_field');
-      const inputEmpresa = document.getElementById('company_code');
-
-      if (tipo === 'empresa') {
-        campoEmpresa.classList.remove('hidden');
-        inputEmpresa.setAttribute('required', 'required');
-      } else {
-        campoEmpresa.classList.add('hidden');
-        inputEmpresa.removeAttribute('required');
-      }
+      const campo = document.getElementById('empresa_field');
+      const input = document.getElementById('company_code');
+      if (tipo === 'empresa') { campo.classList.remove('hidden'); input.setAttribute('required', 'required'); }
+      else { campo.classList.add('hidden'); input.removeAttribute('required'); }
     }
-
     function validarEmpresa() {
       const tipo = document.getElementById('account_type').value;
-      const inputEmpresa = document.getElementById('company_code');
-      if (tipo === 'empresa' && !inputEmpresa.value.trim()) {
+      const input = document.getElementById('company_code');
+      if (tipo === 'empresa' && !input.value.trim()) {
         alert('Por favor, insira o código da empresa.');
         return false;
       }

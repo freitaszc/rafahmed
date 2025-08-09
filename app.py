@@ -15,7 +15,7 @@ from flask import (
     session,
     flash,
     jsonify,
-    make_response,
+    get_flashed_messages,
     abort,
     send_file,
 )
@@ -123,6 +123,7 @@ PUBLIC_ENDPOINTS = {
     'hero',
     'about',
     'privacy_policy',
+    'terms',
     'register',
     'login',
     'static'
@@ -140,6 +141,10 @@ def login_required(f):
 # ==============================================
 # AUTHENTICATION AND ACCOUNT MANAGEMENT
 # ==============================================
+@app.route('/schedule_consultation')
+def schedule_consultation():
+    return render_template('schedule_consultation.html')
+
 @app.route('/')
 def hero():
     return render_template('hero.html')
@@ -152,68 +157,92 @@ def about():
 def privacy_policy():
     return render_template('privacy_policy.html')
 
+@app.route('/terms')
+def terms():
+    return render_template("terms.html")
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == 'POST':
-        username     = escape(request.form.get('username', '').strip())
-        email        = escape(request.form.get('email', '').strip().lower())
-        password     = request.form.get('password', '')
-        confirm      = request.form.get('confirm_password', '')
-        company_code = escape(request.form.get('company_code', '').strip().upper())
+    # GET: limpa mensagens antigas que não são do próprio register
+    if request.method == 'GET':
+        # Se NÃO for um retorno de POST do próprio /register,
+        # consome quaisquer flashes pendentes (de outras rotas)
+        coming_from_register_post = session.pop('register_flash', None)
+        if not coming_from_register_post:
+            # Consome/limpa mensagens pendentes
+            get_flashed_messages()
 
-        # Validação de e-mail
-        email_regex = r'^[\w\.-]+@[\w\.-]+\.\w+$'
-        if not re.match(email_regex, email):
-            flash('E-mail inválido.', 'warning')
+        return render_template('register.html')
+
+    # POST
+    username     = escape(request.form.get('username', '').strip())
+    email        = escape(request.form.get('email', '').strip().lower())
+    password     = request.form.get('password', '')
+    confirm      = request.form.get('confirm_password', '')
+    company_code = escape(request.form.get('company_code', '').strip().upper())
+    account_type = request.form.get('account_type', '').strip().lower()
+
+    # Validação de e-mail
+    email_regex = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+    if not re.match(email_regex, email):
+        session['register_flash'] = True
+        flash('E-mail inválido.', 'warning')
+        return redirect(url_for('register'))
+
+    # Verifica duplicidade
+    exists_email = User.query.filter_by(email=email).first()
+    exists_user  = User.query.filter_by(username=username).first()
+    if exists_email or exists_user:
+        session['register_flash'] = True
+        flash('E-mail ou usuário já cadastrado.', 'warning')
+        return redirect(url_for('register'))
+
+    # Validação de senha
+    if len(password) < 8:
+        session['register_flash'] = True
+        flash('A senha deve ter pelo menos 8 caracteres.', 'warning')
+        return redirect(url_for('register'))
+    if not re.search(r'[A-Za-z]', password):
+        session['register_flash'] = True
+        flash('A senha deve conter letras.', 'warning')
+        return redirect(url_for('register'))
+    if not re.search(r'\d', password):
+        session['register_flash'] = True
+        flash('A senha deve conter números.', 'warning')
+        return redirect(url_for('register'))
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+        session['register_flash'] = True
+        flash('A senha deve conter pelo menos um símbolo especial.', 'warning')
+        return redirect(url_for('register'))
+    if password != confirm:
+        session['register_flash'] = True
+        flash('As senhas não coincidem.', 'warning')
+        return redirect(url_for('register'))
+
+    # Validação do tipo de conta / código da empresa (se exigido)
+    # (mantém seu comportamento anterior: company_code é opcional;
+    # se vier preenchido, precisa ser válido)
+    company = None
+    if company_code:
+        company = Company.query.filter_by(access_code=company_code).first()
+        if not company:
+            session['register_flash'] = True
+            flash('Código da empresa inválido.', 'danger')
             return redirect(url_for('register'))
 
-        # Verifica se já existe usuário com mesmo e-mail ou username
-        exists_email = User.query.filter_by(email=email).first()
-        exists_user  = User.query.filter_by(username=username).first()
-        if exists_email or exists_user:
-            flash('E-mail ou usuário já cadastrado.', 'warning')
-            return redirect(url_for('register'))
+    # Cria o usuário
+    user = User(
+        username=username,
+        email=email,
+        password_hash=generate_password_hash(password),
+        company_id=company.id if company else None
+    )
+    db.session.add(user)
+    db.session.commit()
 
-        # Validação de senha
-        if len(password) < 8:
-            flash('A senha deve ter pelo menos 8 caracteres.', 'warning')
-            return redirect(url_for('register'))
-        if not re.search(r'[A-Za-z]', password):
-            flash('A senha deve conter letras.', 'warning')
-            return redirect(url_for('register'))
-        if not re.search(r'\d', password):
-            flash('A senha deve conter números.', 'warning')
-            return redirect(url_for('register'))
-        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
-            flash('A senha deve conter pelo menos um símbolo especial.', 'warning')
-            return redirect(url_for('register'))
-        if password != confirm:
-            flash('As senhas não coincidem.', 'warning')
-            return redirect(url_for('register'))
-
-        # Validação do código da empresa (opcional)
-        company = None
-        if company_code:
-            company = Company.query.filter_by(access_code=company_code).first()
-            if not company:
-                flash('Código da empresa inválido.', 'danger')
-                return redirect(url_for('register'))
-
-        # Cria o usuário
-        user = User(
-            username=username,
-            email=email,
-            password_hash=generate_password_hash(password),
-            company_id=company.id if company else None
-        )
-        db.session.add(user)
-        db.session.commit()
-
-        flash('Cadastro realizado com sucesso! Faça login para continuar.', 'success')
-        return redirect(url_for('login'))
-
-    return render_template('register.html')
-
+    # Sucesso: vai para login (não precisa preservar flash no /register)
+    flash('Cadastro realizado com sucesso! Faça login para continuar.', 'success')
+    return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -1698,6 +1727,17 @@ def delete_quiz_result():
     flash('Resultado deletado.', 'success')
     return redirect(url_for('quiz_results'))
 
+# ==============================================
+# TRAINING
+# ==============================================
+
+@app.route('/training')
+def training():
+    return render_template("training.html")
+
+@app.route('/videos')
+def videos():
+    return render_template("videos.html")
 
 # ==============================================
 # APPLICATION ENTRY POINT

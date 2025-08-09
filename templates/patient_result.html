@@ -4,215 +4,347 @@
 <head>
   <meta charset="UTF-8">
   <title>Editar Paciente - RafahMed</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
   <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
   <style>
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background-color: #f9f9f9;
-      margin: 0;
-      padding: 0;
+    :root {
+      --bg-deep: #080c14;
+      --bg-dark: #0d1624;
+      --elev: #1a2435;
+      --panel: #0f1929;
+      --text: #e5e7eb;
+      --muted: #cbd5e1;
+      --line: #1f2a3b;
+      --red: #dd1b35;
+      --red-dark: #b81429;
+      --input-bg: #0f1a2a;
+      --input-bd: #283447;
     }
 
-    .logo-img {
-      width: 100px;
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Montserrat', sans-serif;
+      color: var(--text);
+      background: radial-gradient(1000px 600px at 10% 0%, #0b1428 0%, transparent 50%),
+        radial-gradient(900px 600px at 90% 10%, #0a0f1f 0%, transparent 50%),
+        linear-gradient(135deg, var(--bg-deep), var(--bg-dark));
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* Sidebar padronizada */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 250px;
+      background: linear-gradient(180deg, #0b111c 0%, #0a0f1a 100%);
+      padding: 30px 20px;
+      border-right: 1px solid var(--line);
+      box-shadow: 2px 0 14px rgba(0, 0, 0, .35);
+      display: flex;
+      flex-direction: column;
+      transition: width 180ms ease;
+      z-index: 1000
+    }
+
+    .sidebar-toggle {
+      align-self: flex-end;
+      background: rgba(255, 255, 255, .03);
+      border: 1px solid rgba(255, 255, 255, .08);
+      color: #e5e7eb;
+      padding: 6px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 14px;
+      font-size: 14px;
+      font-weight: 700;
+      transition: background .2s, border-color .2s
+    }
+
+    .sidebar-toggle:hover {
+      background: rgba(221, 27, 53, .10);
+      border-color: rgba(221, 27, 53, .35)
+    }
+
+    .sidebar-toggle i {
+      transition: transform 180ms ease
+    }
+
+    .sidebar-logo {
+      width: 200px;
       display: block;
-      margin: 40px auto 20px auto;
+      margin: 0 auto 20px;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .35));
+      transition: width 180ms ease, margin 180ms ease
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 14px;
+      padding: 12px 18px;
+      border-radius: 10px;
+      color: var(--muted);
+      text-decoration: none;
+      margin-bottom: 8px;
+      font-weight: 500;
+      transition: background .2s, color .2s, transform .12s
+    }
+
+    .menu-item i {
+      width: 21px;
+      text-align: center;
+      flex: 0 0 21px
+    }
+
+    .menu-item:hover {
+      background: rgba(221, 27, 53, .12);
+      color: var(--red);
+      transform: translateX(4px)
+    }
+
+    .menu-item.logout {
+      color: #94a3b8;
+      margin-top: auto
+    }
+
+    .menu-item.admin {
+      color: #f87171
+    }
+
+    .sidebar.is-collapsed {
+      width: 76px
+    }
+
+    .sidebar.is-collapsed+.content {
+      margin-left: 76px
+    }
+
+    .sidebar.is-collapsed .sidebar-logo {
+      width: 44px;
+      margin: 0 auto 24px
+    }
+
+    .sidebar.is-collapsed .menu-item {
+      justify-content: center;
+      gap: 0;
+      padding: 12px 0
+    }
+
+    .sidebar.is-collapsed .menu-item .label {
+      display: none
+    }
+
+    .sidebar.is-collapsed .sidebar-toggle i {
+      transform: rotate(180deg)
+    }
+
+    /* Conteúdo */
+    .content {
+      margin-left: 250px;
+      flex: 1;
+      padding: 40px;
+      transition: margin-left 180ms ease
     }
 
     .container {
-      max-width: 700px;
-      margin: 0 auto 50px auto;
-      background-color: #fff;
-      padding: 40px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      max-width: 720px;
+      margin: 0 auto 50px;
+      background: linear-gradient(145deg, var(--elev), #223049);
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, .45), 0 0 0 1px rgba(255, 255, 255, .04) inset
     }
 
     h2 {
       text-align: center;
-      color: #2c3e50;
-      margin-bottom: 30px;
+      margin: 0 0 24px
     }
 
     .form-group {
-      margin-bottom: 20px;
-      width: 96.5%
+      margin-bottom: 16px
     }
 
-    .form-group label {
+    label {
       display: block;
       margin-bottom: 6px;
-      font-weight: 600;
-      font-size: 14px;
-      color: #000000;
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: .5px
     }
 
-    .form-group input,
-    .form-group select {
+    input,
+    select,
+    textarea {
       width: 100%;
-      padding: 10px 12px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 2px solid var(--input-bd);
+      background: var(--input-bg);
+      color: var(--text);
       font-size: 14px;
+      outline: none;
+      transition: .2s;
       font-family: 'Montserrat', sans-serif;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      background-color: #fff;
     }
 
-    .button-group {
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(221, 27, 53, .12)
+    }
+
+    pre {
+      white-space: pre-wrap;
+      background: #0c1424;
+      border: 1px solid var(--line);
+      padding: 10px;
+      border-radius: 8px
+    }
+
+    .buttons {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 16px;
-      margin-top: 30px;
+      gap: 12px;
+      margin-top: 18px
     }
 
-    .menu-button {
-      display: inline-block;
-      font-family: 'Montserrat', sans-serif;
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: var(--red);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: 700;
       font-size: 14px;
-      font-weight: 500;
-      color: #000000;
-      text-decoration: none;
-      padding: 12px 22px;
-      border-radius: 6px;
-      background-color: white;
-      border: 2px solid #dd1b35;
-      transition: 0.3s ease;
       cursor: pointer;
-    }
-
-    .menu-button:hover {
-      background-color: #dd1b35;
-      color: white;
-    }
-
-    .menu-button.danger {
-      border-color: #e74c3c;
-      color: #e74c3c;
-    }
-
-    .menu-button.danger:hover {
-      background-color: #e74c3c;
-      color: white;
-    }
-
-    .doctor-select-group {
-      margin-bottom: 20px;
-      width: 100%;
-    }
-
-    .doctor-select-group label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-      font-size: 14px;
-      color: #2c3e50;
-      text-align: left;
+      transition: .25s;
+      text-decoration: none;
       font-family: 'Montserrat', sans-serif;
     }
 
-    .doctor-select-group select {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 14px;
-      color: #000000;
-      outline-color: #dd1b35;
-      font-weight: 500;
+    .btn:hover {
+      background: var(--red-dark);
+      transform: translateY(-1px)
     }
 
-    .doctor-select-group select option {
-      color: #000000;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 14px;
-      font-weight: 500;
+    .btn.danger {
+      background: #e3342f
+    }
+
+    .btn.danger:hover {
+      background: #c53030
     }
   </style>
+  <script>
+    function toggleSidebar() { const s = document.querySelector('.sidebar'); s.classList.toggle('is-collapsed'); localStorage.setItem('sidebarCollapsed', s.classList.contains('is-collapsed') ? '1' : '0'); }
+    document.addEventListener('DOMContentLoaded', () => { if (localStorage.getItem('sidebarCollapsed') === '1') { document.querySelector('.sidebar')?.classList.add('is-collapsed'); } });
+  </script>
 </head>
 
 <body>
-  <a href="{{ url_for('index') }}">
-    <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo-img">
-  </a>
 
-  <div class="container">
-    <h2>Editar Informações do Paciente</h2>
+  <!-- Sidebar padronizada -->
+  <div class="sidebar">
+    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Minimizar/Maximizar menu">
+      <i class="fa fa-angle-double-left"></i>
+    </button>
 
-    <form method="post">
-      <div class="form-group">
-        <label for="name">Nome</label>
-        <input type="text" id="name" name="name" value="{{ patient.name }}" required>
-      </div>
+    <img src="{{ url_for('static', filename='images/logocompleta.svg') }}" class="sidebar-logo" alt="Logo RafahMed">
 
-      <div class="form-group">
-        <label for="age">Idade</label>
-        <input type="number" id="age" name="age" value="{{ patient.age }}" required>
-      </div>
+    <a href="{{ url_for('index') }}" class="menu-item" title="Início"><i class="fa fa-home"></i> <span
+        class="label">Início</span></a>
+    <a href="{{ url_for('upload') }}" class="menu-item" title="Ponza Lab"><i class="fa fa-upload"></i> <span
+        class="label">Ponza Lab</span></a>
+    <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-list-alt"></i>
+      <span class="label">Autoavaliações</span></a>
+    <a href="{{ url_for('quote_index') }}" class="menu-item" title="Cotações"><i class="fa fa-file-text-o"></i> <span
+        class="label">Cotações</span></a>
+    <a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-users"></i> <span
+        class="label">Pacientes</span></a>
+    <a href="{{ url_for('products') }}" class="menu-item" title="Estoque"><i class="fa fa-archive"></i> <span
+        class="label">Estoque</span></a>
+    <a href="{{ url_for('agenda') }}" class="menu-item" title="Agenda"><i class="fa fa-calendar"></i> <span
+        class="label">Agenda</span></a>
+    <a href="{{ url_for('purchase') }}" class="menu-item" title="Pagamentos"><i class="fa fa-credit-card"></i> <span
+        class="label">Pagamentos</span></a>
+    <a href="{{ url_for('training') }}" class="menu-item" title="Treinamento"><i class="fa fa-play-circle"></i> <span
+        class="label">Treinamento</span></a>
 
-      <div class="form-group">
-        <label for="cpf">CPF</label>
-        <input type="text" id="cpf" name="cpf" value="{{ patient.cpf }}">
-      </div>
+    {% if username and username|lower == 'admin' %}
+    <div style="margin:18px 0 8px 0; border-top:1px solid #1f2937;"></div>
+    <a href="{{ url_for('admin_companies') }}" class="menu-item admin" title="Admin"><i class="fa fa-cog"></i> <span
+        class="label">Admin</span></a>
+    {% endif %}
 
-      <div class="form-group">
-        <label for="gender">Sexo</label>
-        <input type="text" id="gender" name="gender" value="{{ patient.gender }}">
-      </div>
+    <a href="{{ url_for('logout') }}" class="menu-item logout" title="Sair"><i class="fa fa-sign-out"></i> <span
+        class="label">Sair</span></a>
+  </div>
 
-      <div class="form-group">
-        <label for="phone">Telefone</label>
-        <input type="text" id="phone" name="phone" value="{{ patient.phone }}">
-      </div>
+  <!-- Conteúdo -->
+  <div class="content">
+    <div class="container">
+      <h2>Editar Informações do Paciente</h2>
+      <form method="post">
+        <div class="form-group"><label for="name">NOME</label><input type="text" id="name" name="name"
+            value="{{ patient.name }}" required></div>
+        <div class="form-group"><label for="age">IDADE</label><input type="number" id="age" name="age"
+            value="{{ patient.age }}" required></div>
+        <div class="form-group"><label for="cpf">CPF</label><input type="text" id="cpf" name="cpf"
+            value="{{ patient.cpf }}"></div>
+        <div class="form-group"><label for="gender">SEXO</label><input type="text" id="gender" name="gender"
+            value="{{ patient.gender }}"></div>
+        <div class="form-group"><label for="phone">TELEFONE</label><input type="text" id="phone" name="phone"
+            value="{{ patient.phone }}"></div>
 
-      <div class="doctor-select-group">
-        <label for="doctor">Médico</label>
-        <select name="doctor" id="doctor" required>
-          {% for d in doctors %}
-          <option value="{{ d.id }}" {% if patient.doctor==d.id %}selected{% endif %}>{{ d.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
+        <div class="form-group">
+          <label for="doctor">MÉDICO</label>
+          <select name="doctor" id="doctor" required>
+            {% for d in doctors %}
+            <option value="{{ d.id }}" {% if patient.doctor==d.id %}selected{% endif %}>{{ d.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label for="prescription">Prescrição (opcional)</label>
-        <textarea id="prescription" name="prescription" rows="8" placeholder="Prescrição (opcional)"
-          style="width: 100%; padding: 10px 12px; font-size: 14px; font-family: 'Montserrat', sans-serif; border: 1px solid #ccc; border-radius: 6px; background-color: #fff;">{{ patient.prescription or '' }}</textarea>
-      </div>
+        <div class="form-group">
+          <label for="prescription">PRESCRIÇÃO (opcional)</label>
+          <textarea id="prescription" name="prescription" rows="8">{{ patient.prescription or '' }}</textarea>
+        </div>
 
-      {% if patient.prescription %}
-      <div class="doctor-select-group">
-        <label>Prescrição Atual Registrada</label>
-        <pre
-          style="white-space: pre-wrap; background-color: #f9f9f9; border: 1px solid #ccc; padding: 10px; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 14px;">
-      {{ patient.prescription }}
-          </pre>
-      </div>
-      {% endif %}
+        {% if patient.prescription %}
+        <div class="form-group">
+          <label>Prescrição Atual Registrada</label>
+          <pre>{{ patient.prescription }}</pre>
+        </div>
+        {% endif %}
 
-      <div class="button-group">
-        <button type="submit" class="menu-button">Salvar Alterações</button>
-        <button type="button" id="btn-voltar-paciente" class="menu-button">Voltar</button>
-        <button type="button" id="btn-remover-paciente" class="menu-button danger">Remover Paciente</button>
-      </div>
-    </form>
+        <div class="buttons">
+          <button type="submit" class="btn">Salvar Alterações</button>
+          <button type="button" id="btn-voltar-paciente" class="btn">Voltar</button>
+          <button type="button" id="btn-remover-paciente" class="btn danger">Remover Paciente</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      document.getElementById('btn-voltar-paciente').addEventListener('click', function () {
-        window.location.href = "{{ url_for('catalog') }}";
-      });
-
-      document.getElementById('btn-remover-paciente').addEventListener('click', function () {
-        if (confirm('Deseja realmente remover este paciente?')) {
-          window.location.href = "{{ url_for('delete_patient', patient_id=patient.id) }}";
-        }
-      });
+    document.getElementById('btn-voltar-paciente').addEventListener('click', () => { window.location.href = "{{ url_for('catalog') }}" });
+    document.getElementById('btn-remover-paciente').addEventListener('click', () => {
+      if (confirm('Deseja realmente remover este paciente?')) { window.location.href = "{{ url_for('delete_patient', patient_id=patient.id) }}"; }
     });
   </script>
 </body>

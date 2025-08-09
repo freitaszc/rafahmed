@@ -4,67 +4,172 @@
 <head>
   <meta charset="UTF-8">
   <title>Autoavaliação - {{ patient.nome }}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/web.css') }}">
-  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
   <style>
+    :root {
+      --bg-deep: #080c14;
+      --bg-dark: #0d1624;
+      --elev: #1a2435;
+      --text: #e5e7eb;
+      --muted: #cbd5e1;
+      --line: #1f2a3b;
+      --red: #dd1b35;
+      --red-dark: #b81429
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
     body {
       margin: 0;
       font-family: 'Montserrat', sans-serif;
-      background-color: #f9f9f9;
+      color: var(--text);
+      background: radial-gradient(1000px 600px at 10% 0%, #0b1428 0%, transparent 50%), radial-gradient(900px 600px at 90% 10%, #0a0f1f 0%, transparent 50%), linear-gradient(135deg, var(--bg-deep), var(--bg-dark));
+      min-height: 100vh;
+      display: flex
     }
 
-    .top-menu {
-      background-color: white;
-      padding: 10px 0;
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 250px;
+      background: linear-gradient(180deg, #0b111c 0%, #0a0f1a 100%);
+      padding: 30px 20px;
+      border-right: 1px solid var(--line);
+      box-shadow: 2px 0 14px rgba(0, 0, 0, .35);
       display: flex;
-      justify-content: center;
-      gap: 20px;
-      border-bottom: 1px solid #eee;
+      flex-direction: column;
+      transition: width 180ms ease;
+      z-index: 1000
     }
 
-    .top-menu a {
-      font-weight: 500;
+    .sidebar-toggle {
+      align-self: flex-end;
+      background: rgba(255, 255, 255, .03);
+      border: 1px solid rgba(255, 255, 255, .08);
+      color: #e5e7eb;
+      padding: 6px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 14px;
       font-size: 14px;
-      color: #000000;
-      text-decoration: none;
-      padding: 8px 12px;
-      border-radius: 6px;
-      transition: 0.3s;
+      font-weight: 700
     }
 
-    .top-menu a:hover {
-      background-color: #dd1b35;
-      color: white;
+    .sidebar-toggle i {
+      transition: transform 180ms ease
+    }
+
+    .sidebar-logo {
+      width: 200px;
+      display: block;
+      margin: 0 auto 20px;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .35))
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 14px;
+      padding: 12px 18px;
+      border-radius: 10px;
+      color: var(--muted);
+      text-decoration: none;
+      margin-bottom: 8px;
+      font-weight: 500;
+      transition: background .2s, color .2s, transform .12s
+    }
+
+    .menu-item i {
+      width: 21px;
+      text-align: center;
+      flex: 0 0 21px
+    }
+
+    .menu-item:hover {
+      background: rgba(221, 27, 53, .12);
+      color: var(--red);
+      transform: translateX(4px)
+    }
+
+    .menu-item.logout {
+      color: #94a3b8;
+      margin-top: auto
+    }
+
+    .menu-item.admin {
+      color: #f87171
+    }
+
+    .sidebar.is-collapsed {
+      width: 76px
+    }
+
+    .sidebar.is-collapsed+.content {
+      margin-left: 76px
+    }
+
+    .sidebar.is-collapsed .sidebar-logo {
+      width: 44px;
+      margin: 0 auto 24px
+    }
+
+    .sidebar.is-collapsed .menu-item {
+      justify-content: center;
+      gap: 0;
+      padding: 12px 0
+    }
+
+    .sidebar.is-collapsed .menu-item .label {
+      display: none
+    }
+
+    .sidebar.is-collapsed .sidebar-toggle i {
+      transform: rotate(180deg)
+    }
+
+    .content {
+      margin-left: 250px;
+      flex: 1;
+      padding: 32px
     }
 
     .container {
       max-width: 800px;
-      margin: 40px auto;
-      background: #fff;
+      margin: 0 auto;
+      background: linear-gradient(145deg, var(--elev), #223049);
       padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25)
     }
 
     h2 {
       font-size: 26px;
-      color: #dd1b35;
+      color: #fff;
       margin-bottom: 20px;
+      text-align: center
     }
 
     .response-item {
       margin-top: 15px;
       padding: 12px;
-      border-left: 4px solid #dd1b35;
-      background-color: #fafafa;
-      border-radius: 6px;
+      border-left: 4px solid var(--red);
+      background-color: #0f1929;
+      border-radius: 6px
     }
 
     .response-question {
-      font-weight: 600;
+      font-weight: 700;
       margin-bottom: 4px;
-      color: #333;
+      color: #cfe0ff
     }
 
     .response-answer {
@@ -72,90 +177,126 @@
       overflow: visible !important;
       text-overflow: unset !important;
       font-size: 15px;
-      color: #555;
+      color: #e5e7eb
     }
 
-    .back-link {
-      display: inline-block;
-      margin-top: 30px;
-      color: #dd1b35;
-      font-weight: 500;
-      text-decoration: none;
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--red);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: .25s;
+      text-decoration: none
     }
 
-    .back-link:hover {
-      text-decoration: underline;
+    .btn:hover {
+      background: var(--red-dark);
+      transform: translateY(-1px)
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      margin-top: 24px
     }
   </style>
+  <script>
+    function toggleSidebar() { const s = document.querySelector('.sidebar'); s.classList.toggle('is-collapsed'); localStorage.setItem('sidebarCollapsed', s.classList.contains('is-collapsed') ? '1' : '0'); }
+    document.addEventListener('DOMContentLoaded', () => { if (localStorage.getItem('sidebarCollapsed') === '1') { document.querySelector('.sidebar')?.classList.add('is-collapsed'); } });
+  </script>
 </head>
 
 <body>
 
-  <div class="top-menu">
-    <div style="position: absolute; left: 20px;">
-      <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" style="height: 40px;">
-    </div>
-    <a href="{{ url_for('index') }}">Início</a>
-    <a href="{{ url_for('upload') }}">Ponza Lab</a>
-    <a href="{{ url_for('quiz_results') }}">Autoavaliações</a>
-    <a href="{{ url_for('quote_index') }}">Cotações</a>
-    <a href="{{ url_for('catalog') }}">Pacientes</a>
-    <a href="{{ url_for('products') }}">Estoque</a>
-    <a href="{{ url_for('agenda') }}">Agenda</a>
-    <a href="{{ url_for('logout') }}">Sair</a>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Minimizar/Maximizar menu"><i
+        class="fa fa-angle-double-left"></i></button>
+    <img src="{{ url_for('static', filename='images/logocompleta.svg') }}" class="sidebar-logo" alt="Logo RafahMed">
+    <a href="{{ url_for('index') }}" class="menu-item" title="Início"><i class="fa fa-home"></i><span
+        class="label">Início</span></a>
+    <a href="{{ url_for('upload') }}" class="menu-item" title="Ponza Lab"><i class="fa fa-upload"></i><span
+        class="label">Ponza Lab</span></a>
+    <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-list-alt"></i><span
+        class="label">Autoavaliações</span></a>
+    <a href="{{ url_for('quote_index') }}" class="menu-item" title="Cotações"><i class="fa fa-file-text-o"></i><span
+        class="label">Cotações</span></a>
+    <a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-users"></i><span
+        class="label">Pacientes</span></a>
+    <a href="{{ url_for('products') }}" class="menu-item" title="Estoque"><i class="fa fa-archive"></i><span
+        class="label">Estoque</span></a>
+    <a href="{{ url_for('agenda') }}" class="menu-item" title="Agenda"><i class="fa fa-calendar"></i><span
+        class="label">Agenda</span></a>
+    <a href="{{ url_for('purchase') }}" class="menu-item" title="Pagamentos"><i class="fa fa-credit-card"></i><span
+        class="label">Pagamentos</span></a>
+    <a href="{{ url_for('training') }}" class="menu-item" title="Treinamento"><i class="fa fa-play-circle"></i><span
+        class="label">Treinamento</span></a>
+    {% if username and username|lower == 'admin' %}<div style="margin:18px 0 8px 0; border-top:1px solid #1f2937;">
+    </div><a href="{{ url_for('admin_companies') }}" class="menu-item admin" title="Admin"><i
+        class="fa fa-cog"></i><span class="label">Admin</span></a>{% endif %}
+    <a href="{{ url_for('logout') }}" class="menu-item logout" title="Sair"><i class="fa fa-sign-out"></i><span
+        class="label">Sair</span></a>
   </div>
 
-  <div class="container">
-    <h2>Detalhes do Paciente</h2>
-    {% set perguntas = [
-    ('nome', 'Qual seu nome?'),
-    ('idade', 'Qual sua idade?'),
-    ('nervosismo', 'Nas últimas 2 semanas, com que frequência você se sentiu nervoso(a), ansioso(a) ou muito
-    tenso(a)?'),
-    ('preocupacao', 'Nas últimas 2 semanas, você não foi capaz de controlar a preocupação?'),
-    ('interesse', 'Nas últimas 2 semanas, você teve pouco interesse ou prazer em fazer as coisas?'),
-    ('depressao', 'Nas últimas 2 semanas, você se sentiu desanimado(a), deprimido(a) ou sem esperança?'),
-    ('estresse', 'Considerando as últimas 2 semanas, o quanto você sentiu que estava estressado(a)?'),
-    ('hora_extra', 'Considerando uma semana de trabalho normal, quantos dias você normalmente precisa trabalhar a mais
-    do que a sua carga horária habitual e/ou fazer hora extra?'),
-    ('sono', 'Como você classificaria sua qualidade do sono nas últimas 2 semanas?'),
-    ('atividade_fisica', 'Com que frequência você pratica atividade física?'),
-    ('fatores', 'Quando você pensa na sua saúde mental e qualidade de vida, quais os fatores que mais impactam?'),
-    ('motivacao', 'Com relação à questão apontada, em qual estágio de motivação você considera que está para tentar
-    resolver a questão?'),
-    ('pronto_socorro', 'Nos últimos 3 meses, quantas vezes você utilizou o pronto socorro?'),
-    ('relacionamentos', 'Como você avalia seu relacionamento com família e amigos?'),
-    ('hobbies', 'Você tem algum hobby ou atividade que lhe dá prazer?'),
-    ('ansiedade', 'Nível de Ansiedade'),
-    ('depressao', 'Nível de Depressão'),
-    ('estresse', 'Nível de Estresse'),
-    ('qualidade', 'Qualidade de Vida'),
-    ('risco', 'Risco Geral'),
-    ('recomendacao', 'Recomendação Final')
-    ] %}
+  <div class="content">
+    <div class="container">
+      <h2>Detalhes do Paciente</h2>
 
-    {% for key, pergunta in perguntas %}
-    <div class="response-item">
-      <div class="response-question">{{ pergunta }}</div>
-      <div class="response-answer" {% if key=='recomendacao' %} style="white-space: normal; display: block;" {% endif
-        %}>
-        {% if patient[key] %}
-        {% if patient[key] is iterable and patient[key] is not string %}
-        {{ patient[key]|join(', ') }}
-        {% else %}
-        {{ patient[key] }}
-        {% endif %}
-        {% else %}
-        Não informado
-        {% endif %}
+      {% set perguntas = [
+      ('nome','Qual seu nome?'),
+      ('idade','Qual sua idade?'),
+      ('nervosismo','Nas últimas 2 semanas, com que frequência você se sentiu nervoso(a), ansioso(a) ou muito
+      tenso(a)?'),
+      ('preocupacao','Nas últimas 2 semanas, você não foi capaz de controlar a preocupação?'),
+      ('interesse','Nas últimas 2 semanas, você teve pouco interesse ou prazer em fazer as coisas?'),
+      ('depressao_raw','Nas últimas 2 semanas, você se sentiu desanimado(a), deprimido(a) ou sem esperança?'),
+      ('estresse_raw','Nas últimas 2 semanas, o quanto você sentiu que estava estressado(a)?'),
+      ('hora_extra','Quantos dias por semana você faz hora extra?'),
+      ('sono','Qualidade do sono (últimas 2 semanas)'),
+      ('atividade_fisica','Frequência de atividade física'),
+      ('fatores','Fatores que mais impactam sua qualidade de vida'),
+      ('motivacao','Estágio de motivação para resolver a questão'),
+      ('pronto_socorro','Uso do pronto socorro nos últimos 3 meses'),
+      ('relacionamentos','Relacionamento com família e amigos'),
+      ('hobbies','Hobbies/atividades de prazer'),
+      ('ansiedade','Nível de Ansiedade'),
+      ('depressao','Nível de Depressão'),
+      ('estresse','Nível de Estresse'),
+      ('qualidade','Qualidade de Vida'),
+      ('risco','Risco Geral'),
+      ('recomendacao','Recomendação Final')
+      ] %}
+
+      {% for key, pergunta in perguntas %}
+      <div class="response-item">
+        <div class="response-question">{{ pergunta }}</div>
+        <div class="response-answer" {% if key=='recomendacao' %}style="white-space: normal; display:block;" {% endif
+          %}>
+          {% if patient[key] is defined and patient[key] %}
+          {% if patient[key] is iterable and patient[key] is not string %}
+          {{ patient[key]|join(', ') }}
+          {% else %}
+          {{ patient[key] }}
+          {% endif %}
+          {% else %}
+          Não informado
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+
+      <div class="actions">
+        <a href="{{ url_for('quiz_results') }}" class="btn">← Voltar aos Resultados</a>
       </div>
     </div>
-    {% endfor %}
-
-
-    <a href="{{ url_for('quiz_results') }}" class="back-link">← Voltar aos Resultados</a>
   </div>
-
 </body>
 
 </html>
