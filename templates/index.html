@@ -15,52 +15,88 @@
     const pacotes_usados = {{ used or 0 }};
     const pacotes_comprados = {{ (used or 0) + (remaining or 0) }};
 
-    google.charts.load('current', { packages: ['corechart'] });
-    google.charts.setOnLoadCallback(drawChart);
-    google.charts.setOnLoadCallback(drawDonutChart);
+    let comboChart, donutChart, comboData, comboOptions, donutData, donutOptions;
 
-    function drawChart() {
-      const data = google.visualization.arrayToDataTable([
+    google.charts.load('current', { packages: ['corechart'] });
+    google.charts.setOnLoadCallback(initCharts);
+
+    function initCharts() {
+      // ===== Dados
+      comboData = google.visualization.arrayToDataTable([
         ['Data', 'Autoavaliações', 'Média'],
         {% for item in quiz_chart_data %}
     ['{{ item.date }}', {{ item.count }}, {{ item.media }}]{% if not loop.last %}, {% endif %}
     {% endfor %}
       ]);
 
-    const options = {
-      title: '',
-      titleTextStyle: { color: '#e5e7eb', fontName: 'Montserrat', fontSize: 16, bold: true },
-      seriesType: 'bars',
-      series: {
-        0: { color: '#dd1b35', type: 'bars' },
-        1: { type: 'line', color: '#ffffff', lineWidth: 4, pointSize: 7, pointShape: 'circle' }
-      },
-      legend: { position: 'bottom', textStyle: { color: '#e5e7eb', fontName: 'Montserrat', fontSize: 13, bold: true } },
-      vAxis: {
-        minValue: 0,
-        textStyle: { color: '#cbd5e1', fontName: 'Montserrat', fontSize: 12 },
-        gridlines: { color: '#23304a', count: 5 },
-        baselineColor: '#334155'
-      },
-      hAxis: { textStyle: { color: '#cbd5e1', fontName: 'Montserrat', fontSize: 12, bold: true } },
-      backgroundColor: 'transparent',
-      chartArea: { left: 60, top: 20, width: '85%', height: '75%' },
-      bar: { groupWidth: '60%' },
-      animation: { duration: 1000, easing: 'out', startup: true }
-    };
+    donutData = google.visualization.arrayToDataTable([
+      ['Pacote', 'Análises'],
+      ['Usado', pacotes_usados],
+      ['Disponível', Math.max((pacotes_comprados - pacotes_usados), 0)]
+    ]);
 
-    const chart = new google.visualization.ComboChart(document.getElementById('curve_chart'));
-    chart.draw(data, options);
+    // ===== Instâncias
+    comboChart = new google.visualization.ComboChart(document.getElementById('curve_chart'));
+    donutChart = new google.visualization.PieChart(document.getElementById('donut_chart'));
+
+    // Primeira renderização
+    redrawCharts();
+
+    // Redesenhar em resize (com debounce)
+    window.addEventListener('resize', debounce(redrawCharts, 120));
+
+    // Observar mudanças de tamanho do contêiner (mais preciso que resize da janela)
+    const ro = new ResizeObserver(debounce(redrawCharts, 80));
+    const content = document.querySelector('.content');
+    const curve = document.getElementById('curve_chart');
+    const donut = document.getElementById('donut_chart');
+    if (content) ro.observe(content);
+    if (curve) ro.observe(curve);
+    if (donut) ro.observe(donut);
     }
 
-    function drawDonutChart() {
-      const data = google.visualization.arrayToDataTable([
-        ['Pacote', 'Análises'],
-        ['Usado', pacotes_usados],
-        ['Disponível', pacotes_comprados - pacotes_usados]
-      ]);
+    function getComboOptions() {
+      const container = document.getElementById('curve_chart');
+      const w = container?.clientWidth || 800;
 
-      const options = {
+      // Ajustes finos conforme a largura disponível
+      const small = w < 700;
+      const tiny = w < 500;
+
+      return {
+        title: '',
+        backgroundColor: 'transparent',
+        chartArea: { left: small ? 50 : 60, top: 20, width: '85%', height: '75%' },
+        legend: {
+          position: tiny ? 'none' : 'bottom',
+          textStyle: { color: '#e5e7eb', fontName: 'Montserrat', fontSize: small ? 12 : 13, bold: true }
+        },
+        seriesType: 'bars',
+        series: {
+          0: { color: '#dd1b35', type: 'bars', targetAxisIndex: 0 },
+          1: { type: 'line', color: '#ffffff', lineWidth: small ? 3 : 4, pointSize: small ? 5 : 7, pointShape: 'circle' }
+        },
+        bar: { groupWidth: small ? '52%' : '60%' },
+        vAxis: {
+          minValue: 0,
+          textStyle: { color: '#cbd5e1', fontName: 'Montserrat', fontSize: small ? 11 : 12 },
+          gridlines: { color: '#23304a', count: 5 },
+          baselineColor: '#334155'
+        },
+        hAxis: {
+          textStyle: { color: '#cbd5e1', fontName: 'Montserrat', fontSize: small ? 11 : 12, bold: true },
+          slantedText: small, slantedTextAngle: small ? 30 : 0
+        },
+        animation: { duration: 500, easing: 'out', startup: true }
+      };
+    }
+
+    function getDonutOptions() {
+      const container = document.getElementById('donut_chart');
+      const w = container?.clientWidth || 180;
+      const tiny = w < 160;
+
+      return {
         pieHole: 0.65,
         pieSliceText: 'none',
         colors: ['#dd1b35', '#0f172a'],
@@ -69,41 +105,43 @@
         backgroundColor: 'transparent',
         pieSliceBorderColor: '#0b1222',
         slices: { 0: { offset: 0.02 }, 1: { offset: 0 } },
-        animation: { duration: 1200, easing: 'out', startup: true }
+        tooltip: { textStyle: { fontName: 'Montserrat', fontSize: tiny ? 10 : 12 }, showColorCode: true },
+        animation: { duration: 500, easing: 'out', startup: true }
       };
+    }
 
-      const chart = new google.visualization.PieChart(document.getElementById('donut_chart'));
-      chart.draw(data, options);
+    function redrawCharts() {
+      if (!comboChart || !donutChart) return;
 
+      comboOptions = getComboOptions();
+      donutOptions = getDonutOptions();
+
+      comboChart.draw(comboData, comboOptions);
+      donutChart.draw(donutData, donutOptions);
+
+      // Realça o donut após o draw
       setTimeout(() => {
         const svg = document.getElementById('donut_chart')?.querySelector('svg');
         if (svg) {
           svg.style.filter = 'drop-shadow(0 0 16px rgba(221, 27, 53, 0.35))';
           svg.style.borderRadius = '50%';
         }
-      }, 100);
-
-      const total = pacotes_comprados > 0 ? pacotes_comprados : 1;
-      const percentage = Math.round((pacotes_usados / total) * 100);
-      document.getElementById('donut_label').innerText = percentage + '%';
-      animateNumber('donut_label', 0, percentage, 1000);
+        const total = pacotes_comprados > 0 ? pacotes_comprados : 1;
+        const percentage = Math.round((pacotes_usados / total) * 100);
+        document.getElementById('donut_label').innerText = percentage + '%';
+      }, 0);
     }
 
-    function animateNumber(elementId, start, end, duration) {
-      const element = document.getElementById(elementId);
-      const startTime = performance.now();
-      function update(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-        const current = Math.round(start + (end - start) * easeOutQuart);
-        element.innerText = current + '%';
-        if (progress < 1) requestAnimationFrame(update);
-      }
-      requestAnimationFrame(update);
+    // ===== Helpers
+    function debounce(fn, ms) {
+      let t;
+      return (...args) => {
+        clearTimeout(t);
+        t = setTimeout(() => fn.apply(this, args), ms);
+      };
     }
 
-    // Modal helpers (corrigido: trava scroll e foca no modal)
+    // ===== Modal (inalterado)
     function openModal() {
       const modal = document.getElementById('detailsModal');
       modal.style.display = 'flex';
@@ -121,11 +159,23 @@
       if (e.key === 'Escape') closeModal();
     });
 
-    // Minimizador da barra lateral (com persistência)
+    // ===== Sidebar: redesenhar após colapsar/expandir
     function toggleSidebar() {
       const sidebar = document.querySelector('.sidebar');
       sidebar.classList.toggle('is-collapsed');
       localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('is-collapsed') ? '1' : '0');
+
+      // Espera o fim da transição de largura para redesenhar
+      const onEnd = (ev) => {
+        if (ev.propertyName === 'width') {
+          redrawCharts();
+          sidebar.removeEventListener('transitionend', onEnd);
+        }
+      };
+      sidebar.addEventListener('transitionend', onEnd);
+
+      // Fallback caso o evento não dispare em algum browser
+      setTimeout(redrawCharts, 220);
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -159,11 +209,13 @@
       }
     }
 
+    /* Layout principal em flex: sidebar estático + conteúdo */
     body {
       margin: 0;
       display: flex;
       font-family: 'Montserrat', sans-serif;
-      background: radial-gradient(1000px 600px at 10% 0%, #0b1428 0%, transparent 50%),
+      background:
+        radial-gradient(1000px 600px at 10% 0%, #0b1428 0%, transparent 50%),
         radial-gradient(900px 600px at 90% 10%, #0a0f1f 0%, transparent 50%),
         linear-gradient(135deg, var(--bg-deep) 0%, var(--bg-dark) 100%);
       color: var(--text);
@@ -174,13 +226,13 @@
       overflow: hidden;
     }
 
-    /* === SIDEBAR === */
+    /* === SIDEBAR (ESTÁTICO) === */
     .sidebar {
-      position: fixed;
-      left: 0;
-      top: 0;
-      height: 100%;
+      position: static;
+      /* desfixado */
       width: 250px;
+      min-height: 100vh;
+      /* coluna cheia na viewport */
       background: linear-gradient(180deg, #0b111c 0%, #0a0f1a 100%);
       padding: 30px 20px;
       border-right: 1px solid #1f2937;
@@ -189,7 +241,6 @@
       display: flex;
       flex-direction: column;
       transition: width 180ms ease;
-      z-index: 1000;
     }
 
     .sidebar-logo {
@@ -230,9 +281,15 @@
       color: #f87171;
     }
 
+    .sidebar-spacer {
+      flex: 1 1 auto;
+    }
+
+    /* empurra o Sair para o rodapé da coluna */
+
     .sidebar a.menu-item.logout {
-      color: #94a3b8;
-      margin-top: auto;
+      color: #e5e7eb;
+      margin-top: 0;
     }
 
     /* Botão de minimizar */
@@ -258,13 +315,9 @@
       transition: transform 180ms ease;
     }
 
-    /* Estado colapsado */
+    /* Estado colapsado (apenas largura/ocultação do label) */
     .sidebar.is-collapsed {
       width: 76px;
-    }
-
-    .sidebar.is-collapsed+.content {
-      margin-left: 76px;
     }
 
     .sidebar.is-collapsed .sidebar-logo {
@@ -286,13 +339,13 @@
       transform: rotate(180deg);
     }
 
-    /* Conteúdo */
+    /* === CONTEÚDO === */
     .content {
-      margin-left: 250px;
-      /* acompanha sidebar fixa */
       flex-grow: 1;
       padding: 40px;
       position: relative;
+      min-width: 0;
+      /* evita overflow horizontal em flex */
     }
 
     h2 {
@@ -323,7 +376,9 @@
       background: linear-gradient(145deg, var(--bg-elev) 0%, var(--bg-elev-2) 100%);
       padding: 28px;
       border-radius: 20px;
-      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+      box-shadow:
+        0 14px 40px rgba(0, 0, 0, 0.35),
+        0 0 0 1px rgba(255, 255, 255, 0.04) inset;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       position: relative;
       overflow: hidden;
@@ -334,7 +389,9 @@
     .chart-container:hover,
     .donut-container:hover {
       transform: translateY(-6px);
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(221, 27, 53, 0.08) inset;
+      box-shadow:
+        0 24px 60px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(221, 27, 53, 0.08) inset;
     }
 
     .chart-container h3,
@@ -358,6 +415,24 @@
       height: 3px;
       background: linear-gradient(90deg, var(--red), #ff6b8a);
       border-radius: 2px;
+    }
+
+    /* Responsividade do container do gráfico (para colapso da sidebar) */
+    .chart-container {
+      flex: 1;
+      min-width: 520px;
+    }
+
+    @media (max-width: 1100px) {
+      .chart-container {
+        min-width: 420px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .chart-container {
+        min-width: 100%;
+      }
     }
 
     .donut-container {
@@ -417,7 +492,7 @@
       filter: saturate(1.05);
     }
 
-    /* Perfil topo */
+    /* Perfil topo (mantém fixo no topo direito) */
     .top-profile {
       position: fixed;
       top: 18px;
@@ -436,7 +511,7 @@
       background: #0b1222;
     }
 
-    /* ==== MODAL (corrigido, tema azul-escuro/preto) ==== */
+    /* ==== MODAL ==== */
     #detailsModal {
       display: none;
       position: fixed;
@@ -445,7 +520,6 @@
       align-items: center;
       justify-content: center;
       background: rgba(0, 0, 0, 0.6);
-      /* backdrop */
       backdrop-filter: blur(8px);
       padding: 20px;
     }
@@ -530,6 +604,7 @@
       filter: saturate(1.05);
     }
 
+    /* Ajustes mobile */
     @media (max-width: 700px) {
       .top-profile {
         right: 10px;
@@ -539,8 +614,15 @@
       .content {
         padding: 28px;
       }
+
+      .sidebar {
+        width: 72px;
+      }
+
+      /* em telas pequenas, já começa mais estreito */
     }
   </style>
+
 </head>
 
 <body>
@@ -553,7 +635,7 @@
     </a>
   </div>
 
-  <!-- Modal (corrigido) -->
+  <!-- Modal -->
   <div id="detailsModal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal-card">
       <button class="close-btn" data-close onclick="closeModal()" aria-label="Fechar">×</button>
@@ -568,7 +650,7 @@
     </div>
   </div>
 
-  <!-- Sidebar -->
+  <!-- Sidebar (agora estático no fluxo) -->
   <div class="sidebar">
     <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Minimizar/Maximizar menu">
       <i class="fa fa-angle-double-left"></i>
@@ -610,6 +692,9 @@
       <i class="fa fa-cog"></i> <span class="label">Admin</span>
     </a>
     {% endif %}
+
+    <!-- espaçador para manter o SAIR no rodapé -->
+    <div class="sidebar-spacer" aria-hidden="true"></div>
 
     <a href="{{ url_for('logout') }}" class="menu-item logout" title="Sair">
       <i class="fa fa-sign-out"></i> <span class="label">Sair</span>
