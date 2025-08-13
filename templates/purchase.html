@@ -2,14 +2,13 @@
 <html lang="pt-br">
 
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Pagamentos - RafahMed</title>
   <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 
   <script>
-    // === Minimizador da barra lateral (com persistência) ===
     function toggleSidebar() {
       const sidebar = document.querySelector('.sidebar');
       sidebar.classList.toggle('is-collapsed');
@@ -34,6 +33,7 @@
       --line: #1f2937;
       --red: #dd1b35;
       --red-dark: #b81429;
+      --green: #10b981;
     }
 
     * {
@@ -51,7 +51,6 @@
       color: var(--text);
     }
 
-    /* Sidebar (padrão index) */
     .sidebar {
       position: fixed;
       left: 0;
@@ -61,8 +60,6 @@
       background: linear-gradient(180deg, #0b111c 0%, #0a0f1a 100%);
       padding: 30px 20px;
       border-right: 1px solid var(--line);
-      height: 100vh;
-      box-sizing: border-box;
       box-shadow: 2px 0 14px rgba(0, 0, 0, .35);
       display: flex;
       flex-direction: column;
@@ -88,7 +85,7 @@
       text-decoration: none;
       margin-bottom: 8px;
       font-weight: 501;
-      transition: background 0.2s, color 0.2s, transform 0.12s;
+      transition: .2s;
     }
 
     .menu-item i {
@@ -108,14 +105,6 @@
       margin-top: auto;
     }
 
-    .admin-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      color: #94a3b8;
-      margin: 0 0 7px 8px;
-      letter-spacing: 1px;
-    }
-
     .divider {
       margin: 18px 0 8px 0;
       border-top: 1px solid var(--line);
@@ -130,20 +119,14 @@
       border-radius: 10px;
       cursor: pointer;
       margin-bottom: 14px;
-      transition: background .2s, border-color .2s, transform .12s;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 14px;
-      font-weight: 700;
+      transition: .2s;
+      font: 700 14px 'Montserrat', sans-serif;
     }
 
     .sidebar-toggle:hover {
-      background: rgba(221, 27, 53, .10);
+      background: rgba(221, 27, 53, .1);
       border-color: rgba(221, 27, 53, .35);
       transform: translateY(-1px);
-    }
-
-    .sidebar-toggle i {
-      transition: transform 180ms ease;
     }
 
     .sidebar.is-collapsed {
@@ -167,10 +150,6 @@
 
     .sidebar.is-collapsed .menu-item .label {
       display: none;
-    }
-
-    .sidebar.is-collapsed .sidebar-toggle i {
-      transform: rotate(180deg);
     }
 
     .content {
@@ -207,17 +186,24 @@
       background: linear-gradient(145deg, var(--bg-elev) 0%, var(--bg-elev-2) 100%);
       padding: 28px;
       border-radius: 20px;
-      max-width: 720px;
+      max-width: 920px;
       margin: 0 auto;
       box-shadow: 0 24px 60px rgba(0, 0, 0, .45), 0 0 0 1px rgba(255, 255, 255, .04) inset;
-      position: relative;
-      overflow: hidden;
     }
 
     .section-title {
       text-align: center;
       font-size: 22px;
       margin: 0 0 18px;
+    }
+
+    .warning {
+      background: rgba(239, 68, 68, .12);
+      border: 1px solid rgba(239, 68, 68, .35);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 18px;
+      text-align: center;
     }
 
     .select {
@@ -233,7 +219,6 @@
       display: block;
       margin: 0 auto 16px;
       transition: .2s;
-      font-family: 'Montserrat', sans-serif;
       font-size: 14px;
     }
 
@@ -242,17 +227,35 @@
       box-shadow: 0 0 0 3px rgba(221, 27, 53, .12);
     }
 
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .plan {
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(255, 255, 255, .02);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .plan h4 {
+      margin: 0 0 6px;
+    }
+
+    .price {
+      font-weight: 800;
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+
     .benefits {
       background: rgba(221, 27, 53, .08);
       border: 1px solid rgba(221, 27, 53, .2);
       border-radius: 14px;
-      padding: 18px;
-      margin: 18px 0;
-    }
-
-    .benefits h4 {
-      text-align: center;
-      margin: 0 0 10px;
+      padding: 14px;
+      margin-top: 10px;
     }
 
     .benefits ul {
@@ -261,25 +264,17 @@
       color: var(--muted);
     }
 
-    /* Botões padronizados */
-    button,
-    .btn {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 14px;
-      font-weight: 700;
-    }
-
     .btn {
       display: block;
       width: 100%;
-      max-width: 300px;
-      margin: 0 auto;
+      max-width: 320px;
+      margin: 14px auto 0;
       border: none;
       border-radius: 28px;
       padding: 14px 24px;
       background: linear-gradient(135deg, var(--red), var(--red-dark));
       color: #fff;
-      font-weight: 700;
+      font: 700 14px 'Montserrat', sans-serif;
       cursor: pointer;
       box-shadow: 0 10px 28px rgba(221, 27, 53, .35);
       transition: .25s;
@@ -298,26 +293,35 @@
       text-align: center;
     }
 
-    .warning {
-      background: rgba(239, 68, 68, .12);
-      border: 1px solid rgba(239, 68, 68, .35);
-      border-radius: 14px;
-      padding: 14px;
-      margin-bottom: 18px;
-      text-align: center;
+    .card {
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 16px;
+      padding: 18px;
+      background: rgba(255, 255, 255, .02);
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid rgba(255, 255, 255, .12);
+      font-size: 12px;
+      margin-left: 8px
     }
   </style>
 </head>
 
 <body>
-  <!-- Sidebar -->
   <div class="sidebar">
-    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Minimizar/Maximizar menu">
-      <i class="fa fa-angle-double-left"></i>
-    </button>
-
+    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Minimizar/Maximizar menu"><i
+        class="fa fa-angle-double-left"></i></button>
     <img src="{{ url_for('static', filename='images/logocompleta.svg') }}" class="sidebar-logo" alt="Logo RafahMed">
-
     <a href="{{ url_for('index') }}" class="menu-item"><i class="fa fa-home"></i> <span class="label">Início</span></a>
     <a href="{{ url_for('upload') }}" class="menu-item"><i class="fa fa-upload"></i> <span class="label">Ponza
         Lab</span></a>
@@ -333,23 +337,23 @@
         class="label">Agenda</span></a>
     <a href="{{ url_for('purchase') }}" class="menu-item"><i class="fa fa-credit-card"></i> <span
         class="label">Pagamentos</span></a>
-    <a href="{{ url_for('training') }}" class="menu-item" title="Treinamento">
-      <i class="fa fa-play-circle"></i> <span class="label">Treinamento</span>
-    </a>
-
-    {% if username and username|lower == 'admin' %}
+    <a href="{{ url_for('training') }}" class="menu-item"><i class="fa fa-play-circle"></i> <span
+        class="label">Treinamento</span></a>
+    {% if session.get('username') and session.get('username')|lower == 'admin' %}
     <div class="divider"></div>
-    <div class="admin-label">Administração</div>
+    <div class="admin-label"
+      style="font-size:11px;text-transform:uppercase;color:#94a3b8;margin:0 0 7px 8px;letter-spacing:1px;">Administração
+    </div>
     <a href="{{ url_for('admin_companies') }}" class="menu-item" style="color:#f87171;"><i class="fa fa-cog"></i> <span
         class="label">Admin</span></a>
     {% endif %}
-
     <a href="{{ url_for('logout') }}" class="menu-item logout"><i class="fa fa-sign-out"></i> <span
         class="label">Sair</span></a>
   </div>
 
   <div class="content">
     <h2>Pagamentos</h2>
+
     <div class="payment">
       {% if request.args.get('message') == 'pacote' %}
       <div class="warning">
@@ -358,7 +362,57 @@
       </div>
       {% endif %}
 
-      <form method="post">
+      <!-- ===================== ASSINATURAS (PIX) ===================== -->
+      <div class="card" style="margin-bottom:18px">
+        <h3 class="section-title">Assinar Planos da RafahMed <span class="badge">PIX</span></h3>
+
+        <form method="post" action="{{ url_for('subscribe_pix') }}">
+          <div class="grid">
+            <label class="plan">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <h4 style="margin:0">Plus</h4>
+                <input type="radio" name="plan" value="plus" required>
+              </div>
+              <div class="price">R$ {{ "%.2f"|format(PLAN_PRICES['plus']) }} / mês</div>
+              <div class="subtle">Para quem quer dar o próximo passo.</div>
+              <div class="benefits">
+                <ul>
+                  <li>Suporte priorizado</li>
+                  <li>Acesso a materiais extras</li>
+                  <li>Atualizações contínuas</li>
+                </ul>
+              </div>
+            </label>
+
+            <label class="plan">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <h4 style="margin:0">Premium</h4>
+                <input type="radio" name="plan" value="premium" required>
+              </div>
+              <div class="price">R$ {{ "%.2f"|format(PLAN_PRICES['premium']) }} / mês</div>
+              <div class="subtle">Tudo liberado: autoavaliações, cotações automáticas e treinamento.</div>
+              <div class="benefits">
+                <ul>
+                  <li>Autoavaliações (dashboard completo)</li>
+                  <li>Cotações automáticas</li>
+                  <li>Área de Treinamento</li>
+                </ul>
+              </div>
+            </label>
+          </div>
+
+          <button type="submit" class="btn">Gerar PIX</button>
+
+          <div class="security">
+            <div style="font-weight:800;margin-bottom:6px">🔒 Pagamento via PIX</div>
+            <p class="subtle">Você verá o QR Code e poderá enviar o comprovante para ativação.</p>
+          </div>
+        </form>
+      </div>
+
+      <!-- ===================== PACOTES (Mercado Pago) ===================== -->
+      <div class="card" style="margin-bottom:18px">
+      <form method="post" action="{{ url_for('purchase') }}">
         <h3 class="section-title">Comprar Pacote de Análises</h3>
 
         <label for="packageSelect"
@@ -373,7 +427,7 @@
         </select>
 
         <div class="benefits">
-          <h4>Benefícios Inclusos</h4>
+          <h4 style="text-align:center;margin:0 0 10px">Benefícios Inclusos</h4>
           <ul>
             <li>Análises durante a validade do pacote</li>
             <li>Relatórios detalhados em PDF</li>
@@ -382,11 +436,11 @@
           </ul>
         </div>
 
-        <button type="submit" id="paymentButton" class="btn">Gerar Pagamento</button>
+        <button type="submit" class="btn">Gerar Pagamento (Mercado Pago)</button>
 
         <div class="security">
           <div style="font-weight:800;margin-bottom:6px">🔒 Pagamento 100% Seguro</div>
-          <p style="color:var(--muted)">Seus dados são protegidos com criptografia SSL.</p>
+          <p class="subtle">Transação processada pelo Mercado Pago com criptografia SSL.</p>
         </div>
       </form>
     </div>

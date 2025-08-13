@@ -1,8 +1,8 @@
 import os
 import json
 import secrets
-import uuid
-from sqlalchemy import func, cast, Date
+import uuid, base64, io
+from sqlalchemy import func, cast, Date, text, inspect
 from functools import wraps
 from datetime import datetime, timedelta
 from collections import defaultdict
@@ -20,6 +20,7 @@ from flask import (
     send_file,
 )
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc, or_
 from dotenv import load_dotenv
@@ -34,7 +35,7 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import Flow
 
 from prescription import analyze_pdf
-from whatsapp import send_pdf_whatsapp, send_quote_whatsapp
+from whatsapp import send_pdf_whatsapp, send_quote_whatsapp, send_pix_receipt_admin
 from mercado_pago import generate_payment_link
 from email_utils import send_email_quote
 
@@ -78,7 +79,6 @@ from records import (
     get_quiz_results_by_doctor_and_range,
 )
 
-
 from models import (
     db,
     User,
@@ -96,6 +96,9 @@ load_dotenv()
 
 app = Flask(__name__)
 
+# ==============================================
+# DB INIT
+# ==============================================
 # Define caminho absoluto da pasta 'instance'
 base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'instance'))
 os.makedirs(base_dir, exist_ok=True)
@@ -109,6 +112,112 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = secrets.token_hex(32)
 
 db.init_app(app)
+
+# ==============================================
+# SUBSCRIPTION / PIX CONFIG & CONSTANTES
+# ==============================================
+# PIX
+PIX_CNPJ = os.getenv("PIX_CNPJ", "49.942.520/0001-02") 
+PIX_KEY  = os.getenv("PIX_KEY", "49.942.520/0001-02")      
+PIX_NAME = os.getenv("PIX_NAME", "RafahMed")            
+PIX_CITY = os.getenv("PIX_CITY", "Ipatinga")         
+PIX_DESC = os.getenv("PIX_DESC", "Assinatura RafahMed")
+PLAN_PRICES = {"plus": 99.00, "premium": 179.00}        # R$/mês
+
+# Número do admin para receber comprovantes no WhatsApp
+ADMIN_WHATSAPP = os.getenv("ADMIN_WHATSAPP", "31985570920")  # 👈 NOVO
+
+# Níveis de plano e recursos (p/ gates)
+PLAN_LEVELS = {'standard': 1, 'plus': 2, 'premium': 3}
+FEATURES = {
+    'quotes_auto': 3,     # Premium
+    'training': 3,        # Premium
+    'selfevaluations': 3  # Premium
+}
+
+# Helpers PIX (EMV/BR Code + QR)
+def _emv(tag, value):
+    v = str(value)
+    return f"{tag}{len(v):02d}{v}"
+
+def _crc16(data: bytes) -> str:
+    poly = 0x1021
+    crc = 0xFFFF
+    for b in data:
+        crc ^= (b << 8)
+        for _ in range(8):
+            if crc & 0x8000:
+                crc = (crc << 1) ^ poly
+            else:
+                crc <<= 1
+            crc &= 0xFFFF
+    return f"{crc:04X}"
+
+def build_pix_payload(key: str, name: str, city: str, amount: float, txid: str, description: str = "") -> str:
+    p = _emv("00", "01") + _emv("01", "11")
+    mai = _emv("00", "br.gov.bcb.pix") + _emv("01", key)
+    if description:
+        if len(description) > 99:
+            description = description[:99]
+        mai += _emv("02", description)
+    p += _emv("26", mai)
+    p += _emv("52", "0000") + _emv("53", "986") + _emv("54", f"{amount:.2f}")
+    name = (name or "")[:25]
+    city = (city or "SAO PAULO")[:15]
+    p += _emv("58", "BR") + _emv("59", name) + _emv("60", city)
+    txid = (txid or "RAF")[:25]
+    p += _emv("62", _emv("05", txid))
+    to_crc = (p + "6304").encode("ascii")
+    crc = _crc16(to_crc)
+    return p + "63" + "04" + crc
+
+def make_qr_base64(payload: str) -> str | None:
+    try:
+        import qrcode
+        from PIL import Image  # noqa: F401 (mantém pillow carregado)
+
+        img = qrcode.make(payload)
+        buf = io.BytesIO()
+        img.save(buf, "PNG")
+        buf.seek(0)
+        return base64.b64encode(buf.getvalue()).decode("ascii")
+    except Exception as e:
+        print("[pix] qr generation skipped:", e)
+        return None
+
+
+def ensure_subscription_columns():
+    with app.app_context():
+        insp = inspect(db.engine)
+        try:
+            cols = {c["name"] for c in insp.get_columns("users")}
+        except Exception as e:
+            print("[migrate] Could not read 'users' columns:", e)
+            return
+
+        stmts = []
+        if "plan" not in cols:
+            stmts.append("ALTER TABLE users ADD COLUMN plan TEXT DEFAULT 'standard'")
+        if "plan_status" not in cols:
+            stmts.append("ALTER TABLE users ADD COLUMN plan_status TEXT DEFAULT 'inactive'")
+        if "plan_expires_at" not in cols:
+            stmts.append("ALTER TABLE users ADD COLUMN plan_expires_at DATETIME")
+        if "trial_until" not in cols:
+            stmts.append("ALTER TABLE users ADD COLUMN trial_until DATETIME")
+
+        with db.engine.begin() as conn:
+            for s in stmts:
+                print("[migrate]", s)
+                conn.execute(text(s))
+            # garante defaults para registros antigos
+            conn.execute(text(
+                "UPDATE users "
+                "SET plan = COALESCE(plan,'standard'), "
+                "    plan_status = COALESCE(plan_status,'inactive')"
+            ))
+
+# roda a migração uma vez no startup
+ensure_subscription_columns()
 
 def get_logged_user():
     uid = session.get('user_id')
@@ -139,6 +248,53 @@ def login_required(f):
     return decorated_function
 
 # ==============================================
+# SUBSCRIPTION HELPERS
+# ==============================================
+def is_plan_active(user):
+    if user.username.lower() == 'admin':
+        return True
+    if not getattr(user, 'plan', None) or getattr(user, 'plan_status', '') != 'active':
+        if getattr(user, 'trial_until', None) and user.trial_until >= datetime.utcnow():
+            return True
+        return False
+    if getattr(user, 'plan_expires_at', None) and user.plan_expires_at < datetime.utcnow():
+        return False
+    return True
+
+def has_feature(user, feature):
+    req = FEATURES.get(feature, 99)
+    lvl = PLAN_LEVELS.get((getattr(user, 'plan', None) or 'standard'), 1)
+    if getattr(user, 'trial_until', None) and user.trial_until >= datetime.utcnow():
+        return True
+    return lvl >= req
+
+def feature_required(feature):
+    def inner(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            user = get_logged_user()
+            if not user:
+                return redirect(url_for('login'))
+            if user.username.lower() == 'admin':
+                return f(*args, **kwargs)
+            if not is_plan_active(user):
+                flash('Sua assinatura está inativa ou expirada.', 'danger')
+                return redirect(url_for('plans', next=request.path))
+            if not has_feature(user, feature):
+                flash('Seu plano não dá acesso a esta funcionalidade. Faça upgrade.', 'warning')
+                return redirect(url_for('plans', next=request.path))
+            return f(*args, **kwargs)
+        return wrapper
+    return inner
+
+# Expor helpers no Jinja
+app.jinja_env.globals.update(
+    has_feature=has_feature,
+    PLAN_LEVELS=PLAN_LEVELS,
+    PLAN_PRICES=PLAN_PRICES
+)
+
+# ==============================================
 # AUTHENTICATION AND ACCOUNT MANAGEMENT
 # ==============================================
 @app.route('/schedule_consultation')
@@ -163,18 +319,12 @@ def terms():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    # GET: limpa mensagens antigas que não são do próprio register
     if request.method == 'GET':
-        # Se NÃO for um retorno de POST do próprio /register,
-        # consome quaisquer flashes pendentes (de outras rotas)
         coming_from_register_post = session.pop('register_flash', None)
         if not coming_from_register_post:
-            # Consome/limpa mensagens pendentes
             get_flashed_messages()
-
         return render_template('register.html')
 
-    # POST
     username     = escape(request.form.get('username', '').strip())
     email        = escape(request.form.get('email', '').strip().lower())
     password     = request.form.get('password', '')
@@ -182,14 +332,12 @@ def register():
     company_code = escape(request.form.get('company_code', '').strip().upper())
     account_type = request.form.get('account_type', '').strip().lower()
 
-    # Validação de e-mail
     email_regex = r'^[\w\.-]+@[\w\.-]+\.\w+$'
     if not re.match(email_regex, email):
         session['register_flash'] = True
         flash('E-mail inválido.', 'warning')
         return redirect(url_for('register'))
 
-    # Verifica duplicidade
     exists_email = User.query.filter_by(email=email).first()
     exists_user  = User.query.filter_by(username=username).first()
     if exists_email or exists_user:
@@ -197,7 +345,6 @@ def register():
         flash('E-mail ou usuário já cadastrado.', 'warning')
         return redirect(url_for('register'))
 
-    # Validação de senha
     if len(password) < 8:
         session['register_flash'] = True
         flash('A senha deve ter pelo menos 8 caracteres.', 'warning')
@@ -219,9 +366,6 @@ def register():
         flash('As senhas não coincidem.', 'warning')
         return redirect(url_for('register'))
 
-    # Validação do tipo de conta / código da empresa (se exigido)
-    # (mantém seu comportamento anterior: company_code é opcional;
-    # se vier preenchido, precisa ser válido)
     company = None
     if company_code:
         company = Company.query.filter_by(access_code=company_code).first()
@@ -230,7 +374,6 @@ def register():
             flash('Código da empresa inválido.', 'danger')
             return redirect(url_for('register'))
 
-    # Cria o usuário
     user = User(
         username=username,
         email=email,
@@ -240,7 +383,6 @@ def register():
     db.session.add(user)
     db.session.commit()
 
-    # Sucesso: vai para login (não precisa preservar flash no /register)
     flash('Cadastro realizado com sucesso! Faça login para continuar.', 'success')
     return redirect(url_for('login'))
 
@@ -261,6 +403,8 @@ def login():
         else:
             session['user_id']  = user.id
             session['username'] = user.username
+            if not is_plan_active(user):
+                return redirect(url_for('plans'))
             return redirect(url_for('index'))
 
     return render_template('login.html', error=error)
@@ -463,7 +607,6 @@ def index():
     inv_map = {v: k for k, v in score_map.items()}
 
     for q in quizzes:
-        # Converte string para datetime se necessário
         q_date = q.date if isinstance(q.date, datetime) else datetime.strptime(q.date, '%Y-%m-%d')
         q_date = q_date.date()
 
@@ -508,21 +651,17 @@ def index():
         user=user
     )
 
-
-
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     user = get_logged_user()
     if not user:
         return redirect(url_for('login'))
 
-    # Verifica pacote disponível
     if not is_package_available(user.id):
         flash('Seu pacote de análises acabou. Por favor, adquira mais para continuar.', 'warning')
         return redirect(url_for('purchase'))
 
     if request.method == 'POST':
-        # === Inserção Manual ===
         if 'manual_entry' in request.form:
             name        = request.form['name'].strip()
             age         = int(request.form['age'])
@@ -539,7 +678,6 @@ def upload():
             diagnostic, prescription = result
 
         else:
-            # === Upload de arquivo PDF ===
             pdf_file = request.files.get('pdf_file')
             if not pdf_file or not pdf_file.filename:
                 return render_template('upload.html', error='Por favor, selecione um arquivo PDF.')
@@ -567,8 +705,6 @@ def upload():
                 prescription=prescription
             )
 
-
-        # Agenda no Google Calendar
         start_dt = datetime.now()
         end_dt   = start_dt + timedelta(hours=1)
         notes    = f"Diagnóstico:\n{diagnostic}\n\nPrescrição:\n{prescription}"
@@ -582,7 +718,6 @@ def upload():
         except Exception as e:
             app.logger.error(f"Erro ao criar evento no Google Calendar: {e}")
 
-        # Prepara sessão e gera PDF
         session['diagnostic_text']   = diagnostic
         session['prescription_text'] = prescription
         session['doctor_name']       = doctor_name
@@ -615,7 +750,6 @@ def upload():
         with open(pdf_path, 'wb') as f:
             f.write(pdf_bytes)
 
-        # Envia por WhatsApp
         pdf_link = url_for('static', filename=f"output/{pdf_filename}", _external=True)
         send_pdf_whatsapp(
             doctor_name=doctor_name,
@@ -624,7 +758,6 @@ def upload():
             original_pdf_link=(None if 'manual_entry' in request.form else url_for('static', filename=f"uploads/{filename}", _external=True))
         )
 
-        # Atualiza uso de pacote
         usage = get_package_info(user.id)['used'] + 1
         update_package_usage(user.id, usage)
 
@@ -634,6 +767,9 @@ def upload():
 
     return render_template('upload.html')
 
+# ==============================================
+# PAGAMENTOS (Pacotes + Assinatura PIX)
+# ==============================================
 @app.route('/purchase', methods=['GET', 'POST'])
 def purchase():
     user = get_logged_user()
@@ -647,6 +783,91 @@ def purchase():
         return redirect(link or url_for('pagamento_falha'))
     return render_template('purchase.html')
 
+@app.route('/subscribe_pix', methods=['POST'])
+@login_required
+def subscribe_pix():
+    user = get_logged_user()
+    if not user:
+        return redirect(url_for('login'))
+
+    plan = (request.form.get('plan') or '').lower()
+    if plan not in PLAN_PRICES:
+        flash('Plano inválido.', 'danger')
+        return redirect(url_for('purchase'))
+
+    amount = PLAN_PRICES[plan]
+    txid = f"RAF-{uuid.uuid4().hex[:10].upper()}"
+    payload = build_pix_payload(
+        key=PIX_KEY,
+        name=PIX_NAME,
+        city=PIX_CITY,
+        amount=amount,
+        txid=txid,
+        description=f"{PIX_DESC} {plan.upper()}"
+    )
+    qr_b64 = make_qr_base64(payload)
+
+    return render_template(
+        'pix_checkout.html',
+        plan=plan,
+        amount=amount,
+        pix_key=PIX_KEY,
+        pix_cnpj=PIX_CNPJ,
+        payload=payload,
+        qr_b64=qr_b64,
+        txid=txid
+    )
+
+@app.route('/confirm_pix', methods=['POST'])
+@login_required
+def confirm_pix():
+    user = get_logged_user()
+    if not user:
+        return redirect(url_for('login'))
+
+    plan = (request.form.get('plan') or '').lower()
+    txid = request.form.get('txid') or ''
+    file = request.files.get('receipt')
+
+    # salva comprovante e gera URL pública (se estiver em prod)
+    receipt_url = None
+    if file and file.filename:
+        folder = os.path.join(app.root_path, 'static', 'pix_receipts')
+        os.makedirs(folder, exist_ok=True)
+        fname = secure_filename(f"{user.id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{file.filename}")
+        saved_path = os.path.join(folder, fname)
+        file.save(saved_path)
+        receipt_url = url_for('static', filename=f'pix_receipts/{fname}', _external=True)
+
+    # notifica admin via WhatsApp com os dados
+    try:
+        send_pix_receipt_admin(
+            admin_phone=ADMIN_WHATSAPP,
+            user_name=user.username,
+            user_id=user.id,
+            user_email=getattr(user, "email", "") or "",
+            plan=plan,
+            amount=PLAN_PRICES.get(plan, 0.0),
+            txid=txid,
+            receipt_url=receipt_url,
+            payload_text=request.form.get('payload')  # opcional (se veio do form)
+        )
+    except Exception as e:
+        app.logger.error(f"[pix] falha ao notificar admin no WhatsApp: {e}")
+
+    # marca assinatura como pendente até validação
+    user.plan = plan if plan in PLAN_PRICES else 'standard'
+    user.plan_status = 'pending'
+    user.plan_expires_at = None
+    db.session.commit()
+
+    flash('Comprovante recebido! Sua assinatura ficará ativa assim que validarmos o pagamento.', 'success')
+    return redirect(url_for('plans'))
+
+# ==============================================
+# AGENDA / MÉDICOS / PRODUTOS / etc
+# (restante das rotas – sem mudanças de lógica)
+# ==============================================
 @app.route('/agenda')
 @login_required
 def agenda():
@@ -691,16 +912,11 @@ def save_consult(patient_id):
 
 @app.route('/product/<int:product_id>')
 def product_result(product_id):
-    # Busque o produto do banco pelo ID (ajuste conforme seu ORM/banco)
     product = get_product_by_id(product_id)
     if not product:
         return "Produto não encontrado", 404
     return render_template('product_result.html', product=product)
 
-
-# ==============================================
-# DOWNLOAD DO PDF GERADO
-# ==============================================
 @app.route('/download_pdf/<int:patient_id>')
 def download_pdf(patient_id):
     user = get_logged_user()
@@ -709,7 +925,6 @@ def download_pdf(patient_id):
     patient = get_patient_by_id(patient_id)
     if not patient or patient.doctor_id != user.id:
         abort(403)
-    # O caminho do PDF pode depender de como você salva. Ajuste para o seu padrão:
     cpf = (patient.cpf or '').replace('.', '').replace('-', '')
     pdf_filename = f"result_{cpf}.pdf"
     pdf_path = os.path.join(app.root_path, "static", "output", pdf_filename)
@@ -717,10 +932,6 @@ def download_pdf(patient_id):
         flash('Arquivo PDF não encontrado.', 'danger')
         return redirect(url_for('patient_info', patient_id=patient_id))
     return send_file(pdf_path, as_attachment=True, download_name='prescription.pdf')
-
-# ==============================================
-# PATIENT MANAGEMENT
-# ==============================================
 
 @app.route('/catalog')
 @login_required
@@ -742,7 +953,6 @@ def catalog():
 
     return render_template('catalog.html', patients=patients)
 
-
 @app.route('/edit_patient/<int:patient_id>', methods=['GET', 'POST'])
 def edit_patient(patient_id):
     user = get_logged_user()
@@ -751,7 +961,7 @@ def edit_patient(patient_id):
 
     patient = get_patient_by_id(patient_id)
     if not patient:
-        abort(404)  # Paciente não existe
+        abort(404)
 
     if request.method == 'POST':
         name         = request.form['name'].strip()
@@ -769,14 +979,13 @@ def edit_patient(patient_id):
             cpf=cpf,
             gender=gender,
             phone=phone,
-            doctor_id=patient.doctor_id,  # mantém o médico já cadastrado (ou None)
+            doctor_id=patient.doctor_id,
             prescription=prescription,
             status=status
         )
         return redirect(url_for('catalog'))
 
     return render_template('edit_patient.html', patient=patient)
-
 
 @app.route('/patient_result/<int:patient_id>')
 def patient_result(patient_id):
@@ -819,7 +1028,6 @@ def patient_info(patient_id):
 
     return render_template('patient_info.html', patient=patient)
 
-
 @app.route('/api/edit_patient/<int:patient_id>', methods=['POST'])
 @login_required
 def edit_patient_api(patient_id):
@@ -832,7 +1040,6 @@ def edit_patient_api(patient_id):
         return jsonify(success=False, error="Paciente não encontrado"), 404
 
     data = request.get_json() or {}
-    # Atualize os campos conforme enviados
     update_patient(
         patient_id   = patient_id,
         name         = data.get('name', patient.name),
@@ -856,10 +1063,8 @@ def delete_patient(patient_id):
     if not patient or patient.doctor_id != user.id:
         abort(403)
 
-    # Chama a função importada corretamente
     delete_patient_record(patient_id)
     return redirect(url_for('catalog'))
-
 
 @app.route('/toggle_patient_status/<int:patient_id>/<new_status>', methods=['POST'])
 def toggle_patient_status(patient_id, new_status):
@@ -878,12 +1083,11 @@ def toggle_patient_status(patient_id, new_status):
         cpf=patient.cpf,
         gender=patient.gender,
         phone=patient.phone,
-        doctor_id=patient.doctor_id,  # Use o que está cadastrado!
+        doctor_id=patient.doctor_id,
         prescription=patient.prescription,
         status=new_status
     )
     return redirect(url_for('catalog'))
-
 
 @app.route('/api/add_patient', methods=['POST'])
 def api_add_patient():
@@ -907,20 +1111,17 @@ def api_add_patient():
     except ValueError:
         return jsonify(success=False, error='Idade inválida'), 400
 
-    # OBRIGATÓRIO: ASSOCIA O PACIENTE AO USUÁRIO LOGADO
     patient = add_patient(
         name=name,
         age=age,
         cpf=cpf or None,
         gender=gender or None,
         phone=phone or None,
-        doctor_id=user.id,  # <-- ESTA LINHA É ESSENCIAL!
+        doctor_id=user.id,
         prescription=prescription
     )
 
     return jsonify(success=True, patient_id=patient.id), 201
-
-
 
 @app.route('/api/patients')
 def api_get_patients():
@@ -939,11 +1140,9 @@ def api_get_patients():
     } for p in patients]
     return jsonify(result)
 
-
 # ==============================================
 # PRODUCT MANAGEMENT
 # ==============================================
-
 @app.route('/products')
 @login_required
 def products():
@@ -951,7 +1150,7 @@ def products():
     if not user:
         return redirect(url_for('login'))
 
-    produtos           = get_products(user.id)  # <-- agora filtrando!
+    produtos           = get_products(user.id)
     category_filter    = request.args.get('category', '')
     via_filter         = request.args.get('application_route', '')
     status_filter      = request.args.get('status', '')
@@ -977,14 +1176,13 @@ def products():
                            categories=categories,
                            application_routes=application_routes)
 
-
 @app.route('/add_product', methods=['POST'])
 def add_product_route():
     user = get_logged_user()
     if not user:
         return redirect(url_for('login'))
 
-    name           = request.form.get('name', '').strip()
+    name = request.form.get('name', '').strip()
     if not name:
         flash('Nome do produto é obrigatório.', 'warning')
         return redirect(url_for('products'))
@@ -1014,7 +1212,6 @@ def add_product_route():
     flash("Produto adicionado com sucesso.", "success")
     return redirect(url_for('products'))
 
-
 @app.route('/toggle_product_status/<int:product_id>/<new_status>', methods=['POST'])
 def toggle_product_status(product_id, new_status):
     user = get_logged_user()
@@ -1030,7 +1227,6 @@ def toggle_product_status(product_id, new_status):
 
     return redirect(url_for('products'))
 
-
 @app.route('/stock_view/<int:product_id>')
 def stock_view(product_id):
     user = get_logged_user()
@@ -1045,7 +1241,6 @@ def stock_view(product_id):
         abort(404)
     return render_template('stock_view.html', product=product)
 
-
 @app.route('/stock_edit/<int:product_id>', methods=['GET', 'POST'])
 @login_required
 def stock_edit(product_id):
@@ -1053,7 +1248,6 @@ def stock_edit(product_id):
     if not user:
         return redirect(url_for('login'))
 
-    # Busca produto só do usuário logado
     product = get_product_by_id(product_id, user.id)
     if not product:
         abort(404, description="Produto não encontrado ou sem permissão")
@@ -1099,9 +1293,8 @@ def delete_product(product_id):
     return redirect(url_for('products'))
 
 # ==============================================
-# SUPPLIERS
+# SUPPLIERS (com gates Premium onde necessário)
 # ==============================================
-
 @app.route('/suppliers')
 @login_required
 def suppliers():
@@ -1161,6 +1354,7 @@ def delete_supplier(supplier_id):
 
 @app.route('/create_quote', methods=['GET', 'POST'])
 @login_required
+@feature_required('quotes_auto')
 def create_quote():
     user = get_logged_user()
     if not user:
@@ -1173,25 +1367,19 @@ def create_quote():
         items_raw = request.form['items']
         supplier_ids = request.form.getlist('supplier_ids')
 
-        # Salva IDs como string separada por vírgula
         suppliers_str = ",".join(supplier_ids)
 
-        # Cria cotação e salva no banco
         quote = Quote(title=title, items=items_raw, suppliers=suppliers_str)
         db.session.add(quote)
         db.session.commit()
 
-        # ENVIO WHATSAPP + EMAIL
         items_list = [i.strip() for i in items_raw.split('\n') if i.strip()]
         items_text = "\n".join([f"• {item}" for item in items_list])
 
         for s in suppliers:
             if str(s.id) not in supplier_ids:
                 continue
-
-            # Link para responder (ajuste se necessário)
             response_url = url_for('respond_quote', quote_id=quote.id, supplier_id=s.id, _external=True)
-            # WhatsApp
             if s.phone:
                 try:
                     send_quote_whatsapp(
@@ -1203,7 +1391,6 @@ def create_quote():
                     )
                 except Exception as e:
                     print(f"[Erro WhatsApp - {s.name}] {e}")
-            # E-mail
             if s.email:
                 try:
                     email_subject = f"Cotação RafahMed: {title}"
@@ -1233,6 +1420,7 @@ Equipe RafahMed
 
 @app.route('/quote_index')
 @login_required
+@feature_required('quotes_auto')
 def quote_index():
     user = get_logged_user()
     if not user:
@@ -1290,22 +1478,19 @@ def respond_quote(quote_id, supplier_id):
 
 @app.route('/quote_results/<int:quote_id>')
 @login_required
+@feature_required('quotes_auto')
 def quote_results(quote_id):
-    # 1. Busca cotação e respostas do banco
     quote = Quote.query.get_or_404(quote_id)
     responses = QuoteResponse.query.filter_by(quote_id=quote_id).all()
-    # 2. Monta lista de fornecedores (em ordem)
+
     supplier_ids = [int(x) for x in (quote.suppliers or '').split(',') if x]
     supplier_objs = Supplier.query.filter(Supplier.id.in_(supplier_ids)).all()
-    # Mantém a ordem original dos IDs
     supplier_map = {s.id: s.name for s in supplier_objs}
     supplier_names = [supplier_map.get(sid, f'Fornecedor {sid}') for sid in supplier_ids]
     quote_suppliers = supplier_ids
 
-    # 3. Monta lista de produtos
     quote_items = list(enumerate([item.strip() for item in (quote.items or '').split('\n') if item.strip()]))
 
-    # 4. Map de respostas (id -> resposta com lista de answers)
     quote_responses = {}
     for r in responses:
         try:
@@ -1314,7 +1499,6 @@ def quote_results(quote_id):
             answers = []
         quote_responses[r.supplier_id] = {'answers': answers}
 
-    # 5. Melhor fornecedor para cada produto
     best_per_item = {}
     for idx, _ in quote_items:
         min_price = float('inf')
@@ -1331,15 +1515,14 @@ def quote_results(quote_id):
                     continue
         best_per_item[idx] = best_supplier
 
-    # 6. Renderiza o template usando exatamente o padrão do seu HTML novo
     return render_template(
         'quote_results.html',
         quote=quote,
-        supplier_names=supplier_names,    # lista de nomes dos fornecedores (header)
-        quote_items=quote_items,          # lista de tuplas (idx, nome do produto)
-        quote_suppliers=quote_suppliers,  # lista de ids (ordem dos fornecedores)
-        quote_responses=quote_responses,  # dict: fornecedor_id -> {'answers': [ ... ]}
-        best_per_item=best_per_item       # dict: idx_produto -> id_fornecedor_com_menor_preco
+        supplier_names=supplier_names,
+        quote_items=quote_items,
+        quote_suppliers=quote_suppliers,
+        quote_responses=quote_responses,
+        best_per_item=best_per_item
     )
 
 @app.route('/delete_quote/<int:quote_id>', methods=['POST'])
@@ -1355,7 +1538,6 @@ def delete_quote(quote_id):
 # ==============================================
 # API & CONSULT ROUTES
 # ==============================================
-
 @app.route('/api/add_consult', methods=['POST'])
 def api_add_consult():
     user = get_logged_user()
@@ -1378,7 +1560,6 @@ def api_add_consult():
         print("Erro ao criar evento no Google Calendar:", e)
 
     return jsonify(success=True, consult_id=consult.id), 201
-
 
 @app.route('/submit_patient_consultation', methods=['POST'])
 def submit_patient_consultation():
@@ -1411,7 +1592,6 @@ def submit_patient_consultation():
         app.logger.error(f"Erro ao agendar no Google: {e}")
         return "Erro ao agendar", 500
 
-
 @app.route('/authorize_calendar')
 def authorize_calendar():
     flow = Flow.from_client_secrets_file(
@@ -1426,7 +1606,6 @@ def authorize_calendar():
     )
     session['state'] = state
     return redirect(auth_url)
-
 
 @app.route("/oauth2callback")
 def oauth2callback():
@@ -1452,7 +1631,6 @@ def oauth2callback():
     }
     return redirect(url_for("agenda"))
 
-
 def create_user_event(summary: str, start_datetime: str, end_datetime: str, description: str) -> None:
     info = session.get("credentials")
     if not info:
@@ -1467,14 +1645,12 @@ def create_user_event(summary: str, start_datetime: str, end_datetime: str, desc
     }
     service.events().insert(calendarId='primary', body=event).execute()
 
-
 # ==============================================
 # QUIZ ROUTES
 # ==============================================
 @app.route('/quiz')
 def quiz():
     return render_template('quiz.html')
-
 
 @app.route('/submit_quiz', methods=['POST'])
 def submit_quiz():
@@ -1492,7 +1668,6 @@ def submit_quiz():
     if doctor_id is None:
         return jsonify(status='error', error='doctor_id ausente'), 400
 
-    # 1. Cria o paciente
     patient = add_patient(
         name=name,
         age=age,
@@ -1503,10 +1678,9 @@ def submit_quiz():
         prescription=f"Autoavaliação: {data.get('risco')}"
     )
 
-    # --- TRATAMENTO DE LISTAS PARA CAMPOS MULTIVALORADOS ---
     fatores = data.get('fatores', [])
     if isinstance(fatores, list):
-        fatores = json.dumps(fatores)  # armazene como string JSON
+        fatores = json.dumps(fatores)
     elif isinstance(fatores, str):
         fatores = json.dumps([fatores])
     else:
@@ -1514,17 +1688,24 @@ def submit_quiz():
 
     motivacao = data.get('motivacao', [])
     if isinstance(motivacao, list):
-        motivacao = '; '.join(motivacao)  # separa por ponto e vírgula
+        motivacao = '; '.join(motivacao)
     elif isinstance(motivacao, str):
         motivacao = motivacao
     else:
         motivacao = ""
 
-    # 2. Cria o resultado do quiz
+    
     qr = add_quiz_result(
         name=name,
         age=age,
         date=datetime.utcnow(),
+
+        # === NOVOS CAMPOS ===
+        consentimento=data.get('consentimento'),
+        nivel_hierarquico=data.get('nivel_hierarquico'),
+        setor=data.get('setor'),
+
+        # === respostas cruas ===
         nervosismo=data.get('nervosismo'),
         preocupacao=data.get('preocupacao'),
         interesse=data.get('interesse'),
@@ -1533,11 +1714,13 @@ def submit_quiz():
         hora_extra=data.get('hora_extra'),
         sono=data.get('sono'),
         atividade_fisica=data.get('atividade_fisica'),
-        fatores=fatores,              # agora sempre string
-        motivacao=motivacao,          # agora sempre string
+        fatores=fatores,
+        motivacao=motivacao,
         pronto_socorro=data.get('pronto_socorro'),
         relacionamentos=data.get('relacionamentos'),
         hobbies=data.get('hobbies'),
+
+        # === classificações ===
         ansiedade=data.get('ansiedade'),
         depressao=data.get('depressao'),
         estresse=data.get('estresse'),
@@ -1549,31 +1732,28 @@ def submit_quiz():
         qualidade_cor=data.get('qualidade_cor'),
         risco_cor=data.get('risco_cor'),
         recomendacao=data.get('recomendacao'),
+
         doctor_id=doctor_id,
-        patient_id=patient.id  # <-- associa quiz ao paciente
+        patient_id=patient.id
     )
 
     print("QUIZ RESULT ADDED:", qr)
-    
-    # 3. Atualiza o paciente para apontar para o quiz
     patient.quiz_result_id = qr.id
     db.session.commit()
 
     return jsonify(status='ok', quiz_id=qr.id)
 
 @app.route('/selfevaluation')
+@login_required
+@feature_required('selfevaluations')
 def selfevaluation():
     user = get_logged_user()
     if not user:
         return redirect(url_for('login'))
 
-    # garanta que doctor_id seja um int válido
     doctor_id = user.id
-
-    # usa a função de records para buscar resultados
     results = get_quiz_results_by_doctor(doctor_id)
 
-    # conta quantos quizzes por dia
     counts = defaultdict(int)
     for r in results:
         day = r.date.strftime('%d/%m')
@@ -1584,8 +1764,9 @@ def selfevaluation():
 
     return render_template('selfevaluation.html', labels=labels, values=values)
 
-
 @app.route("/quiz-results")
+@login_required
+@feature_required('selfevaluations')
 def quiz_results():
     user    = get_logged_user()
     if not user:
@@ -1618,8 +1799,9 @@ def quiz_results():
 
     return render_template("quiz_results.html", results=formatted, user=user)
 
-
 @app.route('/quiz-patient/<int:quiz_id>')
+@login_required
+@feature_required('selfevaluations')
 def quiz_patient(quiz_id):
     user = get_logged_user()
     if not user:
@@ -1629,7 +1811,6 @@ def quiz_patient(quiz_id):
     if result.doctor_id != user.id:
         abort(403)
 
-    # Decodifica fatores (JSON string para lista legível)
     fatores_val = result.fatores
     if isinstance(fatores_val, str):
         try:
@@ -1642,10 +1823,8 @@ def quiz_patient(quiz_id):
         fatores_list = fatores_val
     else:
         fatores_list = [str(fatores_val)]
-
     fatores_texto = ', '.join(fatores_list)
 
-    # Motivação pode ser lista ou string separada por ';'
     motivacao_val = result.motivacao
     if isinstance(motivacao_val, str):
         if motivacao_val.startswith("[") and motivacao_val.endswith("]"):
@@ -1665,11 +1844,16 @@ def quiz_patient(quiz_id):
         "nome":             result.name,
         "idade":            result.age,
         "data":             result.date.strftime('%d/%m/%Y'),
+
+        "consentimento":     getattr(result, "consentimento", None),
+        "nivel_hierarquico": getattr(result, "nivel_hierarquico", None),
+        "setor":             getattr(result, "setor", None),
+
         "nervosismo":       result.nervosismo,
         "preocupacao":      result.preocupacao,
         "interesse":        result.interesse,
         "depressao_raw":    result.depressao_raw,
-        "estresse_raw":     result.estresse_raw,
+        "estresse_raw":     result.estresse_raw,   # <- usar *_raw aqui
         "hora_extra":       result.hora_extra,
         "sono":             result.sono,
         "atividade_fisica": result.atividade_fisica,
@@ -1678,13 +1862,15 @@ def quiz_patient(quiz_id):
         "pronto_socorro":   result.pronto_socorro,
         "relacionamentos":  result.relacionamentos,
         "hobbies":          result.hobbies,
+
         "ansiedade":        result.ansiedade,
         "depressao":        result.depressao,
-        "estresse":         result.estresse,
+        "estresse":         result.estresse,      # classificação
         "qualidade":        result.qualidade,
         "risco":            result.risco,
         "recomendacao":     result.recomendacao,
     }
+
 
     questions = {
         "nome":             "Qual seu nome?",
@@ -1728,16 +1914,39 @@ def delete_quiz_result():
     return redirect(url_for('quiz_results'))
 
 # ==============================================
-# TRAINING
+# TRAINING (Premium)
 # ==============================================
-
 @app.route('/training')
+@login_required
+@feature_required('training')
 def training():
     return render_template("training.html")
 
 @app.route('/videos')
+@login_required
+@feature_required('training')
 def videos():
     return render_template("videos.html")
+
+# ==============================================
+# SUBSCRIBE / PLANS
+# ==============================================
+@app.route('/plans')
+def plans():
+    user = get_logged_user()
+    return render_template('plans.html', user=user, next=request.args.get('next', '/index'))
+
+@app.route('/subscribe', methods=['POST'])
+@login_required
+def subscribe():
+    user = get_logged_user()
+    selected = request.form.get('plan', 'standard')
+    pricing = {'standard': 49, 'plus': 99, 'premium': 179}
+    if selected not in pricing:
+        flash('Plano inválido.', 'danger')
+        return redirect(url_for('plans'))
+    link = generate_payment_link(selected, pricing[selected])
+    return redirect(link or url_for('plans'))
 
 # ==============================================
 # APPLICATION ENTRY POINT

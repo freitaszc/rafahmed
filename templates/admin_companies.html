@@ -1,84 +1,198 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
   <meta charset="UTF-8">
   <title>Administração – RafahMed</title>
   <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg-deep:#080c14; --bg-dark:#0d1624; --bg-elev:#1a2435;
-      --text:#e5e7eb; --text-dim:#cbd5e1; --line:#1f2a3b;
-      --red:#dd1b35; --red-dark:#b81429;
-      --input-bg:#0f1a2a; --input-bd:#283447;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; font-family:'Montserrat',sans-serif;
-      background:linear-gradient(135deg,var(--bg-deep),var(--bg-dark));
-      color:var(--text);
+    :root {
+      --bg-deep: #080c14;
+      --bg-dark: #0d1624;
+      --bg-elev: #1a2435;
+      --text: #e5e7eb;
+      --text-dim: #cbd5e1;
+      --line: #1f2a3b;
+      --red: #dd1b35;
+      --red-dark: #b81429;
+      --input-bg: #0f1a2a;
+      --input-bd: #283447;
     }
 
-    .top-menu{
-      background:linear-gradient(180deg,#0b1423,var(--bg-dark));
-      padding:12px 0; display:flex; justify-content:center; gap:16px;
-      border-bottom:1px solid var(--line); position:relative;
-      box-shadow:0 6px 18px rgba(0,0,0,.35);
+    * {
+      box-sizing: border-box
     }
-    .top-menu img{position:absolute;left:20px;height:40px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))}
-    .top-menu a{
-      font-weight:700; font-size:14px; color:var(--text-dim); text-decoration:none;
-      padding:8px 12px; border-radius:10px; transition:.2s;
-    }
-    .top-menu a:hover{background:rgba(221,27,53,.12); color:var(--red)}
 
-    .content{max-width:1100px;margin:20px auto;padding:0 16px}
-    .header{text-align:center;margin-bottom:18px}
-    .header h2{font-size:26px;margin:0 0 10px}
+    body {
+      margin: 0;
+      font-family: 'Montserrat', sans-serif;
+      background: linear-gradient(135deg, var(--bg-deep), var(--bg-dark));
+      color: var(--text);
+    }
 
-    .menu-button{
-      display:inline-block; font-weight:800; font-size:14px; cursor:pointer;
-      padding:12px 20px; border-radius:28px; border:none;
-      background:linear-gradient(135deg,var(--red),var(--red-dark)); color:#fff;
-      box-shadow:0 10px 28px rgba(221,27,53,.35); transition:.25s;
+    .top-menu {
+      background: linear-gradient(180deg, #0b1423, var(--bg-dark));
+      padding: 12px 0;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      border-bottom: 1px solid var(--line);
+      position: relative;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
     }
-    .menu-button:hover{transform:translateY(-2px) scale(1.03)}
 
-    .form-box{
-      background:linear-gradient(145deg,var(--bg-elev),#233049);
-      padding:24px; border-radius:16px; max-width:640px; margin:0 auto 28px;
-      box-shadow:0 20px 60px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.04) inset;
-      text-align:center;
+    .top-menu img {
+      position: absolute;
+      left: 20px;
+      height: 40px;
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .5))
     }
-    .form-box input{
-      width:90%; padding:12px; margin:8px 0; border-radius:12px;
-      font-size:14px; background:var(--input-bg); color:var(--text);
-      border:2px solid var(--input-bd); outline:none; transition:.2s;
-    }
-    .form-box input:focus{border-color:var(--red); box-shadow:0 0 0 3px rgba(221,27,53,.12)}
-    .form-box button{width:60%; margin-top:10px}
 
-    .catalog-table{
-      width:100%; border-collapse:collapse;
-      background:linear-gradient(145deg,var(--bg-elev),#223049);
-      border-radius:12px; overflow:hidden;
-      box-shadow:0 20px 60px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.03) inset;
+    .top-menu a {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text-dim);
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 10px;
+      transition: .2s;
     }
-    .catalog-table th,.catalog-table td{
-      padding:12px 14px; border-bottom:1px solid var(--line); text-align:center; position:relative;
+
+    .top-menu a:hover {
+      background: rgba(221, 27, 53, .12);
+      color: var(--red)
     }
-    .catalog-table th{background:#121c2b; color:#cfe0ff; font-weight:800}
-    .catalog-table tr:hover{background:#0f1929}
-    .delete-btn{
-      position:absolute; right:10px; top:50%; transform:translateY(-50%);
-      background:none;border:none;font-size:18px;font-weight:bold;color:#9fb0c9;cursor:pointer;transition:.2s;
+
+    .content {
+      max-width: 1100px;
+      margin: 20px auto;
+      padding: 0 16px
     }
-    .delete-btn:hover{color:var(--red)}
-    .details-row{display:none;background:#0f1929}
-    .details-cell{padding:0;border:none}
-    h3{margin:24px 0 10px}
+
+    .header {
+      text-align: center;
+      margin-bottom: 18px
+    }
+
+    .header h2 {
+      font-size: 26px;
+      margin: 0 0 10px
+    }
+
+    .menu-button {
+      display: inline-block;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 12px 20px;
+      border-radius: 28px;
+      border: none;
+      background: linear-gradient(135deg, var(--red), var(--red-dark));
+      color: #fff;
+      box-shadow: 0 10px 28px rgba(221, 27, 53, .35);
+      transition: .25s;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .menu-button:hover {
+      transform: translateY(-2px) scale(1.03)
+    }
+
+    .form-box {
+      background: linear-gradient(145deg, var(--bg-elev), #233049);
+      padding: 24px;
+      border-radius: 16px;
+      max-width: 640px;
+      margin: 0 auto 28px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .45), 0 0 0 1px rgba(255, 255, 255, .04) inset;
+      text-align: center;
+    }
+
+    .form-box input {
+      width: 90%;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 12px;
+      font-size: 14px;
+      background: var(--input-bg);
+      color: var(--text);
+      border: 2px solid var(--input-bd);
+      outline: none;
+      transition: .2s;
+    }
+
+    .form-box input:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(221, 27, 53, .12)
+    }
+
+    .form-box button {
+      width: 60%;
+      margin-top: 10px
+    }
+
+    .catalog-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: linear-gradient(145deg, var(--bg-elev), #223049);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .45), 0 0 0 1px rgba(255, 255, 255, .03) inset;
+    }
+
+    .catalog-table th,
+    .catalog-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: center;
+      position: relative;
+    }
+
+    .catalog-table th {
+      background: #121c2b;
+      color: #cfe0ff;
+      font-weight: 800
+    }
+
+    .catalog-table tr:hover {
+      background: #0f1929
+    }
+
+    .delete-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      font-size: 18px;
+      font-weight: bold;
+      color: #9fb0c9;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .delete-btn:hover {
+      color: var(--red)
+    }
+
+    .details-row {
+      display: none;
+      background: #0f1929
+    }
+
+    .details-cell {
+      padding: 0;
+      border: none
+    }
+
+    h3 {
+      margin: 24px 0 10px
+    }
   </style>
 </head>
+
 <body>
   <!-- MENU SUPERIOR -->
   <div class="top-menu">
@@ -99,15 +213,18 @@
     </div>
 
     <!-- MODAL ADICIONAR EMPRESA -->
-    <div id="addCompanyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);justify-content:center;align-items:center;z-index:1000;">
-      <div style="background:linear-gradient(145deg,#0f172a,#0b1222);color:var(--text);padding:22px;border-radius:16px;width:90%;max-width:360px;position:relative;border:1px solid rgba(255,255,255,.06);box-shadow:0 24px 60px rgba(0,0,0,.5)">
-        <button onclick="closeCompanyModal()" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:22px;font-weight:bold;color:#93a4bd;cursor:pointer;">×</button>
+    <div id="addCompanyModal"
+      style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);justify-content:center;align-items:center;z-index:1000;">
+      <div
+        style="background:linear-gradient(145deg,#0f172a,#0b1222);color:var(--text);padding:22px;border-radius:16px;width:90%;max-width:360px;position:relative;border:1px solid rgba(255,255,255,.06);box-shadow:0 24px 60px rgba(0,0,0,.5)">
+        <button onclick="closeCompanyModal()"
+          style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:22px;font-weight:bold;color:#93a4bd;cursor:pointer;">×</button>
         <h2 style="text-align:center;margin:8px 0 14px">Cadastrar Empresa</h2>
         <form method="post" action="{{ url_for('add_company') }}">
           <input type="text" name="company_name" placeholder="Nome da Empresa" required
-                 style="width:95%;padding:12px;border-radius:12px;border:2px solid var(--input-bd);background:var(--input-bg);color:var(--text);margin-bottom:10px;">
+            style="width:95%;padding:12px;border-radius:12px;border:2px solid var(--input-bd);background:var(--input-bg);color:var(--text);margin-bottom:10px; font-family: 'Montserrat', sans-serif;">
           <input type="text" name="access_code" placeholder="Código de Acesso" required
-                 style="width:95%;padding:12px;border-radius:12px;border:2px solid var(--input-bd);background:var(--input-bg);color:var(--text);margin-bottom:14px;">
+            style="width:95%;padding:12px;border-radius:12px;border:2px solid var(--input-bd);background:var(--input-bg);color:var(--text);margin-bottom:14px;font-family: 'Montserrat', sans-serif;">
           <div style="display:flex;justify-content:center">
             <button type="submit" class="menu-button" style="width:100%">Salvar</button>
           </div>
@@ -119,14 +236,18 @@
     {% if companies %}
     <table class="catalog-table" id="tblEmpresas">
       <thead>
-      <tr><th>Empresa</th><th>Código</th></tr>
+        <tr>
+          <th>Empresa</th>
+          <th>Código</th>
+        </tr>
       </thead>
       <tbody>
-      {% for comp in companies %}
+        {% for comp in companies %}
         <tr onclick="toggleDetails({{ loop.index0 }})">
           <td>
             {{ comp.name }}
-            <form method="post" action="{{ url_for('delete_company', company_id=comp.id) }}" onsubmit="return confirm('Deseja realmente excluir esta empresa?')" style="display:inline;">
+            <form method="post" action="{{ url_for('delete_company', company_id=comp.id) }}"
+              onsubmit="return confirm('Deseja realmente excluir esta empresa?')" style="display:inline;">
               <button class="delete-btn" title="Excluir Empresa">×</button>
             </form>
           </td>
@@ -136,47 +257,68 @@
           <td colspan="2" class="details-cell">
             {% if comp.users %}
             <table class="catalog-table" style="margin:10px;">
-              <thead><tr><th>ID</th><th>Username</th><th>E‑mail</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Username</th>
+                  <th>E‑mail</th>
+                </tr>
+              </thead>
               <tbody>
-              {% for u in comp.users %}
-                <tr><td>{{ u.id }}</td><td>{{ u.username }}</td><td>{{ u.email }}</td></tr>
-              {% endfor %}
+                {% for u in comp.users %}
+                <tr>
+                  <td>{{ u.id }}</td>
+                  <td>{{ u.username }}</td>
+                  <td>{{ u.email }}</td>
+                </tr>
+                {% endfor %}
               </tbody>
             </table>
             {% else %}
-              <p style="padding:10px;color:var(--text-dim)">Nenhum usuário vinculado.</p>
+            <p style="padding:10px;color:var(--text-dim)">Nenhum usuário vinculado.</p>
             {% endif %}
           </td>
         </tr>
-      {% endfor %}
+        {% endfor %}
       </tbody>
     </table>
     {% else %}
-      <p style="text-align:center;color:#93a4bd">Nenhuma empresa cadastrada.</p>
+    <p style="text-align:center;color:#93a4bd">Nenhuma empresa cadastrada.</p>
     {% endif %}
 
     <h3 style="margin-top:28px;">Usuários Pessoais</h3>
     {% if personal_users %}
     <table class="catalog-table">
-      <thead><tr><th>ID</th><th>Username</th><th>E‑mail</th></tr></thead>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>E‑mail</th>
+        </tr>
+      </thead>
       <tbody>
-      {% for u in personal_users %}
-        <tr><td>{{ u.id }}</td><td>{{ u.username }}</td><td>{{ u.email }}</td></tr>
-      {% endfor %}
+        {% for u in personal_users %}
+        <tr>
+          <td>{{ u.id }}</td>
+          <td>{{ u.username }}</td>
+          <td>{{ u.email }}</td>
+        </tr>
+        {% endfor %}
       </tbody>
     </table>
     {% else %}
-      <p style="text-align:center;color:#93a4bd">Sem usuários pessoais.</p>
+    <p style="text-align:center;color:#93a4bd">Sem usuários pessoais.</p>
     {% endif %}
   </div>
 
   <script>
-    function openCompanyModal(){document.getElementById('addCompanyModal').style.display='flex'}
-    function closeCompanyModal(){document.getElementById('addCompanyModal').style.display='none'}
-    function toggleDetails(idx){
-      const row=document.getElementById('detail-'+idx);
-      row.style.display=(row.style.display==='table-row'?'none':'table-row');
+    function openCompanyModal() { document.getElementById('addCompanyModal').style.display = 'flex' }
+    function closeCompanyModal() { document.getElementById('addCompanyModal').style.display = 'none' }
+    function toggleDetails(idx) {
+      const row = document.getElementById('detail-' + idx);
+      row.style.display = (row.style.display === 'table-row' ? 'none' : 'table-row');
     }
   </script>
 </body>
+
 </html>

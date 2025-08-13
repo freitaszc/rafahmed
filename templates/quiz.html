@@ -33,7 +33,8 @@
             padding: 16px;
             font-family: 'Montserrat', sans-serif;
             color: var(--text);
-            background: radial-gradient(1000px 600px at 10% 0%, #0b1428 0%, transparent 50%),
+            background:
+                radial-gradient(1000px 600px at 10% 0%, #0b1428 0%, transparent 50%),
                 radial-gradient(900px 600px at 90% 10%, #0a0f1f 0%, transparent 50%),
                 linear-gradient(135deg, var(--bg-deep) 0%, var(--bg-dark) 100%);
             min-height: 100vh;
@@ -50,11 +51,6 @@
             transform: translateY(-2px) scale(1.02);
             box-shadow: 0 18px 40px rgba(221, 27, 53, .35);
             filter: saturate(1.03);
-        }
-
-        .logo {
-            height: 60px;
-            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .35));
         }
 
         .question-card {
@@ -184,95 +180,98 @@
             }
         }
 
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0)
-            }
-
-            50% {
-                transform: translateY(-6px)
-            }
-        }
-
-        .floating {
-            animation: float 3s ease-in-out infinite;
-        }
-
-        h1 {
-            color: var(--text);
-        }
-
-        .pulse-effect {
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1
-            }
-
-            50% {
-                opacity: .75
-            }
+        .consent-box {
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid var(--stroke);
+            border-radius: 14px;
+            padding: 16px;
+            color: var(--text-dim);
+            line-height: 1.6;
         }
     </style>
 </head>
 
 <body>
-
     <!-- Header -->
     <header class="w-full flex justify-center py-6">
-        <img src="{{ url_for('static', filename='images/flatlogo.svg') }}" alt="Logo RafahMed"
-            class="h-14 md:h-16 floating">
+        <img src="{{ url_for('static', filename='images/flatlogo.svg') }}" alt="Logo RafahMed" class="h-14 md:h-16">
     </header>
 
-    <!-- Barra de progresso -->
+    <!-- Progresso -->
     <div class="progress-wrap">
         <div class="progress-track">
             <div id="progress-bar" class="progress-bar" style="width:0%"></div>
         </div>
-        <p id="progress-text" class="text-sm mt-2 text-center">Pergunta 1 de 14</p>
+        <p id="progress-text" class="text-sm mt-2 text-center">Pergunta 1</p>
     </div>
 
     <div class="max-w-2xl mx-auto question-card rounded-3xl p-8 mt-4">
-        <h1 class="text-3xl md:text-4xl font-bold text-center mb-8 pulse-effect">Autoavaliação de Saúde Mental</h1>
+        <h1 class="text-3xl md:text-4xl font-bold text-center mb-8">Autoavaliação de Saúde Mental</h1>
         <div id="quiz-container" class="space-y-6"></div>
     </div>
 
     <script>
-        function getAdminIdFromURL() { const params = new URLSearchParams(window.location.search); return params.get("admin"); }
+        function getAdminIdFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get("admin");
+        }
 
+        // === Perguntas ===
         const quiz = [
-            { type: "text", question: "Qual seu nome?", key: "nome" },
-            { type: "text", question: "Qual sua idade?", key: "idade" },
-            { type: "radio", question: "Nas últimas 2 semanas, com que frequência você se sentiu nervoso(a), ansioso(a) ou muito tenso(a)?", key: "nervosismo", options: ["Quase todos os dias", "Alguns dias", "Poucos dias", "Quase nunca"] },
-            { type: "radio", question: "Nas últimas 2 semanas, você não foi capaz de controlar a preocupação?", key: "preocupacao", options: ["Quase todos os dias", "Alguns dias", "Poucos dias", "Quase nunca"] },
-            { type: "radio", question: "Nas últimas 2 semanas, você teve pouco interesse ou prazer em fazer as coisas?", key: "interesse", options: ["Quase todos os dias", "Alguns dias", "Poucos dias", "Quase nunca"] },
-            { type: "radio", question: "Nas últimas 2 semanas, você se sentiu desanimado(a), deprimido(a) ou sem esperança?", key: "depressao_raw", options: ["Quase todos os dias", "Alguns dias", "Poucos dias", "Quase nunca"] },
-            { type: "radio", question: "Considerando as últimas 2 semanas, o quanto você sentiu que estava estressado(a)?", key: "estresse", options: ["Quase todos os dias", "Alguns dias", "Poucos dias", "Quase nunca"] },
-            { type: "radio", question: "Considerando uma semana de trabalho normal, quantos dias você normalmente precisa trabalhar a mais do que a sua carga horária habitual e/ou fazer hora extra?", key: "hora_extra", options: ["Todos os dias da semana", "De 3 a 4 dias da semana", "De 1 a 2 dias da semana", "Nunca"] },
-            { type: "radio", question: "Como você classificaria sua qualidade do sono nas últimas 2 semanas?", key: "sono", options: ["Muito ruim", "Ruim", "Regular", "Boa", "Excelente"] },
-            { type: "radio", question: "Com que frequência você pratica atividade física?", key: "atividade_fisica", options: ["Diariamente", "3-4 vezes por semana", "1-2 vezes por semana", "Raramente", "Nunca"] },
-            { type: "checkbox", question: "Quando você pensa na sua saúde mental e qualidade de vida, quais os fatores que mais impactam?", key: "fatores", options: ["Quero me conhecer melhor", "Ansiedade", "Depressão", "Ambiente Profissional", "Tabagismo", "Álcool", "Relacionamento", "Estresse", "Sexualidade", "Transtornos alimentares", "Sobrepeso/Obesidade", "Autoestima/Motivação", "Diversidade", "Problemas Financeiros"] },
+            // 1) Consentimento obrigatório
             {
-                type: "checkbox", question: "Com relação à questão apontada, em qual estágio de motivação você considera que está para tentar resolver a questão?", key: "motivacao", options: [
-                    "Eu na verdade acredito que não tenho necessidade de seguir com o programa de saúde emocional, pois não acho que tenho algo a resolver. Resolvi preencher apenas por conta da indicação de outra pessoa.",
-                    "Eu já estava querendo agendar um atendimento psicológico, mas ainda não havia conseguido me programar, pois acho que não é prioridade. Gostaria de começar a fazer algo a respeito do problema ou questão informada.",
-                    "Com relação à questão apontada por mim eu avalio que tem me trazido problemas e estou pensando em ações que podem me ajudar a melhorar.",
-                    "Com relação à questão apontada por mim, eu já tenho feito algumas mudanças e estou buscando mais ações que possam me ajudar a melhorar.",
-                    "Eu já havia melhorado quanto ao problema apontado, mas tive uma recaída."
+                type: "radio",
+                key: "consentimento",
+                question: "Termo de consentimento",
+                description: `
+          <div class="consent-box">
+            <p>De forma livre e voluntária, <strong>autorizo e concordo</strong> que a <strong>RafahMed</strong> me inclua no <strong>Programa de Saúde Emocional</strong>.</p>
+            <p>As informações obtidas neste questionário têm como objetivo oferecer a melhor trilha de cuidado dentro do programa, de acordo com as demandas apresentadas, e <strong>não são compartilhadas de forma individual com empresas</strong>.</p>
+            <p>Se o resultado indicar <strong>risco psicossocial moderado ou alto</strong>, a equipe de navegação de cuidado poderá entrar em contato via WhatsApp para oferecer auxílio.</p>
+            <p>Os resultados são mantidos sob <strong>sigilo profissional</strong> pela equipe clínica, em conformidade com a legislação vigente e a <strong>LGPD</strong> (Lei nº 13.709/2018, alterada pela Lei nº 13.853/2019).</p>
+          </div>
+        `,
+                options: ["Li e concordo", "Li e não concordo"]
+            },
+
+            { type: "text", key: "nome", question: "Qual seu nome?" },
+            { type: "text", key: "idade", question: "Qual sua idade?" },
+            {
+                type: "radio",
+                key: "nivel_hierarquico",
+                question: "Qual é o seu nível hierárquico na empresa em que trabalha?",
+                options: ["Analista", "Assistente", "Auxiliar", "Consultor", "Coordenador", "Gerente", "Supervisor(a)", "Outro"]
+            },
+            { type: "text", key: "setor", question: "Em qual setor você trabalha?" },
+            { type: "radio", key: "nervosismo", question: "Nas últimas 2 semanas, com que frequência você se sentiu nervoso(a), ansioso(a) ou muito tenso(a)?", options: ["Quase todos os dias", "Alguns dias", "Poucos dias", "Quase nunca"] },
+            { type: "radio", key: "preocupacao", question: "Nas últimas 2 semanas, você não foi capaz de controlar a preocupação?", options: ["Quase todos os dias", "Alguns dias", "Poucos dias", "Quase nunca"] },
+            { type: "radio", key: "interesse", question: "Nas últimas 2 semanas, você teve pouco interesse ou prazer em fazer as coisas?", options: ["Quase todos os dias", "Alguns dias", "Poucos dias", "Quase nunca"] },
+            { type: "radio", key: "depressao_raw", question: "Nas últimas 2 semanas, você se sentiu desanimado(a), deprimido(a) ou sem esperança?", options: ["Quase todos os dias", "Alguns dias", "Poucos dias", "Quase nunca"] },
+            { type: "radio", key: "estresse", question: "Considerando as últimas 2 semanas, o quanto você sentiu que estava estressado(a)?", options: ["Quase todos os dias", "Alguns dias", "Poucos dias", "Quase nunca"] },
+            { type: "radio", key: "hora_extra", question: "Considerando uma semana de trabalho normal, quantos dias você normalmente precisa fazer hora extra?", options: ["Todos os dias da semana", "De 3 a 4 dias da semana", "De 1 a 2 dias da semana", "Nunca"] },
+            { type: "radio", key: "sono", question: "Como você classificaria sua qualidade do sono nas últimas 2 semanas?", options: ["Muito ruim", "Ruim", "Regular", "Boa", "Excelente"] },
+            { type: "radio", key: "atividade_fisica", question: "Com que frequência você pratica atividade física?", options: ["Diariamente", "3-4 vezes por semana", "1-2 vezes por semana", "Raramente", "Nunca"] },
+            { type: "checkbox", key: "fatores", question: "Pensando na sua saúde mental e qualidade de vida, quais fatores mais impactam?", options: ["Quero me conhecer melhor", "Ansiedade", "Depressão", "Ambiente Profissional", "Tabagismo", "Álcool", "Relacionamento", "Estresse", "Sexualidade", "Transtornos alimentares", "Sobrepeso/Obesidade", "Autoestima/Motivação", "Diversidade", "Problemas Financeiros"] },
+            {
+                type: "checkbox",
+                key: "motivacao",
+                question: "Sobre a questão apontada, em qual estágio de motivação você está para tentar resolver?",
+                options: [
+                    "Acredito que não tenho necessidade de seguir com o programa; preenchi por indicação.",
+                    "Quero agendar atendimento, mas ainda não priorizei. Gostaria de começar a agir.",
+                    "Avalio que o problema tem me trazido impactos e estou pensando em ações para melhorar.",
+                    "Já estou fazendo algumas mudanças e buscando novas ações para melhorar.",
+                    "Eu havia melhorado, mas tive uma recaída."
                 ]
             },
-            { type: "text", question: "Nos últimos 3 meses, quantas vezes você utilizou o pronto socorro?", key: "pronto_socorro" },
-            { type: "radio", question: "Como você avalia seu relacionamento com família e amigos?", key: "relacionamentos", options: ["Excelente", "Bom", "Regular", "Ruim", "Muito ruim"] },
-            { type: "radio", question: "Você tem algum hobby ou atividade que lhe dá prazer?", key: "hobbies", options: ["Sim, pratico regularmente", "Sim, mas raramente pratico", "Tenho interesse mas não pratico", "Não tenho hobbies"] }
+            { type: "text", key: "pronto_socorro", question: "Nos últimos 3 meses, quantas vezes você utilizou o pronto socorro?" },
+            { type: "radio", key: "relacionamentos", question: "Como você avalia seu relacionamento com família e amigos?", options: ["Excelente", "Bom", "Regular", "Ruim", "Muito ruim"] },
+            { type: "radio", key: "hobbies", question: "Você tem algum hobby ou atividade que lhe dá prazer?", options: ["Sim, pratico regularmente", "Sim, mas raramente pratico", "Tenho interesse mas não pratico", "Não tenho hobbies"] }
         ];
 
-        let currentQuestion = 0; const answers = {}; const container = document.getElementById("quiz-container");
+        let currentQuestion = 0;
+        const answers = {};
+        const container = document.getElementById("quiz-container");
 
         function updateProgress() {
             const progress = ((currentQuestion + 1) / quiz.length) * 100;
@@ -281,17 +280,24 @@
         }
 
         function renderQuestion() {
-            const q = quiz[currentQuestion]; updateProgress();
+            const q = quiz[currentQuestion];
+            updateProgress();
+
+            const descriptionHTML = q.description ? `<div class="mb-5">${q.description}</div>` : "";
+
             container.innerHTML = `
         <div class="fade-in">
           <div class="text-center mb-6">
             <p class="text-xl font-semibold mb-6 leading-relaxed">${q.question}</p>
           </div>
+
+          ${descriptionHTML}
+
           <div class="space-y-3 mb-8">
             ${q.type === "radio" ? q.options.map(opt => `
               <div class="option-item px-6 py-4" onclick="selectOption('${opt}', this)">
                 <label class="flex items-center cursor-pointer">
-                  <input type="radio" name="q" value="${opt}" class="mr-4 w-4 h-4"> 
+                  <input type="radio" name="q" value="${opt}" class="mr-4 w-4 h-4">
                   <span class="font-medium">${opt}</span>
                 </label>
               </div>`).join("") : ""}
@@ -299,7 +305,7 @@
             ${q.type === "checkbox" ? q.options.map(opt => `
               <div class="option-item px-6 py-4" onclick="toggleCheckbox('${opt}', this)">
                 <label class="flex items-center cursor-pointer">
-                  <input type="checkbox" name="q" value="${opt}" class="mr-4 w-4 h-4"> 
+                  <input type="checkbox" name="q" value="${opt}" class="mr-4 w-4 h-4">
                   <span class="font-medium">${opt}</span>
                 </label>
               </div>`).join("") : ""}
@@ -309,6 +315,7 @@
                 <input type="text" id="text-input" placeholder="Digite sua resposta..." class="input-focus">
               </div>` : ""}
           </div>
+
           <div class="text-center">
             <button onclick="next()" class="btn-primary text-white px-8 py-4 rounded-xl text-lg font-semibold inline-flex items-center gap-3">
               <span>Continuar</span><span class="text-xl">→</span>
@@ -319,33 +326,85 @@
 
         function selectOption(_, element) {
             document.querySelectorAll('.option-item').forEach(i => i.classList.remove('selected'));
-            element.classList.add('selected'); element.querySelector('input').checked = true;
+            element.classList.add('selected');
+            element.querySelector('input').checked = true;
         }
         function toggleCheckbox(_, element) {
-            const checkbox = element.querySelector('input'); checkbox.checked = !checkbox.checked;
+            const checkbox = element.querySelector('input');
+            checkbox.checked = !checkbox.checked;
             element.classList.toggle('selected', checkbox.checked);
         }
 
         function showAlert(msg) {
-            const d = document.createElement('div'); d.className = 'alert'; d.textContent = msg; document.body.appendChild(d);
+            const d = document.createElement('div');
+            d.className = 'alert';
+            d.textContent = msg;
+            document.body.appendChild(d);
             setTimeout(() => d.remove(), 2800);
+        }
+
+        // === ENCERRA A AVALIAÇÃO SE NÃO CONCORDAR COM O TERMO ===
+        function endEvaluationDueToNoConsent() {
+            for (const k in answers) delete answers[k];
+
+            document.getElementById("progress-bar").style.width = "100%";
+            document.getElementById("progress-text").textContent = "Avaliação encerrada";
+
+            container.innerHTML = `
+        <div class="result-card rounded-2xl p-8 space-y-6 slide-up">
+          <div class="text-center">
+            <div class="text-6xl mb-4">🔒</div>
+            <h2 class="text-2xl font-bold mb-2" style="color:var(--text)">Avaliação encerrada</h2>
+            <p style="color:var(--text-dim); line-height:1.6">
+              Você selecionou <strong>“Li e não concordo”</strong> no termo de consentimento.<br>
+              Para participar da autoavaliação, é necessário aceitar o termo.
+            </p>
+            <div class="mt-6 flex items-center justify-center gap-3">
+              <button onclick="restartQuiz()" class="btn-primary text-white px-6 py-3 rounded-xl font-semibold">
+                Reiniciar avaliação
+              </button>
+            </div>
+          </div>
+        </div>`;
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            for (const k in answers) delete answers[k];
+            renderQuestion();
         }
 
         function next() {
             const q = quiz[currentQuestion];
+
             if (q.type === "text") {
                 const val = document.getElementById("text-input").value;
                 if (!val.trim()) return showAlert("Por favor, preencha o campo.");
                 answers[q.key] = val;
+
             } else if (q.type === "radio") {
                 const sel = document.querySelector("input[name='q']:checked");
-                if (!sel) return showAlert("Por favor, selecione uma opção."); answers[q.key] = sel.value;
+                if (!sel) return showAlert("Por favor, selecione uma opção.");
+
+                // ENCERRA SE NÃO CONCORDAR COM O TERMO
+                if (q.key === "consentimento" && sel.value === "Li e não concordo") {
+                    return endEvaluationDueToNoConsent();
+                }
+
+                answers[q.key] = sel.value;
+
             } else if (q.type === "checkbox") {
                 const sel = [...document.querySelectorAll("input[name='q']:checked")].map(e => e.value);
-                if (sel.length === 0) return showAlert("Por favor, selecione ao menos uma opção."); answers[q.key] = sel;
+                if (sel.length === 0) return showAlert("Por favor, selecione ao menos uma opção.");
+                answers[q.key] = sel;
             }
+
             currentQuestion++;
-            if (currentQuestion < quiz.length) setTimeout(() => renderQuestion(), 250); else setTimeout(() => showResult(), 250);
+            if (currentQuestion < quiz.length) {
+                setTimeout(renderQuestion, 250);
+            } else {
+                setTimeout(showResult, 250);
+            }
         }
 
         function getClassificacao(score, max) {
@@ -360,12 +419,12 @@
             const freqMap = { "Quase todos os dias": 4, "Alguns dias": 3, "Poucos dias": 2, "Quase nunca": 1 };
             const extraMap = { "Todos os dias da semana": 4, "De 3 a 4 dias da semana": 3, "De 1 a 2 dias da semana": 2, "Nunca": 1 };
             const sonoMap = { "Excelente": 5, "Boa": 4, "Regular": 3, "Ruim": 2, "Muito ruim": 1 };
-            const atividadeMap = { "Diariamente": 5, "3-4 vezes por semana": 4, "1-2 vezes por semana": 3, "Raramente": 2, "Nunca": 1 };
+            const atvMap = { "Diariamente": 5, "3-4 vezes/semana": 4, "3-4 vezes por semana": 4, "1-2 vezes por semana": 3, "Raramente": 2, "Nunca": 1 };
 
             const ansiedadeScore = (freqMap[answers.nervosismo] || 0) + (freqMap[answers.preocupacao] || 0);
             const depressaoScore = (freqMap[answers.interesse] || 0) + (freqMap[answers.depressao_raw] || 0);
             const estresseScore = (freqMap[answers.estresse] || 0) + (extraMap[answers.hora_extra] || 0);
-            const qualidadeVidaScore = (sonoMap[answers.sono] || 0) + (atividadeMap[answers.atividade_fisica] || 0);
+            const qualidadeVidaScore = (sonoMap[answers.sono] || 0) + (atvMap[answers.atividade_fisica] || 0);
 
             const ansiedadeClass = getClassificacao(ansiedadeScore, 8);
             const depressaoClass = getClassificacao(depressaoScore, 8);
@@ -379,8 +438,9 @@
             if (riscoPrincipal.nivel === "BAIXO") recomendacao = "Sua saúde mental aparenta estar preservada. Continue cuidando de si!";
             else if (riscoPrincipal.nivel === "NORMAL/LEVE") recomendacao = "Há alguns sinais que merecem atenção. Considere práticas de autocuidado.";
             else if (riscoPrincipal.nivel === "MODERADO") recomendacao = "Identificamos sinais importantes. Recomendamos acompanhamento psicológico.";
-            else recomendacao = "Indica necessidade urgente de suporte. Busque ajuda profissional.";
+            else recomendacao = "Indica necessidade de suporte prioritário. Busque ajuda profissional.";
 
+            // Campos de classificação no payload final
             answers.ansiedade = ansiedadeClass.nivel; answers.ansiedade_cor = ansiedadeClass.cor;
             answers.depressao = depressaoClass.nivel; answers.depressao_cor = depressaoClass.cor;
             answers.estresse = estresseClass.nivel; answers.estresse_cor = estresseClass.cor;
@@ -390,20 +450,24 @@
 
             const adminId = getAdminIdFromURL();
             fetch(`/submit_quiz?admin=${adminId}`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(answers)
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(answers)
             });
 
             document.getElementById("progress-bar").style.width = "100%";
             document.getElementById("progress-text").textContent = "Avaliação Concluída";
 
+            const riscoEmoji = (riscoPrincipal.nivel === "BAIXO") ? "🌟"
+                : (riscoPrincipal.nivel === "NORMAL/LEVE") ? "⚠️"
+                    : (riscoPrincipal.nivel === "MODERADO") ? "🔶" : "🚨";
+
             container.innerHTML = `
         <div class="result-card rounded-2xl p-8 space-y-6 slide-up">
           <div class="text-center">
-            <div class="text-6xl mb-4">
-              ${riscoPrincipal.nivel === "BAIXO" ? "🌟" : riscoPrincipal.nivel === "NORMAL/LEVE" ? "⚠️" : riscoPrincipal.nivel === "MODERADO" ? "🔶" : "🚨"}
-            </div>
+            <div class="text-6xl mb-4">${riscoEmoji}</div>
             <h2 class="text-3xl font-bold mb-2" style="color:var(--text)">Resultado da Avaliação</h2>
-            <h3 class="text-xl font-semibold mb-4" style="color:var(--text-dim)">${answers.nome},</h3>
+            <h3 class="text-xl font-semibold mb-4" style="color:var(--text-dim)">${answers.nome || ''},</h3>
           </div>
 
           <div class="rounded-xl p-6" style="background:rgba(255,255,255,.03); border:1px solid var(--stroke);">
@@ -416,27 +480,26 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
               <div class="p-4 rounded-lg" style="background:rgba(255,255,255,.03); border:1px solid var(--stroke);">
-                <p class="font-semibold" style="color:var(--text)">Ansiedade:</p>
+                <p class="font-semibold">Ansiedade:</p>
                 <span style="color:${ansiedadeClass.cor}; font-weight:bold;">${ansiedadeClass.nivel}</span>
               </div>
               <div class="p-4 rounded-lg" style="background:rgba(255,255,255,.03); border:1px solid var(--stroke);">
-                <p class="font-semibold" style="color:var(--text)">Depressão:</p>
+                <p class="font-semibold">Depressão:</p>
                 <span style="color:${depressaoClass.cor}; font-weight:bold;">${depressaoClass.nivel}</span>
               </div>
               <div class="p-4 rounded-lg" style="background:rgba(255,255,255,.03); border:1px solid var(--stroke);">
-                <p class="font-semibold" style="color:var(--text)">Estresse:</p>
+                <p class="font-semibold">Estresse:</p>
                 <span style="color:${estresseClass.cor}; font-weight:bold;">${estresseClass.nivel}</span>
               </div>
               <div class="p-4 rounded-lg" style="background:rgba(255,255,255,.03); border:1px solid var(--stroke);">
-                <p class="font-semibold" style="color:var(--text)">Qualidade de Vida:</p>
+                <p class="font-semibold">Qualidade de Vida:</p>
                 <span style="font-weight:bold; color:${qualidadeClass.nivel === "BAIXO" ? "#22c55e" :
                     qualidadeClass.nivel === "NORMAL/LEVE" ? "#eab308" :
                         qualidadeClass.nivel === "MODERADO" ? "#f97316" : "#ef4444"
-                }">
-                ${qualidadeClass.nivel === "BAIXO" ? "BOA" :
+                }">${qualidadeClass.nivel === "BAIXO" ? "BOA" :
                     qualidadeClass.nivel === "NORMAL/LEVE" ? "REGULAR" :
-                        qualidadeClass.nivel === "MODERADO" ? "RUIM" : "MUITO RUIM"}
-                </span>
+                        qualidadeClass.nivel === "MODERADO" ? "RUIM" : "MUITO RUIM"
+                }</span>
               </div>
             </div>
           </div>

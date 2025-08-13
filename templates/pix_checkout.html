@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Checkout PIX - RafahMed</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <style>
+    :root {
+      --bg-deep: #080b12;
+      --bg-dark: #0b1220;
+      --bg-elev: #111827;
+      --bg-elev-2: #0f172a;
+      --text: #e5e7eb;
+      --muted: #cbd5e1;
+      --text-dim: #cbd5e1;
+      --line: #1f2937;
+      --red: #dd1b35;
+      --red-dark: #b81429;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      display: flex;
+      min-height: 100vh;
+      font-family: 'Montserrat', sans-serif;
+      background:
+        radial-gradient(1000px 600px at 10% 0%, #0b1428 0%, transparent 50%),
+        radial-gradient(900px 600px at 90% 10%, #0a0f1f 0%, transparent 50%),
+        linear-gradient(135deg, var(--bg-deep) 0%, var(--bg-dark) 100%);
+      color: var(--text);
+    }
+
+    .content {
+      margin: 0 auto;
+      padding: 40px;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    h2 {
+      font-size: 34px;
+      font-weight: 700;
+      text-align: center;
+      margin: 0 0 26px;
+      color: var(--text);
+      text-shadow: 0 2px 6px rgba(0, 0, 0, .35);
+      position: relative;
+    }
+
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--red), #ff6b8a);
+      border-radius: 2px;
+      box-shadow: 0 0 12px rgba(221, 27, 53, .35);
+    }
+
+    .card {
+      background: linear-gradient(145deg, var(--bg-elev) 0%, var(--bg-elev-2) 100%);
+      padding: 28px;
+      border-radius: 20px;
+      margin: 0 auto;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, .45), 0 0 0 1px rgba(255, 255, 255, .04) inset;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .row .box {
+      background: rgba(255, 255, 255, .02);
+      border: 1px solid rgba(255, 255, 255, .06);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .value {
+      font-weight: 800;
+      font-size: 16px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    .qr {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+
+    .qr img {
+      width: 260px;
+      height: 260px;
+      image-rendering: pixelated;
+    }
+
+    .payload {
+      width: 100%;
+      min-height: 120px;
+      resize: none;
+      border-radius: 12px;
+      padding: 12px;
+      border: 2px solid #283447;
+      background: #0f1a2a;
+      color: var(--text);
+      font-family: monospace;
+    }
+
+    /* Botões padronizados */
+    .btn {
+      display: inline-block;
+      border: none;
+      border-radius: 28px;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, var(--red), var(--red-dark));
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 1;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      box-shadow: 0 10px 28px rgba(221, 27, 53, .35);
+      transition: .25s;
+    }
+
+    .btn i {
+      margin-right: 8px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px) scale(1.03);
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Uploader bonito e consistente */
+    .uploader {
+      margin-top: 8px;
+    }
+
+    .file-drop {
+      width: 100%;
+      min-height: 160px;
+      border: 2px dashed #283447;
+      border-radius: 16px;
+      padding: 22px;
+      background: #0f1a2a;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .file-drop:hover {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(221, 27, 53, .15);
+    }
+
+    .file-drop .icon {
+      font-size: 26px;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .file-drop .title {
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .file-drop .subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    #receiptInput {
+      display: none;
+    }
+
+    .file-name {
+      margin-top: 12px;
+      display: none;
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid rgba(255, 255, 255, .1);
+      padding: 8px 12px;
+      border-radius: 999px;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .mt-8 {
+      margin-top: 8px;
+    }
+
+    .mt-16 {
+      margin-top: 16px;
+    }
+
+    .mt-24 {
+      margin-top: 24px;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    @media (max-width: 860px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="content">
+    <h2>Checkout PIX</h2>
+    <div class="card">
+      <div class="row">
+        <div class="box">
+          <div class="label">Plano</div>
+          <div class="value">{{ plan|upper }}</div>
+          <div class="label mt-16">Valor</div>
+          <div class="value">R$ {{ '%.2f'|format(amount) }}</div>
+
+          <div class="label mt-16">Chave PIX (CNPJ)</div>
+          <div class="value">{{ pix_key }}</div>
+          {% if pix_cnpj and pix_cnpj != pix_key %}
+          <div class="hint">CNPJ: {{ pix_cnpj }}</div>
+          {% endif %}
+
+          <div class="label mt-16">TXID</div>
+          <div class="value">{{ txid }}</div>
+        </div>
+
+        <div class="box">
+          <div class="label">QR Code</div>
+          <div class="qr">
+            {% if qr_b64 %}
+            <img src="data:image/png;base64,{{ qr_b64 }}" alt="QR Code PIX" />
+            {% else %}
+            <div class="hint">Não foi possível gerar a imagem do QR neste servidor. Use o código abaixo (copia-e-cola).
+            </div>
+            {% endif %}
+          </div>
+          <div class="label mt-16">Copia e cola (EMV)</div>
+          <textarea id="payload" class="payload" readonly>{{ payload }}</textarea>
+          <div class="actions mt-16">
+            <button type="button" class="btn" onclick="copyPayload()"><i class="fa fa-copy"></i> Copiar código
+              PIX</button>
+            <a href="{{ url_for('purchase') }}" class="btn"><i class="fa fa-arrow-left"></i> Voltar</a>
+          </div>
+          <div class="hint center mt-16">
+            Abra seu app do banco, escolha pagar via PIX &rarr; QR Code ou “copia-e-cola”, cole o código acima e
+            confirme.
+          </div>
+        </div>
+      </div>
+
+      <form class="mt-24" action="{{ url_for('confirm_pix') }}" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="plan" value="{{ plan }}">
+        <input type="hidden" name="txid" value="{{ txid }}">
+        <input type="hidden" name="payload" value="{{ payload }}">
+
+        <div class="label">Envie o comprovante</div>
+
+        <!-- Uploader estilizado -->
+        <label class="uploader file-drop" for="receiptInput" id="fileDrop">
+          <div class="icon"><i class="fa fa-upload"></i></div>
+          <div class="title">Clique para escolher o arquivo</div>
+          <div class="subtitle">ou arraste e solte o comprovante (PNG, JPG, PDF)</div>
+          <span id="fileName" class="file-name"></span>
+        </label>
+        <input id="receiptInput" type="file" name="receipt" accept=".png,.jpg,.jpeg,.pdf" required>
+
+        <div class="center mt-16">
+          <button class="btn" type="submit"><i class="fa fa-check"></i> Enviar comprovante</button>
+        </div>
+        <div class="hint center mt-16">
+          Após validar manualmente, ativaremos sua assinatura e você receberá um e-mail de confirmação.
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function copyPayload() {
+      const text = document.getElementById('payload').value;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => alert('Código PIX copiado!'));
+      } else {
+        const el = document.getElementById('payload');
+        el.select(); el.setSelectionRange(0, el.value.length);
+        document.execCommand('copy');
+        alert('Código PIX copiado!');
+      }
+    }
+
+    // Uploader: clique e arrastar
+    const input = document.getElementById('receiptInput');
+    const drop = document.getElementById('fileDrop');
+    const nameEl = document.getElementById('fileName');
+
+    drop.addEventListener('click', () => input.click());
+
+    ['dragenter', 'dragover'].forEach(evt =>
+      drop.addEventListener(evt, e => {
+        e.preventDefault(); e.stopPropagation();
+        e.dataTransfer && (e.dataTransfer.dropEffect = 'copy');
+        drop.style.borderColor = 'var(--red)';
+        drop.style.boxShadow = '0 0 0 3px rgba(221,27,53,.15)';
+      })
+    );
+    ['dragleave', 'drop'].forEach(evt =>
+      drop.addEventListener(evt, e => {
+        e.preventDefault(); e.stopPropagation();
+        drop.style.borderColor = '#283447';
+        drop.style.boxShadow = 'none';
+      })
+    );
+    drop.addEventListener('drop', e => {
+      const files = e.dataTransfer.files;
+      if (files && files.length) {
+        input.files = files;
+        updateFileName();
+      }
+    });
+    input.addEventListener('change', updateFileName);
+
+    function updateFileName() {
+      if (input.files && input.files.length) {
+        nameEl.textContent = input.files[0].name;
+        nameEl.style.display = 'inline-block';
+      } else {
+        nameEl.textContent = '';
+        nameEl.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+
+</html>

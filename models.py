@@ -15,6 +15,10 @@ class User(db.Model):
     profile_image = db.Column(db.String(200), default='images/user-icon.png')
     company_id    = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=True)
     company       = db.relationship('Company', backref='users')
+    plan = db.Column(db.String(20), default='standard')        
+    plan_status = db.Column(db.String(20), default='inactive')
+    plan_expires_at = db.Column(db.DateTime, nullable=True)      
+    trial_until = db.Column(db.DateTime, nullable=True)
 
     def __init__(self, username: str, email: str, password_hash: str,
                  name: Optional[str] = None, birthdate: Optional[date] = None,
@@ -146,6 +150,10 @@ class QuizResult(db.Model):
     date             = db.Column(db.DateTime, default=datetime.utcnow)
 
     # — respostas brutas —
+    consentimento     = db.Column(db.String(64))
+    nivel_hierarquico = db.Column(db.String(64))
+    setor             = db.Column(db.String(128))
+    estresse_raw      = db.Column(db.String(64))
     nervosismo       = db.Column(db.String(50))
     preocupacao      = db.Column(db.String(50))
     interesse        = db.Column(db.String(50))
