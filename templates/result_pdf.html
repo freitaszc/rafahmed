@@ -6,12 +6,12 @@
     <title>Resultado - RafahMed (PDF)</title>
     <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
     <style>
-        /* PDF: mantém tipografia padrão mas ajusta para tema escuro */
+        /* PDF: versão clara */
         :root {
-            --bg: #0b1220;
-            --panel: #0f172a;
-            --text: #e5e7eb;
-            --muted: #cbd5e1;
+            --bg: #ffffff;
+            --panel: #f9f9f9;
+            --text: #000000;
+            --muted: #555555;
             --red: #dd1b35;
         }
 
@@ -29,7 +29,7 @@
             align-items: flex-start;
             padding: 10px 20px;
             background: var(--panel);
-            border: 1px solid rgba(255, 255, 255, .08);
+            border: 1px solid #ddd;
             border-radius: 8px;
         }
 
@@ -43,7 +43,6 @@
         .logo {
             width: 150px;
             margin-top: -10px;
-            filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .45));
         }
 
         .result-section {
@@ -55,7 +54,7 @@
             font-size: 20px;
             font-weight: bold;
             margin: 40px 0 12px;
-            color: #fff;
+            color: var(--text);
         }
 
         pre {
@@ -64,7 +63,7 @@
             font-size: 14px;
             background: var(--panel);
             color: var(--text);
-            border: 1px solid rgba(255, 255, 255, .08);
+            border: 1px solid #ddd;
             padding: 12px;
             border-radius: 8px;
         }
@@ -77,7 +76,7 @@
 
         .signature-line {
             display: inline-block;
-            border-top: 1px solid #fff;
+            border-top: 1px solid #000;
             width: 300px;
             margin-top: 10px;
         }
@@ -100,7 +99,7 @@
 
     <div class="signature-block">
         <div class="signature-line"></div>
-        <div style="margin-top: 6px; color:#fff;">{{ doctor_name }}</div>
+        <div style="margin-top: 6px;">{{ doctor_name }}</div>
     </div>
 </body>
 

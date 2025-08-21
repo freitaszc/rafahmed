@@ -190,7 +190,6 @@ class QuizResult(db.Model):
             if hasattr(self, key):
                 setattr(self, key, value)
 
-
 class Product(db.Model):
     __tablename__ = 'products'
     id             = db.Column(db.Integer, primary_key=True)
@@ -208,3 +207,16 @@ class Product(db.Model):
         self.sale_price     = sale_price
         self.quantity       = quantity
         self.status         = status
+
+class PdfFile(db.Model):
+    __tablename__ = 'pdf_files'
+    id            = db.Column(db.Integer, primary_key=True)
+    filename      = db.Column(db.String(255), nullable=False)
+    original_name = db.Column(db.String(255), nullable=False)      
+    size_bytes    = db.Column(db.Integer, nullable=False, default=0)
+    uploaded_at   = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def __init__(self, filename: str, original_name: str, size_bytes: int = 0):
+        self.filename      = filename
+        self.original_name = original_name
+        self.size_bytes    = size_bytes

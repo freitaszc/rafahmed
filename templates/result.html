@@ -114,7 +114,7 @@
     <pre>{{ prescription_text }}</pre>
 
     <div class="button-group no-print">
-        <a href="/download_pdf" target="_blank" class="menu-button">Download PDF</a>
+        <a href="{{ url_for('download_pdf', patient_id=patient.id) }}" class="menu-button">Download PDF</a>
         <a href="/catalog" class="menu-button">Catálogo de Pacientes</a>
     </div>
 </body>

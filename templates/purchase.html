@@ -339,14 +339,6 @@
         class="label">Pagamentos</span></a>
     <a href="{{ url_for('training') }}" class="menu-item"><i class="fa fa-play-circle"></i> <span
         class="label">Treinamento</span></a>
-    {% if session.get('username') and session.get('username')|lower == 'admin' %}
-    <div class="divider"></div>
-    <div class="admin-label"
-      style="font-size:11px;text-transform:uppercase;color:#94a3b8;margin:0 0 7px 8px;letter-spacing:1px;">Administração
-    </div>
-    <a href="{{ url_for('admin_companies') }}" class="menu-item" style="color:#f87171;"><i class="fa fa-cog"></i> <span
-        class="label">Admin</span></a>
-    {% endif %}
     <a href="{{ url_for('logout') }}" class="menu-item logout"><i class="fa fa-sign-out"></i> <span
         class="label">Sair</span></a>
   </div>

@@ -1,12 +1,17 @@
 import os
+from io import BytesIO
 import json
+import weasyprint
 import secrets
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 import uuid, base64, io
 from sqlalchemy import func, cast, Date, text, inspect
+import time
 from functools import wraps
 from datetime import datetime, timedelta
 from collections import defaultdict
 from flask import (
+    current_app,
     Flask,
     render_template,
     request,
@@ -18,6 +23,8 @@ from flask import (
     get_flashed_messages,
     abort,
     send_file,
+    send_from_directory,
+    make_response,
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -25,9 +32,9 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc, or_
 from dotenv import load_dotenv
 import jwt
-import weasyprint
 from markupsafe import escape
 import re
+import mimetypes
 
 from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials
@@ -90,6 +97,7 @@ from models import (
     Consult,
     Patient,
     QuizResult,
+    PdfFile
 )
 
 load_dotenv()
@@ -99,11 +107,9 @@ app = Flask(__name__)
 # ==============================================
 # DB INIT
 # ==============================================
-# Define caminho absoluto da pasta 'instance'
 base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'instance'))
 os.makedirs(base_dir, exist_ok=True)
 
-# Caminho fixo para o banco de dados
 db_path = os.path.join(base_dir, 'web.db')
 DATABASE_URL = os.getenv('DATABASE_URL') or f'sqlite:///{db_path}'
 
@@ -113,29 +119,51 @@ app.secret_key = secrets.token_hex(32)
 
 db.init_app(app)
 
+def ensure_tables():
+    with app.app_context():
+        insp = inspect(db.engine)
+        if not insp.has_table('pdf_files'):
+            db.create_all()
+
+ensure_tables()
+
+# ==============================================
+# PROTECTING URL (PDF tokens)
+# ==============================================
+def _pdf_serializer():
+    return URLSafeTimedSerializer(current_app.secret_key, salt="pdf-protection-v1")  # type:ignore
+
+def generate_pdf_token(file_id: int) -> str:
+    s = _pdf_serializer()
+    return s.dumps({"fid": int(file_id)})
+
+def verify_pdf_token(token: str, max_age_seconds: int = 3600) -> int | None:
+    s = _pdf_serializer()
+    try:
+        data = s.loads(token, max_age=max_age_seconds)
+        return int(data.get("fid"))
+    except (BadSignature, SignatureExpired, ValueError, TypeError):
+        return None
+
 # ==============================================
 # SUBSCRIPTION / PIX CONFIG & CONSTANTES
 # ==============================================
-# PIX
-PIX_CNPJ = os.getenv("PIX_CNPJ", "49.942.520/0001-02") 
-PIX_KEY  = os.getenv("PIX_KEY", "49.942.520/0001-02")      
-PIX_NAME = os.getenv("PIX_NAME", "RafahMed")            
-PIX_CITY = os.getenv("PIX_CITY", "Ipatinga")         
+PIX_CNPJ = os.getenv("PIX_CNPJ", "49.942.520/0001-02")
+PIX_KEY  = os.getenv("PIX_KEY", "49.942.520/0001-02")
+PIX_NAME = os.getenv("PIX_NAME", "RafahMed")
+PIX_CITY = os.getenv("PIX_CITY", "Ipatinga")
 PIX_DESC = os.getenv("PIX_DESC", "Assinatura RafahMed")
-PLAN_PRICES = {"plus": 99.00, "premium": 179.00}        # R$/mês
+PLAN_PRICES = {"plus": 99.00, "premium": 179.00}
 
-# Número do admin para receber comprovantes no WhatsApp
-ADMIN_WHATSAPP = os.getenv("ADMIN_WHATSAPP", "31985570920")  # 👈 NOVO
+ADMIN_WHATSAPP = os.getenv("ADMIN_WHATSAPP", "31985570920")
 
-# Níveis de plano e recursos (p/ gates)
 PLAN_LEVELS = {'standard': 1, 'plus': 2, 'premium': 3}
 FEATURES = {
-    'quotes_auto': 3,     # Premium
-    'training': 3,        # Premium
-    'selfevaluations': 3  # Premium
+    'quotes_auto': 3,
+    'training': 3,
+    'selfevaluations': 3
 }
 
-# Helpers PIX (EMV/BR Code + QR)
 def _emv(tag, value):
     v = str(value)
     return f"{tag}{len(v):02d}{v}"
@@ -174,8 +202,7 @@ def build_pix_payload(key: str, name: str, city: str, amount: float, txid: str, 
 def make_qr_base64(payload: str) -> str | None:
     try:
         import qrcode
-        from PIL import Image  # noqa: F401 (mantém pillow carregado)
-
+        from PIL import Image  # noqa: F401
         img = qrcode.make(payload)
         buf = io.BytesIO()
         img.save(buf, "PNG")
@@ -184,7 +211,6 @@ def make_qr_base64(payload: str) -> str | None:
     except Exception as e:
         print("[pix] qr generation skipped:", e)
         return None
-
 
 def ensure_subscription_columns():
     with app.app_context():
@@ -209,14 +235,12 @@ def ensure_subscription_columns():
             for s in stmts:
                 print("[migrate]", s)
                 conn.execute(text(s))
-            # garante defaults para registros antigos
             conn.execute(text(
                 "UPDATE users "
                 "SET plan = COALESCE(plan,'standard'), "
                 "    plan_status = COALESCE(plan_status,'inactive')"
             ))
 
-# roda a migração uma vez no startup
 ensure_subscription_columns()
 
 def get_logged_user():
@@ -293,6 +317,10 @@ app.jinja_env.globals.update(
     PLAN_LEVELS=PLAN_LEVELS,
     PLAN_PRICES=PLAN_PRICES
 )
+app.jinja_env.globals.update(
+    pdf_token=generate_pdf_token,
+    make_pdf_token=generate_pdf_token
+)
 
 # ==============================================
 # AUTHENTICATION AND ACCOUNT MANAGEMENT
@@ -304,6 +332,10 @@ def schedule_consultation():
 @app.route('/')
 def hero():
     return render_template('hero.html')
+
+@app.route('/plano-de-empresas')
+def companies_plan():
+    return render_template('companies_plan.html')
 
 @app.route('/about')
 def about():
@@ -422,7 +454,6 @@ def account():
         return redirect(url_for('login'))
     return render_template('account.html', user=user)
 
-
 @app.route('/update_personal_info', methods=['POST'])
 def update_personal_info():
     user = get_logged_user()
@@ -449,7 +480,6 @@ def update_personal_info():
     db.session.commit()
     return redirect(url_for("account"))
 
-
 @app.route('/update_password', methods=['POST'])
 def update_password():
     user = get_logged_user()
@@ -469,7 +499,6 @@ def update_password():
     flash("Senha atualizada.", "success")
     return redirect(url_for("account"))
 
-
 @app.route('/remove_profile_image', methods=['POST'])
 def remove_profile_image():
     user = get_logged_user()
@@ -483,7 +512,6 @@ def remove_profile_image():
     db.session.commit()
     return redirect(url_for("account"))
 
-
 @app.route('/RafahMed-lab')
 def RafahMed_lab():
     user = get_logged_user()
@@ -496,7 +524,6 @@ def RafahMed_lab():
 
     return render_template('upload.html')
 
-
 @app.route('/users')
 def list_users():
     user = get_logged_user()
@@ -508,6 +535,7 @@ def list_users():
     users = User.query.order_by(User.id).all()
     return render_template('users.html', users=users)
 
+from sqlalchemy.exc import OperationalError
 
 @app.route('/admin/companies', methods=['GET', 'POST'])
 def admin_companies():
@@ -533,12 +561,21 @@ def admin_companies():
 
     companies = Company.query.order_by(Company.name).all()
     personal_users = User.query.filter(User.company_id.is_(None)).order_by(User.id).all()  # type: ignore
+    pdfs = PdfFile.query.order_by(PdfFile.uploaded_at.desc()).all()
+    
     return render_template(
         'admin_companies.html',
+        pdfs=pdfs,
         companies=companies,
         personal_users=personal_users
     )
 
+ALLOWED_EXTENSIONS = {'pdf'}
+PDF_UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'uploads', 'pdfs')
+os.makedirs(PDF_UPLOAD_DIR, exist_ok=True)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/add_company', methods=['POST'])
 def add_company():
@@ -561,7 +598,6 @@ def add_company():
     flash(f'Empresa "{name}" cadastrada.', 'success')
     return redirect(url_for('admin_companies'))
 
-
 @app.route('/delete_company/<int:company_id>', methods=['POST'])
 def delete_company(company_id):
     user = get_logged_user()
@@ -577,6 +613,113 @@ def delete_company(company_id):
     db.session.commit()
     flash(f'Empresa "{company.name}" removida com sucesso.', 'success')
     return redirect(url_for('admin_companies'))
+
+@app.post('/pdfs/add')
+def add_pdf():
+    user = get_logged_user()
+    if not user or user.username.lower() != 'admin':
+        abort(403)
+
+    file = request.files.get('pdf_file')
+    if not file or file.filename == '':
+        flash('Selecione um arquivo PDF.')
+        return redirect(url_for('admin_companies'))
+
+    if not allowed_file(file.filename):
+        flash('Apenas PDFs são permitidos.')
+        return redirect(url_for('admin_companies'))
+
+    file.stream.seek(0)
+    mime = mimetypes.guess_type(file.filename or "")[0]
+    original = secure_filename(file.filename or "")
+    ts = int(time.time())
+    disk_name = f'{ts}_{original}'
+    save_path = os.path.join(PDF_UPLOAD_DIR, disk_name)
+    file.save(save_path)
+
+    size_bytes = os.path.getsize(save_path)
+    pdf = PdfFile(filename=disk_name, original_name=original, size_bytes=size_bytes)
+    db.session.add(pdf)
+    db.session.commit()
+
+    flash('PDF enviado com sucesso.')
+    return redirect(url_for('admin_companies'))
+
+# ====== Rotas ADMIN (por ID) ======
+@app.get('/pdfs/view/<int:file_id>')
+def view_pdf(file_id):
+    user = get_logged_user()
+    if not user or user.username.lower() != 'admin':
+        abort(403)
+    pdf = PdfFile.query.get_or_404(file_id)
+    resp = make_response(send_from_directory(PDF_UPLOAD_DIR, pdf.filename, mimetype='application/pdf', as_attachment=False))
+    resp.headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
+    resp.headers['Cache-Control'] = 'private, no-store, max-age=0'
+    return resp
+
+@app.get('/pdfs/download/<int:file_id>')
+def download_pdf_admin(file_id):
+    user = get_logged_user()
+    if not user or user.username.lower() != 'admin':
+        abort(403)
+    pdf = PdfFile.query.get_or_404(file_id)
+    resp = make_response(send_from_directory(PDF_UPLOAD_DIR, pdf.filename, as_attachment=True, download_name=pdf.original_name))
+    resp.headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
+    resp.headers['Cache-Control'] = 'private, no-store, max-age=0'
+    return resp
+
+@app.post('/pdfs/delete/<int:file_id>')
+def delete_pdf(file_id):
+    user = get_logged_user()
+    if not user or user.username.lower() != 'admin':
+        abort(403)
+
+    pdf = PdfFile.query.get_or_404(file_id)
+    path = os.path.join(PDF_UPLOAD_DIR, pdf.filename)
+
+    try:
+        if os.path.exists(path):
+            os.remove(path)
+        db.session.delete(pdf)
+        db.session.commit()
+        flash('PDF excluído com sucesso.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'[pdfs/delete] erro ao excluir: {e}')
+        flash('Erro ao excluir o PDF.', 'danger')
+
+    return redirect(url_for('admin_companies'))
+
+# ====== Rotas SEGURAS (por token assinado) ======
+@app.get('/pdfs/secure/<token>')
+def pdf_secure_view(token):
+    file_id = verify_pdf_token(token, max_age_seconds=3600)
+    if not file_id:
+        abort(403)
+    pdf = PdfFile.query.get_or_404(file_id)
+    resp = make_response(send_from_directory(PDF_UPLOAD_DIR, pdf.filename, mimetype='application/pdf', as_attachment=False))
+    resp.headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
+    resp.headers['Cache-Control'] = 'private, no-store, max-age=0'
+    return resp
+
+@app.get('/pdfs/secure-download/<token>')
+def pdf_secure_download(token):
+    file_id = verify_pdf_token(token, max_age_seconds=3600)
+    if not file_id:
+        abort(403)
+    pdf = PdfFile.query.get_or_404(file_id)
+    resp = make_response(send_from_directory(PDF_UPLOAD_DIR, pdf.filename, as_attachment=True, download_name=pdf.original_name))
+    resp.headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
+    resp.headers['Cache-Control'] = 'private, no-store, max-age=0'
+    return resp
+
+@app.get('/pdfs/s/<token>')
+def view_pdf_signed(token):
+    return pdf_secure_view(token)
+
+@app.get('/pdfs/d/<token>')
+def download_pdf_signed(token):
+    return pdf_secure_download(token)
 
 # ==============================================
 # DASHBOARD AND PDF UPLOAD
@@ -662,20 +805,37 @@ def upload():
         return redirect(url_for('purchase'))
 
     if request.method == 'POST':
-        if 'manual_entry' in request.form:
-            name        = request.form['name'].strip()
-            age         = int(request.form['age'])
-            cpf         = request.form['cpf'].strip()
-            gender      = request.form['gender'].strip()
-            phone       = request.form['phone'].strip()
-            doctor_name = request.form['doctor'].strip()
-            manual_text = request.form['lab_results'].strip()
+        using_manual = 'manual_entry' in request.form
+        patient = None  # garantimos que existe
+
+        if using_manual:
+            name        = (request.form.get('name') or '').strip()
+            age_str     = (request.form.get('age') or '').strip()
+            age         = int(age_str) if age_str.isdigit() else None
+            cpf         = (request.form.get('cpf') or '').strip()
+            gender      = (request.form.get('gender') or '').strip()
+            phone       = (request.form.get('phone') or '').strip()
+            doctor_name = (request.form.get('doctor') or '').strip()
+            manual_text = (request.form.get('lab_results') or '').strip()
 
             result = analyze_pdf(manual_text, manual=True)
             if not isinstance(result, (list, tuple)) or len(result) != 2:
                 flash('Erro ao processar análise manual.', 'danger')
                 return render_template('upload.html')
             diagnostic, prescription = result
+
+            if not cpf:
+                cpf = f"no_cpf_{int(time.time())}"
+
+            patient = add_patient(
+                name=name,
+                age=age if isinstance(age, int) else None,
+                cpf=cpf,
+                gender=gender or None,
+                phone=phone or None,
+                doctor_id=user.id,
+                prescription=prescription
+            )
 
         else:
             pdf_file = request.files.get('pdf_file')
@@ -684,7 +844,8 @@ def upload():
 
             uploads_folder = os.path.join(app.root_path, "static", "uploads")
             os.makedirs(uploads_folder, exist_ok=True)
-            filename    = pdf_file.filename
+
+            filename    = secure_filename(pdf_file.filename)
             upload_path = os.path.join(uploads_folder, filename)
             pdf_file.save(upload_path)
 
@@ -697,14 +858,15 @@ def upload():
 
             patient = add_patient(
                 name=name,
-                age=int(age),
+                age=int(age) if str(age).isdigit() else None,
                 cpf=cpf or None,
                 gender=gender or None,
                 phone=phone or None,
-                doctor_id=user.id, 
+                doctor_id=user.id,
                 prescription=prescription
             )
 
+        # tenta criar evento no Google Calendar (não bloqueia fluxo)
         start_dt = datetime.now()
         end_dt   = start_dt + timedelta(hours=1)
         notes    = f"Diagnóstico:\n{diagnostic}\n\nPrescrição:\n{prescription}"
@@ -729,6 +891,7 @@ def upload():
             f"Telefone: {phone}"
         )
 
+        # Geração inicial do PDF (opcional para histórico/whatsapp)
         html = render_template(
             "result_pdf.html",
             diagnostic_text=diagnostic,
@@ -737,33 +900,52 @@ def upload():
             patient_info=session['patient_info'],
             logo_path=os.path.join(app.root_path, 'static', 'images', 'logo.png')
         )
-        pdf_bytes = weasyprint.HTML(string=html, base_url=os.path.join(app.root_path, 'static')).write_pdf()
+        static_base = os.path.join(app.root_path, 'static')
+        pdf_bytes = weasyprint.HTML(string=html, base_url=static_base).write_pdf()
         if not pdf_bytes:
             flash('Erro ao gerar o PDF.', 'danger')
             return render_template('upload.html')
 
-        cpf_clean    = cpf.replace('.', '').replace('-', '')
-        pdf_filename = f"result_{cpf_clean}.pdf"
-        output_folder= os.path.join(app.root_path, "static", "output")
+        cpf_clean = (patient.cpf or '').replace('.', '').replace('-', '') if patient else ''
+        if not cpf_clean:
+            cpf_clean = f"no_cpf_{int(time.time())}"
+
+        output_folder = os.path.join(app.root_path, "static", "output")
         os.makedirs(output_folder, exist_ok=True)
+        pdf_filename = f"result_{cpf_clean}.pdf"
         pdf_path     = os.path.join(output_folder, pdf_filename)
         with open(pdf_path, 'wb') as f:
             f.write(pdf_bytes)
 
-        pdf_link = url_for('static', filename=f"output/{pdf_filename}", _external=True)
-        send_pdf_whatsapp(
-            doctor_name=doctor_name,
-            patient_name=name,
-            analyzed_pdf_link=pdf_link,
-            original_pdf_link=(None if 'manual_entry' in request.form else url_for('static', filename=f"uploads/{filename}", _external=True))
+        analyzed_link = url_for('static', filename=f"output/{pdf_filename}", _external=True)
+        original_link = None
+        if not using_manual:
+            original_link = url_for('static', filename=f"uploads/{filename}", _external=True)
+
+        try:
+            send_pdf_whatsapp(
+                doctor_name=doctor_name,
+                patient_name=name,
+                analyzed_pdf_link=analyzed_link,
+                original_pdf_link=original_link
+            )
+        except Exception as e:
+            app.logger.error(f"Erro ao enviar PDF no WhatsApp: {e}")
+
+        # consumo do pacote
+        try:
+            info = get_package_info(user.id)
+            usage = (info.get('used') or 0) + 1
+            update_package_usage(user.id, usage)
+        except Exception as e:
+            app.logger.error(f"Erro ao atualizar uso de pacote: {e}")
+
+        return render_template(
+            'result.html',
+            patient=patient,
+            diagnostic_text=diagnostic,
+            prescription_text=prescription
         )
-
-        usage = get_package_info(user.id)['used'] + 1
-        update_package_usage(user.id, usage)
-
-        return render_template('result.html',
-                               diagnostic_text=diagnostic,
-                               prescription_text=prescription)
 
     return render_template('upload.html')
 
@@ -829,7 +1011,6 @@ def confirm_pix():
     txid = request.form.get('txid') or ''
     file = request.files.get('receipt')
 
-    # salva comprovante e gera URL pública (se estiver em prod)
     receipt_url = None
     if file and file.filename:
         folder = os.path.join(app.root_path, 'static', 'pix_receipts')
@@ -839,7 +1020,6 @@ def confirm_pix():
         file.save(saved_path)
         receipt_url = url_for('static', filename=f'pix_receipts/{fname}', _external=True)
 
-    # notifica admin via WhatsApp com os dados
     try:
         send_pix_receipt_admin(
             admin_phone=ADMIN_WHATSAPP,
@@ -850,12 +1030,11 @@ def confirm_pix():
             amount=PLAN_PRICES.get(plan, 0.0),
             txid=txid,
             receipt_url=receipt_url,
-            payload_text=request.form.get('payload')  # opcional (se veio do form)
+            payload_text=request.form.get('payload')
         )
     except Exception as e:
         app.logger.error(f"[pix] falha ao notificar admin no WhatsApp: {e}")
 
-    # marca assinatura como pendente até validação
     user.plan = plan if plan in PLAN_PRICES else 'standard'
     user.plan_status = 'pending'
     user.plan_expires_at = None
@@ -866,7 +1045,6 @@ def confirm_pix():
 
 # ==============================================
 # AGENDA / MÉDICOS / PRODUTOS / etc
-# (restante das rotas – sem mudanças de lógica)
 # ==============================================
 @app.route('/agenda')
 @login_required
@@ -917,21 +1095,81 @@ def product_result(product_id):
         return "Produto não encontrado", 404
     return render_template('product_result.html', product=product)
 
+# ========= DOWNLOAD PDF (sempre atualizado) =========
 @app.route('/download_pdf/<int:patient_id>')
 def download_pdf(patient_id):
     user = get_logged_user()
     if not user:
         return redirect(url_for('login'))
+
     patient = get_patient_by_id(patient_id)
     if not patient or patient.doctor_id != user.id:
         abort(403)
-    cpf = (patient.cpf or '').replace('.', '').replace('-', '')
-    pdf_filename = f"result_{cpf}.pdf"
-    pdf_path = os.path.join(app.root_path, "static", "output", pdf_filename)
-    if not os.path.exists(pdf_path):
-        flash('Arquivo PDF não encontrado.', 'danger')
-        return redirect(url_for('patient_info', patient_id=patient_id))
-    return send_file(pdf_path, as_attachment=True, download_name='prescription.pdf')
+
+    consults = get_consults_by_patient(patient_id)
+    if consults:
+        latest_notes = consults[-1].notes or ""
+        parts = latest_notes.split("Prescrição:\n", 1)
+        diagnostic_text   = parts[0].strip()
+        prescription_text = (parts[1].strip() if len(parts) > 1 else (patient.prescription or "")).strip()
+    else:
+        diagnostic_text   = "Nenhuma consulta registrada."
+        prescription_text = (patient.prescription or "").strip()
+
+    patient_info = (
+        f"Paciente: {patient.name}\n"
+        f"Idade: {patient.age or ''}\n"
+        f"CPF: {(patient.cpf or '')}\n"
+        f"Sexo: {patient.gender or ''}\n"
+        f"Telefone: {patient.phone or ''}"
+    )
+
+    html = render_template(
+        "result_pdf.html",
+        diagnostic_text=diagnostic_text,
+        prescription_text=prescription_text,
+        doctor_name=getattr(patient.doctor, "name", ""),
+        patient_info=patient_info,
+        logo_path=os.path.join(app.root_path, 'static', 'images', 'logo.png')
+    )
+    static_base = os.path.join(app.root_path, 'static')
+    pdf_bytes: bytes = weasyprint.HTML(string=html, base_url=static_base).write_pdf() #type:ignore
+
+    cpf_or_id = (patient.cpf or f"id_{patient.id}").replace('.', '').replace('-', '')
+    safe_name = re.sub(r'[^A-Za-z0-9_-]+', '_', f"{patient.name}_{cpf_or_id}")[:80] or f"paciente_{patient.id}"
+    return send_file(
+        BytesIO(pdf_bytes),
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"prescription_{safe_name}.pdf"
+    )
+
+# ========= Helper opcional para gravar PDF em disco =========
+def regenerate_patient_pdf(patient, diagnostic_text, prescription_text, doctor_name):
+    html = render_template(
+        "result_pdf.html",
+        diagnostic_text=diagnostic_text,
+        prescription_text=prescription_text,
+        doctor_name=doctor_name,
+        patient_info=f"Paciente: {patient.name}\nIdade: {patient.age}\nCPF: {patient.cpf}\nSexo: {patient.gender}\nTelefone: {patient.phone}",
+        logo_path=os.path.join(app.root_path, 'static', 'images', 'logo.png'),
+    )
+
+    base_url = os.path.join(app.root_path, 'static')
+    pdf_bytes: bytes = weasyprint.HTML(string=html, base_url=base_url).write_pdf() #type:ignore
+    if not pdf_bytes:
+        raise RuntimeError("Falha ao gerar PDF (WeasyPrint retornou vazio).")
+
+    cpf_clean = (patient.cpf or "").replace(".", "").replace("-", "") or f"no_cpf_{int(time.time())}"
+    output_folder = os.path.join(app.root_path, "static", "output")
+    os.makedirs(output_folder, exist_ok=True)
+    pdf_filename = f"result_{cpf_clean}.pdf"
+    pdf_path = os.path.join(output_folder, pdf_filename)
+
+    with open(pdf_path, "wb") as f:
+        f.write(pdf_bytes)
+
+    return pdf_path
 
 @app.route('/catalog')
 @login_required
@@ -995,22 +1233,21 @@ def patient_result(patient_id):
 
     patient = get_patient_by_id(patient_id)
     if not patient or patient.doctor_id != user.id:
-        return render_template('result.html',
-                               diagnostic_text="Paciente não encontrado.",
-                               prescription_text="")
+        abort(403)  # evita renderizar result.html sem 'patient'
 
     consults = get_consults_by_patient(patient_id)
     if consults:
         latest = consults[-1].notes
-        parts = latest.split("Prescrição:\n", 1) #type:ignore
+        parts = latest.split("Prescrição:\n", 1)  # type:ignore
         diagnostic_text  = parts[0].strip()
         prescription_text = parts[1].strip() if len(parts) > 1 else patient.prescription or ""
     else:
         diagnostic_text  = "Nenhuma consulta registrada."
-        prescription_text= patient.prescription or ""
+        prescription_text = patient.prescription or ""
 
     return render_template(
         'result.html',
+        patient=patient,  # ✅ sempre presente
         diagnostic_text=diagnostic_text,
         prescription_text=prescription_text,
         doctor_name=getattr(patient.doctor, "name", "")
@@ -1853,7 +2090,7 @@ def quiz_patient(quiz_id):
         "preocupacao":      result.preocupacao,
         "interesse":        result.interesse,
         "depressao_raw":    result.depressao_raw,
-        "estresse_raw":     result.estresse_raw,   # <- usar *_raw aqui
+        "estresse_raw":     result.estresse_raw,
         "hora_extra":       result.hora_extra,
         "sono":             result.sono,
         "atividade_fisica": result.atividade_fisica,
@@ -1865,12 +2102,11 @@ def quiz_patient(quiz_id):
 
         "ansiedade":        result.ansiedade,
         "depressao":        result.depressao,
-        "estresse":         result.estresse,      # classificação
+        "estresse":         result.estresse,
         "qualidade":        result.qualidade,
         "risco":            result.risco,
         "recomendacao":     result.recomendacao,
     }
-
 
     questions = {
         "nome":             "Qual seu nome?",

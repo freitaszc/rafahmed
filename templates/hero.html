@@ -18,11 +18,8 @@
       --rafahmed-red-dark: #b81429;
       --rafahmed-red-light: #ff3854;
       --black-blue-1: #080b12;
-      /* base quase preta */
       --black-blue-2: #0a0f1f;
-      /* azul bem escuro */
       --black-blue-3: #0f172a;
-      /* elevação */
       --text: #e5e7eb;
       --text-dim: #cbd5e1;
     }
@@ -68,6 +65,15 @@
       animation: fadeIn 0.9s ease-out both;
     }
 
+    .chip {
+      border: 1px solid rgba(255, 255, 255, .12);
+      background: rgba(255, 255, 255, .05);
+      padding: .35rem .75rem;
+      border-radius: 9999px;
+      font-size: .75rem;
+      color: var(--text-dim);
+    }
+
     @keyframes fadeIn {
       from {
         opacity: 0;
@@ -76,7 +82,7 @@
 
       to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0)
       }
     }
   </style>
@@ -95,6 +101,18 @@
       </div>
 
       <nav class="hidden md:flex space-x-8 text-sm font-medium">
+        <a href="{{ url_for('hero') }}#empresas"
+          class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
+          Plano para Empresas
+          <span
+            class="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--rafahmed-red)] transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <a href="{{ url_for('hero') }}#palestras"
+          class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
+          Palestras
+          <span
+            class="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--rafahmed-red)] transition-all duration-300 group-hover:w-full"></span>
+        </a>
         <a href="{{ url_for('hero') }}#quem-somos"
           class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
           Quem Somos
@@ -104,12 +122,6 @@
         <a href="{{ url_for('hero') }}#psicologos"
           class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
           Para Psicólogos
-          <span
-            class="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--rafahmed-red)] transition-all duration-300 group-hover:w-full"></span>
-        </a>
-        <a href="{{ url_for('hero') }}#empresas"
-          class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
-          Para Empresas
           <span
             class="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--rafahmed-red)] transition-all duration-300 group-hover:w-full"></span>
         </a>
@@ -123,13 +135,9 @@
 
       <div class="hidden md:flex items-center space-x-4">
         <a href="/register"
-          class="text-sm font-semibold text-[var(--rafahmed-red)] hover:text-[#ff5169] transition-colors duration-300 px-4 py-2 rounded-full border border-[var(--rafahmed-red)] hover:bg-[var(--rafahmed-red)] hover:text-white">
-          Cadastrar
-        </a>
+          class="text-sm font-semibold text-[var(--rafahmed-red)] hover:text-[#ff5169] transition-colors duration-300 px-4 py-2 rounded-full border border-[var(--rafahmed-red)] hover:bg-[var(--rafahmed-red)] hover:text-white">Cadastrar</a>
         <a href="/login"
-          class="text-sm font-semibold text-[var(--rafahmed-red)] hover:text-[#ff5169] transition-colors duration-300 px-4 py-2 rounded-full border border-[var(--rafahmed-red)] hover:bg-[var(--rafahmed-red)] hover:text-white">
-          Entrar
-        </a>
+          class="text-sm font-semibold text-[var(--rafahmed-red)] hover:text-[#ff5169] transition-colors duration-300 px-4 py-2 rounded-full border border-[var(--rafahmed-red)] hover:bg-[var(--rafahmed-red)] hover:text-white">Entrar</a>
       </div>
     </div>
   </header>
@@ -140,16 +148,18 @@
 
       <!-- TEXTO -->
       <div class="lg:w-1/2 text-center lg:text-left animate-fade-in">
-        <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight text-white">
-          Cuidar da saúde mental nunca foi
+        <h1 class="text-4xl md:text-6xl font-bold mb-4 md:mb-6 leading-tight text-white">
+          Programa completo de
           <span
             class="bg-gradient-to-r from-[var(--rafahmed-red)] to-[var(--rafahmed-red-light)] bg-clip-text text-transparent">
-            tão fácil
+            saúde mental
           </span>
+          para pessoas e empresas
         </h1>
         <p class="text-xl text-[var(--text-dim)] mb-8 leading-relaxed">
-          Com a <strong class="text-[var(--rafahmed-red)]">RafahMed</strong>, você encontra psicólogos e acompanha
-          relatórios de bem-estar de forma simples, rápida e segura.
+          A <strong class="text-[var(--rafahmed-red)]">RafahMed</strong> oferece acesso rápido e confidencial a
+          psicólogos, psiquiatras e clínico geral, além de um programa educacional que fortalece a cultura de cuidado
+          nas organizações.
         </p>
 
         <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-12">
@@ -161,90 +171,165 @@
             Área do Profissional
           </a>
         </div>
-
-        <!-- Estatísticas -->
-        <div class="flex flex-wrap justify-center lg:justify-start gap-6">
-          <div class="stats-card px-6 py-4 rounded-2xl text-center">
-            <span class="text-2xl font-bold text-[var(--rafahmed-red)] block">+50</span>
-            <span class="text-sm text-[var(--text-dim)]">Profissionais cadastrados</span>
-          </div>
-          <div class="stats-card px-6 py-4 rounded-2xl text-center">
-            <span class="text-2xl font-bold text-[var(--rafahmed-red)] block">+2 mil</span>
-            <span class="text-sm text-[var(--text-dim)]">Consultas realizadas</span>
-          </div>
-          <div class="stats-card px-6 py-4 rounded-2xl text-center">
-            <span class="text-2xl font-bold text-[var(--rafahmed-red)] block">98%</span>
-            <span class="text-sm text-[var(--text-dim)]">Satisfação dos usuários</span>
-          </div>
-        </div>
-      </div>
+      </div> <!-- fecha a coluna de TEXTO -->
 
       <!-- IMAGEM -->
       <div class="lg:w-1/2 animate-fade-in">
-        <div class="relative w-full max-w-xl mx-auto">
-          <img src="{{ url_for('static', filename='images/hero.jpg') }}" alt="Consulta online"
-            class="rounded-3xl shadow-2xl w-full">
+        <div class="relative w-full h-full">
+          <img src="{{ url_for('static', filename='images/hero-main.jpg') }}" alt="Consulta online"
+            class="rounded-3xl shadow-2xl w-full h-[480px] object-cover object-center">
           <div
             class="absolute bottom-6 right-6 bg-[#0b1222]/90 backdrop-blur-sm px-6 py-3 rounded-2xl shadow-lg text-[var(--rafahmed-red)] font-semibold text-sm border border-white/10">
             <div class="flex items-center gap-2">
               <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              Plataforma 100% online
+              Agendamento confidencial
             </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- PLANO PARA EMPRESAS -->
+  <section id="empresas" class="py-20 px-6"
+    style="background: linear-gradient(180deg, var(--black-blue-1) 0%, var(--black-blue-2) 100%);">
+    <div class="max-w-6xl mx-auto">
+      <div class="section-card rounded-3xl shadow-xl overflow-hidden">
+        <div class="flex flex-col md:flex-row-reverse items-center">
+          <div class="md:w-1/2 p-8 md:p-12">
+            <h2 class="text-4xl font-bold mb-6 text-white">Plano para Empresas</h2>
+            <p class="text-[var(--text-dim)] text-lg mb-8 leading-relaxed">
+              Programa mensal com <strong>30 atendimentos</strong>, que poderão ser utilizados conforme sua necessidade
+              nas especialidades de <strong>Psicologia, Psiquiatria e Clínica Geral.</strong> Também são inclusas
+              <strong>6 palestras presenciais com o Dr. Samuel</strong> e <strong>3 conteúdos online</strong>.
+            </p>
+
+            <!-- sem chips/mini cards aqui; foco no CTA -->
+            <div class="flex justify-center">
+              <a href="{{ url_for('companies_plan') }}"
+                class="btn-primary text-white px-8 py-4 rounded-full font-semibold inline-block">
+                Saiba mais
+              </a>
+            </div>
+          </div>
+
+          <div class="md:w-1/2">
+            <img src="{{ url_for('static', filename='images/lecture.jpg') }}" alt="Empresas"
+              class="w-full h-full object-cover">
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- QUEM SOMOS -->
+  <!-- PALESTRAS -->
+  <section id="palestras" class="py-20 px-6"
+    style="background: linear-gradient(180deg, var(--black-blue-2) 0%, var(--black-blue-1) 100%);">
+    <div class="max-w-6xl mx-auto">
+      <div class="section-card rounded-3xl shadow-xl overflow-hidden">
+        <div class="flex flex-col md:flex-row items-center">
+          <div class="md:w-1/2 p-8 md:p-12">
+            <h2 class="text-4xl font-bold mb-6 text-white">Palestras & Conteúdos</h2>
+            <p class="text-[var(--text-dim)] text-lg leading-relaxed">
+              <strong>6 palestras presenciais</strong> ao longo do ano com o psiquiatra <strong>Dr. Samuel</strong>, em
+              temas como manejo do estresse,
+              resiliência e equilíbrio vida-trabalho, além de <strong>3 conteúdos online</strong> sob demanda para
+              educação contínua.
+            </p>
+
+            <ul class="space-y-3 text-[var(--text-dim)] mt-6">
+              <li>• Fortalece a cultura de cuidado e reduz estigma</li>
+              <li>• Melhora engajamento e produtividade</li>
+              <li>• Contribui para reduzir absenteísmo e presenteísmo</li>
+            </ul>
+
+            <div class="mt-8 flex justify-center">
+              <a href="https://wa.me/5531985570920?text=Quero%20consultar%20o%20calend%C3%A1rio%20de%20palestras%20da%20RafahMed"
+                target="_blank" class="btn-primary text-white px-8 py-4 rounded-full font-semibold inline-block">
+                Consulte o Calendário de Palestras
+              </a>
+            </div>
+          </div>
+
+          <div class="md:w-1/2">
+            <img src="{{ url_for('static', filename='images/psicologos.jpg') }}" alt="Palestras"
+              class="w-full h-full object-cover">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUEM SOMOS (Melhorado: Missão, Visão, Valores) -->
   <section id="quem-somos" class="py-20 px-6"
     style="background: linear-gradient(180deg, var(--black-blue-1) 0%, var(--black-blue-2) 100%);">
-    <div class="max-w-6xl mx-auto">
-      <div class="text-center mb-16">
-        <h2 class="text-4xl font-bold mb-6 text-white">Quem Somos</h2>
-        <p class="text-[var(--text-dim)] text-xl max-w-3xl mx-auto leading-relaxed">
-          A RafahMed é uma plataforma de gestão em saúde focada em soluções digitais para psicólogos, clínicas e
-          empresas. Oferecemos tecnologia acessível, eficiente e humanizada.
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-4xl font-bold mb-4 text-white">Quem Somos</h2>
+        <p class="text-[var(--text-dim)] text-lg md:text-xl max-w-3xl mx-auto">
+          Cuidamos de pessoas com tecnologia e humanização. Unimos clínica, educação e gestão para um cuidado contínuo e
+          seguro.
         </p>
       </div>
 
-      <div class="grid md:grid-cols-3 gap-8">
-        <div class="section-card p-8 rounded-3xl shadow-lg text-center">
-          <div
-            class="w-16 h-16 bg-gradient-to-r from-[var(--rafahmed-red)] to-[var(--rafahmed-red-light)] rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- Missão -->
+        <div class="section-card p-8 rounded-3xl shadow-lg">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+              <svg class="w-5 h-5 text-[var(--rafahmed-red)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white">Missão</h3>
           </div>
-          <h3 class="text-xl font-bold text-white mb-3">Segurança Total</h3>
-          <p class="text-[var(--text-dim)]">Dados protegidos com criptografia de ponta e conformidade com LGPD.</p>
+          <p class="text-[var(--text-dim)]">Oferecer um programa acessível, eficiente e humanizado que promova o
+            bem-estar emocional de colaboradores e pacientes.</p>
         </div>
 
-        <div class="section-card p-8 rounded-3xl shadow-lg text-center">
-          <div
-            class="w-16 h-16 bg-gradient-to-r from-[var(--rafahmed-red)] to-[var(--rafahmed-red-light)] rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z">
-              </path>
-            </svg>
+        <!-- Visão -->
+        <div class="section-card p-8 rounded-3xl shadow-lg">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+              <svg class="w-5 h-5 text-[var(--rafahmed-red)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white">Visão</h3>
           </div>
-          <h3 class="text-xl font-bold text-white mb-3">Rapidez</h3>
-          <p class="text-[var(--text-dim)]">Agendamentos e consultas em poucos cliques, sem complicações.</p>
+          <p class="text-[var(--text-dim)]">Ser referência em gestão de saúde mental, reconhecida pela inovação,
+            confidencialidade e resultados de impacto.</p>
         </div>
 
-        <div class="section-card p-8 rounded-3xl shadow-lg text-center">
-          <div
-            class="w-16 h-16 bg-gradient-to-r from-[var(--rafahmed-red)] to-[var(--rafahmed-red-light)] rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
-              </path>
-            </svg>
+        <!-- Valores -->
+        <div class="section-card p-8 rounded-3xl shadow-lg">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+              <svg class="w-5 h-5 text-[var(--rafahmed-red)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white">Valores</h3>
           </div>
-          <h3 class="text-xl font-bold text-white mb-3">Humanização</h3>
-          <p class="text-[var(--text-dim)]">Tecnologia que aproxima pessoas e facilita o cuidado com a saúde mental.</p>
+          <ul class="text-[var(--text-dim)] space-y-2">
+            <li>• Humanização & Acolhimento</li>
+            <li>• Acessibilidade & Simplicidade</li>
+            <li>• Eficiência & Resultado</li>
+            <li>• Segurança & LGPD</li>
+            <li>• Inovação contínua</li>
+          </ul>
         </div>
+      </div>
+
+      <div class="mt-10 flex justify-center">
+        <a href="{{ url_for('about') }}"
+          class="btn-primary text-white px-8 py-4 rounded-full font-semibold inline-block">
+          Saiba mais
+        </a>
       </div>
     </div>
   </section>
@@ -258,8 +343,8 @@
           <div class="md:w-1/2 p-8 md:p-12">
             <h2 class="text-4xl font-bold mb-6 text-white">Para Psicólogos</h2>
             <p class="text-[var(--text-dim)] text-lg mb-8 leading-relaxed">
-              Organize atendimentos, prontuários, agenda e prescrições em uma só plataforma. Tudo com segurança,
-              simplicidade e suporte especializado.
+              Simplifique seu dia a dia clínico: agenda integrada, prontuários, prescrições e acompanhamento de
+              autoavaliações — tudo em um só lugar, com segurança e privacidade.
             </p>
 
             <ul class="space-y-4 mb-8">
@@ -277,7 +362,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                   </svg>
                 </div>
-                <span>Catálogo de pacientes</span>
+                <span>Catálogo de pacientes com prontuário</span>
               </li>
               <li class="flex items-center gap-3">
                 <div class="w-6 h-6 bg-green-600/20 rounded-full flex items-center justify-center">
@@ -285,7 +370,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                   </svg>
                 </div>
-                <span>Cotação de produtos automatizada</span>
+                <span>Prescrições e relatórios de acompanhamento</span>
               </li>
               <li class="flex items-center gap-3">
                 <div class="w-6 h-6 bg-green-600/20 rounded-full flex items-center justify-center">
@@ -297,53 +382,14 @@
               </li>
             </ul>
 
-            <a href="https://wa.me/5531985570920?text=Olá%2C%20gostaria%20de%20me%20cadastrar%20como%20psicologo%20na%20plataforma%20da%20RafahMed."
+            <a href="https://wa.me/5531985570920?text=Ol%C3%A1%2C%20gostaria%20de%20me%20cadastrar%20como%20psic%C3%B3logo%20na%20plataforma%20RafahMed."
               target="_blank" class="btn-primary text-white px-8 py-4 rounded-full font-semibold inline-block">
               Cadastre-se como Psicólogo da RafahMed
             </a>
           </div>
 
           <div class="md:w-1/2">
-            <img src="{{ url_for('static', filename='images/psicologos.jpg') }}" alt="Psicólogos"
-              class="w-full h-full object-cover">
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- PARA EMPRESAS -->
-  <section id="empresas" class="py-20 px-6"
-    style="background: linear-gradient(180deg, var(--black-blue-1) 0%, var(--black-blue-2) 100%);">
-    <div class="max-w-6xl mx-auto">
-      <div class="section-card rounded-3xl shadow-xl overflow-hidden">
-        <div class="flex flex-col md:flex-row-reverse items-center">
-          <div class="md:w-1/2 p-8 md:p-12">
-            <h2 class="text-4xl font-bold mb-6 text-white">Para Empresas</h2>
-            <p class="text-[var(--text-dim)] text-lg mb-8 leading-relaxed">
-              Cuide da saúde emocional dos colaboradores. Agende atendimentos, visualize relatórios e tenha
-              acompanhamento profissional com total integração.
-            </p>
-
-            <div class="grid grid-cols-2 gap-4 mb-8">
-              <div class="text-center p-4 bg-white/5 rounded-2xl border border-white/10">
-                <div class="text-2xl font-bold text-[var(--rafahmed-red)]">87%</div>
-                <div class="text-sm text-[var(--text-dim)]">Redução do absenteísmo</div>
-              </div>
-              <div class="text-center p-4 bg-white/5 rounded-2xl border border-white/10">
-                <div class="text-2xl font-bold text-[var(--rafahmed-red)]">95%</div>
-                <div class="text-sm text-[var(--text-dim)]">Satisfação dos colaboradores</div>
-              </div>
-            </div>
-
-            <a href="https://wa.me/5531985570920?text=Ol%C3%A1%2C%20gostaria%20de%20solicitar%20uma%20demonstra%C3%A7%C3%A3o."
-              target="_blank" class="btn-primary text-white px-8 py-4 rounded-full font-semibold inline-block">
-              Solicitar Demonstração
-            </a>
-          </div>
-
-          <div class="md:w-1/2">
-            <img src="{{ url_for('static', filename='images/empresas.jpg') }}" alt="Empresas"
+            <img src="{{ url_for('static', filename='images/para-psicologos.jpg') }}" alt="Psicólogos"
               class="w-full h-full object-cover">
           </div>
         </div>
@@ -357,7 +403,7 @@
     <div class="max-w-4xl mx-auto text-center">
       <h2 class="text-4xl font-bold text-white mb-6">Agendar Consulta</h2>
       <p class="text-[var(--text-dim)] text-xl mb-12 leading-relaxed max-w-2xl mx-auto">
-        Encontre um profissional de forma rápida e segura. Com poucos cliques, sua saúde está nas mãos certas.
+        Escolha o profissional, selecione o horário e realize sua consulta online com total segurança e privacidade.
       </p>
 
       <div class="grid md:grid-cols-3 gap-8 mb-12">
@@ -367,25 +413,23 @@
             <span class="text-white font-bold text-2xl">1</span>
           </div>
           <h3 class="font-semibold text-lg text-white mb-2">Escolha o Profissional</h3>
-          <p class="text-[var(--text-dim)]">Navegue pelos perfis dos psicólogos disponíveis</p>
+          <p class="text-[var(--text-dim)]">Psicologia, psiquiatria e clínico geral</p>
         </div>
-
         <div class="text-center">
           <div
             class="w-20 h-20 bg-gradient-to-r from-[var(--rafahmed-red)] to-[var(--rafahmed-red-light)] rounded-full flex items-center justify-center mx-auto mb-4">
             <span class="text-white font-bold text-2xl">2</span>
           </div>
           <h3 class="font-semibold text-lg text-white mb-2">Agende o Horário</h3>
-          <p class="text-[var(--text-dim)]">Selecione data e horário disponível</p>
+          <p class="text-[var(--text-dim)]">Processo simples e confidencial</p>
         </div>
-
         <div class="text-center">
           <div
             class="w-20 h-20 bg-gradient-to-r from-[var(--rafahmed-red)] to-[var(--rafahmed-red-light)] rounded-full flex items-center justify-center mx-auto mb-4">
             <span class="text-white font-bold text-2xl">3</span>
           </div>
           <h3 class="font-semibold text-lg text-white mb-2">Realize a Consulta</h3>
-          <p class="text-[var(--text-dim)]">Tenha sua consulta online com segurança</p>
+          <p class="text-[var(--text-dim)]">Atendimento 100% online</p>
         </div>
       </div>
 
@@ -408,12 +452,12 @@
 
         <div class="flex flex-col md:flex-row items-center justify-between w-full gap-6 text-sm">
           <div class="flex flex-wrap items-center justify-center gap-6">
-            <a href="#quem-somos" class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-colors">Quem
-              Somos</a>
             <a href="#psicologos" class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-colors">Para
               Psicólogos</a>
-            <a href="#empresas" class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-colors">Para
-              Empresas</a>
+            <a href="#empresas" class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-colors">Plano
+              para Empresas</a>
+            <a href="#palestras"
+              class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-colors">Palestras</a>
             <a href="/privacy-policy"
               class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-colors">Privacidade</a>
             <a href="/terms"
@@ -425,7 +469,8 @@
               class="text-[var(--text-dim)] hover:opacity-80 transition">
               <img src="{{ url_for('static', filename='images/insta.svg') }}" alt="Instagram" class="h-6 w-6">
             </a>
-            <a href="https://wa.me/5531985570920" target="_blank" class="text-gray-400 hover:text-green-500 transition">
+            <a href="https://wa.me/5531985570920" target="_blank" class="text-gray-400 hover:text-green-500 transition"
+              aria-label="WhatsApp">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                 <path
                   d="M20.52 3.48A11.79 11.79 0 0012 0C5.37 0 0 5.37 0 12c0 2.12.56 4.12 1.61 5.93L0 24l6.24-1.64A11.96 11.96 0 0012 24c6.63 0 12-5.37 12-12 0-3.19-1.25-6.19-3.48-8.52zM12 22a9.92 9.92 0 01-5.14-1.42l-.37-.22-3.69.97.99-3.6-.24-.37A9.97 9.97 0 1122 12c0 5.52-4.48 10-10 10zm5.01-7.35c-.28-.14-1.65-.81-1.9-.9s-.44-.14-.63.14-.72.9-.89 1.08c-.16.18-.33.2-.61.07-.28-.14-1.18-.43-2.25-1.36a8.32 8.32 0 01-1.54-1.92c-.16-.28-.02-.43.12-.58.12-.12.28-.3.42-.45.14-.15.18-.25.27-.42.09-.18.05-.34-.02-.48-.07-.14-.63-1.51-.86-2.07-.23-.56-.47-.48-.65-.48-.17 0-.37 0-.57 0-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.87 1.22 3.07.14.2 2.11 3.23 5.12 4.54.71.31 1.26.5 1.69.64.71.23 1.35.2 1.86.12.57-.08 1.65-.67 1.88-1.31.23-.64.23-1.2.16-1.31-.07-.11-.26-.18-.54-.32z" />
