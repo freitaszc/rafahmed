@@ -203,7 +203,7 @@
             <p class="text-[var(--text-dim)] text-lg mb-8 leading-relaxed">
               Programa mensal com <strong>30 atendimentos</strong>, que poderão ser utilizados conforme sua necessidade
               nas especialidades de <strong>Psicologia, Psiquiatria e Clínica Geral.</strong> Também são inclusas
-              <strong>6 palestras presenciais com o Dr. Samuel</strong> e <strong>3 conteúdos online</strong>.
+              <strong>6 palestras presenciais</strong> e <strong>3 conteúdos online</strong>.
             </p>
 
             <!-- sem chips/mini cards aqui; foco no CTA -->
@@ -233,7 +233,7 @@
           <div class="md:w-1/2 p-8 md:p-12">
             <h2 class="text-4xl font-bold mb-6 text-white">Palestras & Conteúdos</h2>
             <p class="text-[var(--text-dim)] text-lg leading-relaxed">
-              <strong>6 palestras presenciais</strong> ao longo do ano com o psiquiatra <strong>Dr. Samuel</strong>, em
+              <strong>6 palestras presenciais</strong> ao longo do ano com o <strong>Dr. Samuel</strong>, em
               temas como manejo do estresse,
               resiliência e equilíbrio vida-trabalho, além de <strong>3 conteúdos online</strong> sob demanda para
               educação contínua.
@@ -286,8 +286,11 @@
             </div>
             <h3 class="text-xl font-bold text-white">Missão</h3>
           </div>
-          <p class="text-[var(--text-dim)]">Oferecer um programa acessível, eficiente e humanizado que promova o
-            bem-estar emocional de colaboradores e pacientes.</p>
+          <ul class="text-[var(--text-dim)] space-y-2">
+            <li>• Oferecer um programa acessível</li>
+            <li>• Promover o bem-estar emocional</li>
+            <li>• Atuar com eficiência e humanização</li>
+          </ul>
         </div>
 
         <!-- Visão -->
@@ -300,8 +303,11 @@
             </div>
             <h3 class="text-xl font-bold text-white">Visão</h3>
           </div>
-          <p class="text-[var(--text-dim)]">Ser referência em gestão de saúde mental, reconhecida pela inovação,
-            confidencialidade e resultados de impacto.</p>
+          <ul class="text-[var(--text-dim)] space-y-2">
+            <li>• Ser referência em gestão de saúde mental</li>
+            <li>• Garantir inovação e confidencialidade</li>
+            <li>• Gerar resultados de impacto</li>
+          </ul>
         </div>
 
         <!-- Valores -->
@@ -319,19 +325,19 @@
             <li>• Humanização & Acolhimento</li>
             <li>• Acessibilidade & Simplicidade</li>
             <li>• Eficiência & Resultado</li>
-            <li>• Segurança & LGPD</li>
             <li>• Inovação contínua</li>
           </ul>
         </div>
+
+        <!-- Botão Saiba Mais -->
+        <div class="md:col-span-3 mt-10 flex justify-center">
+          <a href="{{ url_for('about') }}"
+            class="btn-primary text-white px-8 py-4 rounded-full font-semibold inline-block text-center">
+            Saiba mais
+          </a>
+        </div>
       </div>
 
-      <div class="mt-10 flex justify-center">
-        <a href="{{ url_for('about') }}"
-          class="btn-primary text-white px-8 py-4 rounded-full font-semibold inline-block">
-          Saiba mais
-        </a>
-      </div>
-    </div>
   </section>
 
   <!-- PARA PSICÓLOGOS -->
