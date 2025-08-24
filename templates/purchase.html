@@ -318,28 +318,42 @@
 </head>
 
 <body>
+  <!-- Sidebar -->
   <div class="sidebar">
-    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Minimizar/Maximizar menu"><i
-        class="fa fa-angle-double-left"></i></button>
+    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Minimizar/Maximizar menu">
+      <i class="fa fa-angle-double-left"></i>
+    </button>
+
     <img src="{{ url_for('static', filename='images/logocompleta.svg') }}" class="sidebar-logo" alt="Logo RafahMed">
-    <a href="{{ url_for('index') }}" class="menu-item"><i class="fa fa-home"></i> <span class="label">Início</span></a>
-    <a href="{{ url_for('upload') }}" class="menu-item"><i class="fa fa-upload"></i> <span class="label">Ponza
-        Lab</span></a>
-    <a href="{{ url_for('quiz_results') }}" class="menu-item"><i class="fa fa-list-alt"></i> <span
-        class="label">Autoavaliações</span></a>
-    <a href="{{ url_for('quote_index') }}" class="menu-item"><i class="fa fa-file-text-o"></i> <span
-        class="label">Cotações</span></a>
-    <a href="{{ url_for('catalog') }}" class="menu-item"><i class="fa fa-users"></i> <span
+
+    <a href="{{ url_for('index') }}" class="menu-item" title="Início"><i class="fa fa-home"></i> <span
+        class="label">Início</span></a>
+    <a href="{{ url_for('upload') }}" class="menu-item" title="Ponza Lab"><i class="fa fa-upload"></i> <span
+        class="label">Ponza Lab</span></a>
+    <a href="{{ url_for('questionnaire_results') }}" class="menu-item" title="Questionários SRQ-20"><i
+        class="fa fa-list-alt"></i><span class="label">SRQ-20</span></a>
+    <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-list-alt"></i>
+      <span class="label">Autoavaliações</span></a>
+    <a href="{{ url_for('quote_index') }}" class="menu-item" title="Cotações"><i class="fa fa-file-text-o"></i>
+      <span class="label">Cotações</span></a>
+    <a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-users"></i> <span
         class="label">Pacientes</span></a>
-    <a href="{{ url_for('products') }}" class="menu-item"><i class="fa fa-archive"></i> <span
+    <a href="{{ url_for('products') }}" class="menu-item" title="Estoque"><i class="fa fa-archive"></i> <span
         class="label">Estoque</span></a>
-    <a href="{{ url_for('agenda') }}" class="menu-item"><i class="fa fa-calendar"></i> <span
+    <a href="{{ url_for('agenda') }}" class="menu-item" title="Agenda"><i class="fa fa-calendar"></i> <span
         class="label">Agenda</span></a>
-    <a href="{{ url_for('purchase') }}" class="menu-item"><i class="fa fa-credit-card"></i> <span
+    <a href="{{ url_for('purchase') }}" class="menu-item" title="Pagamentos"><i class="fa fa-credit-card"></i> <span
         class="label">Pagamentos</span></a>
-    <a href="{{ url_for('training') }}" class="menu-item"><i class="fa fa-play-circle"></i> <span
-        class="label">Treinamento</span></a>
-    <a href="{{ url_for('logout') }}" class="menu-item logout"><i class="fa fa-sign-out"></i> <span
+    <a href="{{ url_for('training') }}" class="menu-item" title="Treinamento"><i class="fa fa-play-circle"></i>
+      <span class="label">Treinamento</span></a>
+
+    {% if username and username|lower == 'admin' %}
+    <div style="margin:18px 0 8px 0; border-top:1px solid #1f2937;"></div>
+    <a href="{{ url_for('admin_companies') }}" class="menu-item admin" title="Admin"><i class="fa fa-cog"></i> <span
+        class="label">Admin</span></a>
+    {% endif %}
+
+    <a href="{{ url_for('logout') }}" class="menu-item logout" title="Sair"><i class="fa fa-sign-out"></i> <span
         class="label">Sair</span></a>
   </div>
 
@@ -404,39 +418,39 @@
 
       <!-- ===================== PACOTES (Mercado Pago) ===================== -->
       <div class="card" style="margin-bottom:18px">
-      <form method="post" action="{{ url_for('purchase') }}">
-        <h3 class="section-title">Comprar Pacote de Análises</h3>
+        <form method="post" action="{{ url_for('purchase') }}">
+          <h3 class="section-title">Comprar Pacote de Análises</h3>
 
-        <label for="packageSelect"
-          style="display:block;text-align:center;margin-bottom:6px;font-weight:700;color:var(--muted)">
-          Selecione o Pacote
-        </label>
-        <select name="package" id="packageSelect" class="select" required>
-          <option value="">Escolha seu pacote...</option>
-          <option value="50">50 Análises - R$ 120</option>
-          <option value="150">150 Análises - R$ 300</option>
-          <option value="500">500 Análises - R$ 950</option>
-        </select>
+          <label for="packageSelect"
+            style="display:block;text-align:center;margin-bottom:6px;font-weight:700;color:var(--muted)">
+            Selecione o Pacote
+          </label>
+          <select name="package" id="packageSelect" class="select" required>
+            <option value="">Escolha seu pacote...</option>
+            <option value="50">50 Análises - R$ 120</option>
+            <option value="150">150 Análises - R$ 300</option>
+            <option value="500">500 Análises - R$ 950</option>
+          </select>
 
-        <div class="benefits">
-          <h4 style="text-align:center;margin:0 0 10px">Benefícios Inclusos</h4>
-          <ul>
-            <li>Análises durante a validade do pacote</li>
-            <li>Relatórios detalhados em PDF</li>
-            <li>Suporte técnico prioritário</li>
-            <li>Backup automático dos dados</li>
-          </ul>
-        </div>
+          <div class="benefits">
+            <h4 style="text-align:center;margin:0 0 10px">Benefícios Inclusos</h4>
+            <ul>
+              <li>Análises durante a validade do pacote</li>
+              <li>Relatórios detalhados em PDF</li>
+              <li>Suporte técnico prioritário</li>
+              <li>Backup automático dos dados</li>
+            </ul>
+          </div>
 
-        <button type="submit" class="btn">Gerar Pagamento (Mercado Pago)</button>
+          <button type="submit" class="btn">Gerar Pagamento (Mercado Pago)</button>
 
-        <div class="security">
-          <div style="font-weight:800;margin-bottom:6px">🔒 Pagamento 100% Seguro</div>
-          <p class="subtle">Transação processada pelo Mercado Pago com criptografia SSL.</p>
-        </div>
-      </form>
+          <div class="security">
+            <div style="font-weight:800;margin-bottom:6px">🔒 Pagamento 100% Seguro</div>
+            <p class="subtle">Transação processada pelo Mercado Pago com criptografia SSL.</p>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
 </body>
 
 </html>

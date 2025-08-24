@@ -1,42 +1,33 @@
 import os
-from io import BytesIO
+import io
+import re
+import jwt
 import json
-import weasyprint
-import secrets
-from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
-import uuid, base64, io
-from sqlalchemy import func, cast, Date, text, inspect
 import time
+import base64
+import secrets
+import mimetypes
+from io import BytesIO
 from functools import wraps
 from datetime import datetime, timedelta
 from collections import defaultdict
+
+import weasyprint
+from dotenv import load_dotenv
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+
 from flask import (
-    current_app,
-    Flask,
-    render_template,
-    request,
-    redirect,
-    url_for,
-    session,
-    flash,
-    jsonify,
-    get_flashed_messages,
-    abort,
-    send_file,
-    send_from_directory,
-    make_response,
+    Flask, render_template, request, redirect, url_for, session, flash, jsonify,
+    get_flashed_messages, abort, send_file, send_from_directory, make_response, current_app
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import desc, or_
-from dotenv import load_dotenv
-import jwt
-from markupsafe import escape
-import re
-import mimetypes
 
-from google.oauth2 import service_account
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from sqlalchemy import text, inspect, desc, or_
+from sqlalchemy.exc import OperationalError
+
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import Flow
@@ -47,69 +38,32 @@ from mercado_pago import generate_payment_link
 from email_utils import send_email_quote
 
 from records import (
-    get_suppliers_by_user,
-    add_supplier_db,
-    update_supplier_db,
-    delete_supplier_db,
-    update_product,
-    get_product_by_id,
-    get_products,
-    save_products,
-    is_package_available,
-    update_package_usage,
-    get_package_info,
-    get_user_by_id,
-    get_user_by_username,
-    create_user,
-    get_company_by_id,
-    get_company_by_access_code,
-    create_company,
-    add_supplier_record,
-    get_suppliers,
-    add_quote,
-    get_quotes,
-    add_quote_response,
-    get_responses_by_quote,
-    add_doctor,
-    get_doctors,
-    get_doctor_by_id,
-    add_patient,
-    get_patient_by_id,
-    get_patients_by_doctor,
-    update_patient,
-    delete_patient_record,
-    add_consult,
-    get_consults_by_patient,
-    update_prescription_in_consult,
-    add_quiz_result,
-    get_quiz_results_by_doctor,
-    get_quiz_results_by_doctor_and_range,
+    get_suppliers_by_user, add_supplier_db, update_supplier_db, delete_supplier_db,
+    update_product, get_product_by_id, get_products, save_products,
+    is_package_available, update_package_usage, get_package_info,
+    get_user_by_id, get_user_by_username, create_user, get_company_by_id,
+    get_company_by_access_code, create_company, add_supplier_record, get_suppliers,
+    add_quote, get_quotes, add_quote_response, get_responses_by_quote,
+    add_doctor, get_doctors, get_doctor_by_id, add_patient, get_patient_by_id,
+    get_patients_by_doctor, update_patient, delete_patient_record, add_consult,
+    get_consults_by_patient, update_prescription_in_consult,
+    add_quiz_result, get_quiz_results_by_doctor, get_quiz_results_by_doctor_and_range,
 )
 
 from models import (
-    db,
-    User,
-    Company,
-    Supplier,
-    Quote,
-    QuoteResponse,
-    Doctor,
-    Consult,
-    Patient,
-    QuizResult,
-    PdfFile
+    db, User, Company, Supplier, Quote, QuoteResponse, Doctor, Consult, Patient,
+    QuizResult, PdfFile, DoctorAvailability, QuestionnaireResult
 )
 
+# ------------------------------------------------------------------------------
+# App & DB
+# ------------------------------------------------------------------------------
 load_dotenv()
-
 app = Flask(__name__)
 
-# ==============================================
-# DB INIT
-# ==============================================
+# DB config
 base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'instance'))
 os.makedirs(base_dir, exist_ok=True)
-
 db_path = os.path.join(base_dir, 'web.db')
 DATABASE_URL = os.getenv('DATABASE_URL') or f'sqlite:///{db_path}'
 
@@ -118,6 +72,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = secrets.token_hex(32)
 
 db.init_app(app)
+migrate = Migrate(app, db)
 
 def ensure_tables():
     with app.app_context():
@@ -127,11 +82,11 @@ def ensure_tables():
 
 ensure_tables()
 
-# ==============================================
-# PROTECTING URL (PDF tokens)
-# ==============================================
+# ------------------------------------------------------------------------------
+# PDF secure tokens
+# ------------------------------------------------------------------------------
 def _pdf_serializer():
-    return URLSafeTimedSerializer(current_app.secret_key, salt="pdf-protection-v1")  # type:ignore
+    return URLSafeTimedSerializer(current_app.secret_key, salt="pdf-protection-v1")  # type: ignore
 
 def generate_pdf_token(file_id: int) -> str:
     s = _pdf_serializer()
@@ -145,16 +100,15 @@ def verify_pdf_token(token: str, max_age_seconds: int = 3600) -> int | None:
     except (BadSignature, SignatureExpired, ValueError, TypeError):
         return None
 
-# ==============================================
-# SUBSCRIPTION / PIX CONFIG & CONSTANTES
-# ==============================================
+# ------------------------------------------------------------------------------
+# Subscription / PIX
+# ------------------------------------------------------------------------------
 PIX_CNPJ = os.getenv("PIX_CNPJ", "49.942.520/0001-02")
 PIX_KEY  = os.getenv("PIX_KEY", "49.942.520/0001-02")
 PIX_NAME = os.getenv("PIX_NAME", "RafahMed")
 PIX_CITY = os.getenv("PIX_CITY", "Ipatinga")
 PIX_DESC = os.getenv("PIX_DESC", "Assinatura RafahMed")
 PLAN_PRICES = {"plus": 99.00, "premium": 179.00}
-
 ADMIN_WHATSAPP = os.getenv("ADMIN_WHATSAPP", "31985570920")
 
 PLAN_LEVELS = {'standard': 1, 'plus': 2, 'premium': 3}
@@ -243,24 +197,14 @@ def ensure_subscription_columns():
 
 ensure_subscription_columns()
 
+# ------------------------------------------------------------------------------
+# Auth helpers
+# ------------------------------------------------------------------------------
 def get_logged_user():
     uid = session.get('user_id')
     if not uid:
         return None
     return User.query.get(uid)
-
-def create_tables():
-    db.create_all()
-
-PUBLIC_ENDPOINTS = {
-    'hero',
-    'about',
-    'privacy_policy',
-    'terms',
-    'register',
-    'login',
-    'static'
-}
 
 def login_required(f):
     @wraps(f)
@@ -271,9 +215,6 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# ==============================================
-# SUBSCRIPTION HELPERS
-# ==============================================
 def is_plan_active(user):
     if user.username.lower() == 'admin':
         return True
@@ -315,16 +256,14 @@ def feature_required(feature):
 app.jinja_env.globals.update(
     has_feature=has_feature,
     PLAN_LEVELS=PLAN_LEVELS,
-    PLAN_PRICES=PLAN_PRICES
-)
-app.jinja_env.globals.update(
+    PLAN_PRICES=PLAN_PRICES,
     pdf_token=generate_pdf_token,
     make_pdf_token=generate_pdf_token
 )
 
-# ==============================================
-# AUTHENTICATION AND ACCOUNT MANAGEMENT
-# ==============================================
+# ------------------------------------------------------------------------------
+# Public pages & auth
+# ------------------------------------------------------------------------------
 @app.route('/schedule_consultation')
 def schedule_consultation():
     return render_template('schedule_consultation.html')
@@ -357,12 +296,12 @@ def register():
             get_flashed_messages()
         return render_template('register.html')
 
-    username     = escape(request.form.get('username', '').strip())
-    email        = escape(request.form.get('email', '').strip().lower())
+    username     = (request.form.get('username', '')).strip()
+    email        = (request.form.get('email', '')).strip().lower()
     password     = request.form.get('password', '')
     confirm      = request.form.get('confirm_password', '')
-    company_code = escape(request.form.get('company_code', '').strip().upper())
-    account_type = request.form.get('account_type', '').strip().lower()
+    company_code = (request.form.get('company_code', '')).strip().upper()
+    account_type = (request.form.get('account_type', '')).strip().lower()
 
     email_regex = r'^[\w\.-]+@[\w\.-]+\.\w+$'
     if not re.match(email_regex, email):
@@ -377,21 +316,9 @@ def register():
         flash('E-mail ou usuário já cadastrado.', 'warning')
         return redirect(url_for('register'))
 
-    if len(password) < 8:
+    if len(password) < 8 or not re.search(r'[A-Za-z]', password) or not re.search(r'\d', password) or not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
         session['register_flash'] = True
-        flash('A senha deve ter pelo menos 8 caracteres.', 'warning')
-        return redirect(url_for('register'))
-    if not re.search(r'[A-Za-z]', password):
-        session['register_flash'] = True
-        flash('A senha deve conter letras.', 'warning')
-        return redirect(url_for('register'))
-    if not re.search(r'\d', password):
-        session['register_flash'] = True
-        flash('A senha deve conter números.', 'warning')
-        return redirect(url_for('register'))
-    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
-        session['register_flash'] = True
-        flash('A senha deve conter pelo menos um símbolo especial.', 'warning')
+        flash('A senha deve ter 8+ caracteres, letras, números e um símbolo.', 'warning')
         return redirect(url_for('register'))
     if password != confirm:
         session['register_flash'] = True
@@ -512,6 +439,9 @@ def remove_profile_image():
     db.session.commit()
     return redirect(url_for("account"))
 
+# ------------------------------------------------------------------------------
+# Upload / Dashboard
+# ------------------------------------------------------------------------------
 @app.route('/RafahMed-lab')
 def RafahMed_lab():
     user = get_logged_user()
@@ -524,206 +454,6 @@ def RafahMed_lab():
 
     return render_template('upload.html')
 
-@app.route('/users')
-def list_users():
-    user = get_logged_user()
-    if not user:
-        return redirect(url_for('login'))
-    if user.username.lower() != 'admin':
-        flash('Acesso negado.', 'danger')
-        return redirect(url_for('index'))
-    users = User.query.order_by(User.id).all()
-    return render_template('users.html', users=users)
-
-from sqlalchemy.exc import OperationalError
-
-@app.route('/admin/companies', methods=['GET', 'POST'])
-def admin_companies():
-    user = get_logged_user()
-    if not user or user.username.lower() != 'admin':
-        flash('Acesso negado.', 'danger')
-        return redirect(url_for('login'))
-
-    if request.method == 'POST':
-        name = request.form.get('company_name', '').strip()
-        code = request.form.get('access_code', '').strip()
-        if not (name and code):
-            flash('Nome e código são obrigatórios.', 'warning')
-        else:
-            exists = Company.query.filter_by(access_code=code).first()
-            if exists:
-                flash(f'Empresa com código "{code}" já existe.', 'warning')
-            else:
-                db.session.add(Company(name=name, access_code=code))
-                db.session.commit()
-                flash(f'Empresa "{name}" criada com sucesso!', 'success')
-        return redirect(url_for('admin_companies'))
-
-    companies = Company.query.order_by(Company.name).all()
-    personal_users = User.query.filter(User.company_id.is_(None)).order_by(User.id).all()  # type: ignore
-    pdfs = PdfFile.query.order_by(PdfFile.uploaded_at.desc()).all()
-    
-    return render_template(
-        'admin_companies.html',
-        pdfs=pdfs,
-        companies=companies,
-        personal_users=personal_users
-    )
-
-ALLOWED_EXTENSIONS = {'pdf'}
-PDF_UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'uploads', 'pdfs')
-os.makedirs(PDF_UPLOAD_DIR, exist_ok=True)
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-@app.route('/add_company', methods=['POST'])
-def add_company():
-    user = get_logged_user()
-    if not user or user.username.lower() != 'admin':
-        abort(403)
-
-    name = request.form.get('company_name', '').strip()
-    code = request.form.get('access_code', '').strip()
-    if not name or not code:
-        flash('Nome e código são obrigatórios.', 'warning')
-        return redirect(url_for('admin_companies'))
-
-    if Company.query.filter_by(access_code=code).first():
-        flash(f'Já existe empresa com código {code}.', 'warning')
-        return redirect(url_for('admin_companies'))
-
-    db.session.add(Company(name=name, access_code=code))
-    db.session.commit()
-    flash(f'Empresa "{name}" cadastrada.', 'success')
-    return redirect(url_for('admin_companies'))
-
-@app.route('/delete_company/<int:company_id>', methods=['POST'])
-def delete_company(company_id):
-    user = get_logged_user()
-    if not user or user.username.lower() != 'admin':
-        abort(403)
-
-    company = Company.query.get_or_404(company_id)
-    if company.users:
-        flash('Não é possível excluir empresa com usuários vinculados.', 'warning')
-        return redirect(url_for('admin_companies'))
-
-    db.session.delete(company)
-    db.session.commit()
-    flash(f'Empresa "{company.name}" removida com sucesso.', 'success')
-    return redirect(url_for('admin_companies'))
-
-@app.post('/pdfs/add')
-def add_pdf():
-    user = get_logged_user()
-    if not user or user.username.lower() != 'admin':
-        abort(403)
-
-    file = request.files.get('pdf_file')
-    if not file or file.filename == '':
-        flash('Selecione um arquivo PDF.')
-        return redirect(url_for('admin_companies'))
-
-    if not allowed_file(file.filename):
-        flash('Apenas PDFs são permitidos.')
-        return redirect(url_for('admin_companies'))
-
-    file.stream.seek(0)
-    mime = mimetypes.guess_type(file.filename or "")[0]
-    original = secure_filename(file.filename or "")
-    ts = int(time.time())
-    disk_name = f'{ts}_{original}'
-    save_path = os.path.join(PDF_UPLOAD_DIR, disk_name)
-    file.save(save_path)
-
-    size_bytes = os.path.getsize(save_path)
-    pdf = PdfFile(filename=disk_name, original_name=original, size_bytes=size_bytes)
-    db.session.add(pdf)
-    db.session.commit()
-
-    flash('PDF enviado com sucesso.')
-    return redirect(url_for('admin_companies'))
-
-# ====== Rotas ADMIN (por ID) ======
-@app.get('/pdfs/view/<int:file_id>')
-def view_pdf(file_id):
-    user = get_logged_user()
-    if not user or user.username.lower() != 'admin':
-        abort(403)
-    pdf = PdfFile.query.get_or_404(file_id)
-    resp = make_response(send_from_directory(PDF_UPLOAD_DIR, pdf.filename, mimetype='application/pdf', as_attachment=False))
-    resp.headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
-    resp.headers['Cache-Control'] = 'private, no-store, max-age=0'
-    return resp
-
-@app.get('/pdfs/download/<int:file_id>')
-def download_pdf_admin(file_id):
-    user = get_logged_user()
-    if not user or user.username.lower() != 'admin':
-        abort(403)
-    pdf = PdfFile.query.get_or_404(file_id)
-    resp = make_response(send_from_directory(PDF_UPLOAD_DIR, pdf.filename, as_attachment=True, download_name=pdf.original_name))
-    resp.headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
-    resp.headers['Cache-Control'] = 'private, no-store, max-age=0'
-    return resp
-
-@app.post('/pdfs/delete/<int:file_id>')
-def delete_pdf(file_id):
-    user = get_logged_user()
-    if not user or user.username.lower() != 'admin':
-        abort(403)
-
-    pdf = PdfFile.query.get_or_404(file_id)
-    path = os.path.join(PDF_UPLOAD_DIR, pdf.filename)
-
-    try:
-        if os.path.exists(path):
-            os.remove(path)
-        db.session.delete(pdf)
-        db.session.commit()
-        flash('PDF excluído com sucesso.', 'success')
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f'[pdfs/delete] erro ao excluir: {e}')
-        flash('Erro ao excluir o PDF.', 'danger')
-
-    return redirect(url_for('admin_companies'))
-
-# ====== Rotas SEGURAS (por token assinado) ======
-@app.get('/pdfs/secure/<token>')
-def pdf_secure_view(token):
-    file_id = verify_pdf_token(token, max_age_seconds=3600)
-    if not file_id:
-        abort(403)
-    pdf = PdfFile.query.get_or_404(file_id)
-    resp = make_response(send_from_directory(PDF_UPLOAD_DIR, pdf.filename, mimetype='application/pdf', as_attachment=False))
-    resp.headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
-    resp.headers['Cache-Control'] = 'private, no-store, max-age=0'
-    return resp
-
-@app.get('/pdfs/secure-download/<token>')
-def pdf_secure_download(token):
-    file_id = verify_pdf_token(token, max_age_seconds=3600)
-    if not file_id:
-        abort(403)
-    pdf = PdfFile.query.get_or_404(file_id)
-    resp = make_response(send_from_directory(PDF_UPLOAD_DIR, pdf.filename, as_attachment=True, download_name=pdf.original_name))
-    resp.headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
-    resp.headers['Cache-Control'] = 'private, no-store, max-age=0'
-    return resp
-
-@app.get('/pdfs/s/<token>')
-def view_pdf_signed(token):
-    return pdf_secure_view(token)
-
-@app.get('/pdfs/d/<token>')
-def download_pdf_signed(token):
-    return pdf_secure_download(token)
-
-# ==============================================
-# DASHBOARD AND PDF UPLOAD
-# ==============================================
 @app.route('/index')
 def index():
     user = get_logged_user()
@@ -741,18 +471,12 @@ def index():
     date_counts = { (week_ago + timedelta(days=i)).strftime('%d/%m'): 0 for i in range(7) }
     dep_stats = defaultdict(lambda: {'sum_score': 0, 'num': 0})
 
-    score_map = {
-        'BAIXO': 1,
-        'NORMAL/LEVE': 2,
-        'MODERADO': 3,
-        'ALTO': 4
-    }
+    score_map = {'BAIXO': 1, 'NORMAL/LEVE': 2, 'MODERADO': 3, 'ALTO': 4}
     inv_map = {v: k for k, v in score_map.items()}
 
     for q in quizzes:
         q_date = q.date if isinstance(q.date, datetime) else datetime.strptime(q.date, '%Y-%m-%d')
         q_date = q_date.date()
-
         if week_ago <= q_date <= today:
             key = q_date.strftime('%d/%m')
             date_counts[key] += 1
@@ -761,14 +485,12 @@ def index():
 
     quiz_chart_data = []
     cum_count = 0
-
     for i in range(7):
         dia = week_ago + timedelta(days=i)
         key = dia.strftime('%d/%m')
         cnt = date_counts[key]
         cum_count += cnt
         mavg = round(cum_count / (i + 1), 2)
-
         stats = dep_stats[key]
         if stats['num']:
             avg_score = stats['sum_score'] / stats['num']
@@ -776,13 +498,9 @@ def index():
         else:
             avg_score = 0.0
             dep_class = None
-
         quiz_chart_data.append({
-            'date': key,
-            'count': cnt,
-            'media': mavg,
-            'dep_avg': round(avg_score, 2),
-            'dep_class': dep_class
+            'date': key, 'count': cnt, 'media': mavg,
+            'dep_avg': round(avg_score, 2), 'dep_class': dep_class
         })
 
     return render_template(
@@ -806,7 +524,7 @@ def upload():
 
     if request.method == 'POST':
         using_manual = 'manual_entry' in request.form
-        patient = None  # garantimos que existe
+        patient = None
 
         if using_manual:
             name        = (request.form.get('name') or '').strip()
@@ -891,7 +609,7 @@ def upload():
             f"Telefone: {phone}"
         )
 
-        # Geração inicial do PDF (opcional para histórico/whatsapp)
+        # Geração do PDF
         html = render_template(
             "result_pdf.html",
             diagnostic_text=diagnostic,
@@ -949,9 +667,9 @@ def upload():
 
     return render_template('upload.html')
 
-# ==============================================
-# PAGAMENTOS (Pacotes + Assinatura PIX)
-# ==============================================
+# ------------------------------------------------------------------------------
+# Pagamentos (Pacotes + Assinatura)
+# ------------------------------------------------------------------------------
 @app.route('/purchase', methods=['GET', 'POST'])
 def purchase():
     user = get_logged_user()
@@ -978,26 +696,17 @@ def subscribe_pix():
         return redirect(url_for('purchase'))
 
     amount = PLAN_PRICES[plan]
-    txid = f"RAF-{uuid.uuid4().hex[:10].upper()}"
+    txid = f"RAF-{secrets.token_hex(5).upper()}"
     payload = build_pix_payload(
-        key=PIX_KEY,
-        name=PIX_NAME,
-        city=PIX_CITY,
-        amount=amount,
-        txid=txid,
-        description=f"{PIX_DESC} {plan.upper()}"
+        key=PIX_KEY, name=PIX_NAME, city=PIX_CITY, amount=amount,
+        txid=txid, description=f"{PIX_DESC} {plan.upper()}"
     )
     qr_b64 = make_qr_base64(payload)
 
     return render_template(
         'pix_checkout.html',
-        plan=plan,
-        amount=amount,
-        pix_key=PIX_KEY,
-        pix_cnpj=PIX_CNPJ,
-        payload=payload,
-        qr_b64=qr_b64,
-        txid=txid
+        plan=plan, amount=amount, pix_key=PIX_KEY, pix_cnpj=PIX_CNPJ,
+        payload=payload, qr_b64=qr_b64, txid=txid
     )
 
 @app.route('/confirm_pix', methods=['POST'])
@@ -1043,9 +752,9 @@ def confirm_pix():
     flash('Comprovante recebido! Sua assinatura ficará ativa assim que validarmos o pagamento.', 'success')
     return redirect(url_for('plans'))
 
-# ==============================================
-# AGENDA / MÉDICOS / PRODUTOS / etc
-# ==============================================
+# ------------------------------------------------------------------------------
+# Agenda / disponibilidade
+# ------------------------------------------------------------------------------
 @app.route('/agenda')
 @login_required
 def agenda():
@@ -1055,6 +764,260 @@ def agenda():
 @login_required
 def doctors():
     return render_template('doctors.html')
+
+@app.route('/api/doctors')
+def api_doctors():
+    doctors = Doctor.query.order_by(Doctor.name).all()
+    return jsonify([{"id": d.id, "name": d.name} for d in doctors])
+
+def _br_to_date(s: str):
+    return datetime.strptime(s, '%d/%m/%Y').date()
+
+@app.route('/api/available_slots')
+def api_available_slots():
+    doctor_id = request.args.get('doctor_id', type=int)
+    date_str  = request.args.get('date', type=str)  # dd/mm/aaaa
+    if not doctor_id or not date_str:
+        return jsonify([])
+
+    day = _br_to_date(date_str)
+    weekday = day.weekday()
+
+    blocks = DoctorAvailability.query.filter_by(doctor_id=doctor_id, weekday=weekday).all()
+    if not blocks:
+        return jsonify([])
+
+    taken = {
+        c.time.strftime('%H:%M')
+        for c in Consult.query.filter_by(doctor_id=doctor_id, date=day).filter(Consult.time != None).all()
+    }
+
+    free = []
+    for b in blocks:
+        cur = datetime.combine(day, b.start_time)
+        end = datetime.combine(day, b.end_time)
+        step = timedelta(minutes=b.slot_minutes or 30)
+        while cur <= end - step + timedelta(seconds=1):
+            hm = cur.strftime('%H:%M')
+            if hm not in taken:
+                free.append(hm)
+            cur += step
+
+    return jsonify(sorted(free))
+
+@app.route('/availability', methods=['GET', 'POST'])
+@login_required
+def availability():
+    # usa o usuário autenticado via sessão
+    user = get_logged_user()
+    if not user:
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    doc_id = user.id
+
+    if request.method == 'POST':
+        data = request.get_json(silent=True) or {}
+        blocks = data.get('blocks') or []
+        if not isinstance(blocks, list):
+            return jsonify({"ok": False, "error": "`blocks` deve ser uma lista"}), 400
+
+        new_rows = []
+        for i, b in enumerate(blocks):
+            if not isinstance(b, dict):
+                return jsonify({"ok": False, "error": f"blocks[{i}] deve ser um objeto"}), 400
+            try:
+                weekday = int(b.get('weekday'))  # type: ignore
+            except (TypeError, ValueError):
+                return jsonify({"ok": False, "error": f"blocks[{i}].weekday inválido"}), 400
+            if weekday < 0 or weekday > 6:
+                return jsonify({"ok": False, "error": f"blocks[{i}].weekday fora do intervalo 0..6"}), 400
+            try:
+                start_t = datetime.strptime(str(b.get('start', '')), '%H:%M').time()
+                end_t   = datetime.strptime(str(b.get('end', '')), '%H:%M').time()
+            except ValueError:
+                return jsonify({"ok": False, "error": f"blocks[{i}] horários inválidos (use HH:MM)"}), 400
+            try:
+                slot = int(b.get('slot', 30))
+            except (TypeError, ValueError):
+                slot = 30
+            if end_t <= start_t:
+                return jsonify({"ok": False, "error": f"blocks[{i}] end deve ser maior que start"}), 400
+
+            new_rows.append(
+                DoctorAvailability(
+                    doctor_id=doc_id, weekday=weekday,
+                    start_time=start_t, end_time=end_t, slot_minutes=slot
+                )
+            )
+
+        DoctorAvailability.query.filter_by(doctor_id=doc_id).delete(synchronize_session=False)
+        db.session.add_all(new_rows)
+        db.session.commit()
+        return jsonify({"ok": True})
+
+    rows = DoctorAvailability.query.filter_by(doctor_id=doc_id).all()
+    return jsonify([
+        {
+            "weekday": r.weekday,
+            "start": r.start_time.strftime('%H:%M'),
+            "end":   r.end_time.strftime('%H:%M'),
+            "slot":  r.slot_minutes
+        } for r in rows
+    ])
+
+# ------------------------------------------------------------------------------
+# Companies / PDFs (admin)
+# ------------------------------------------------------------------------------
+ALLOWED_EXTENSIONS = {'pdf'}
+PDF_UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'uploads', 'pdfs')
+os.makedirs(PDF_UPLOAD_DIR, exist_ok=True)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/admin/companies', methods=['GET', 'POST'])
+def admin_companies():
+    user = get_logged_user()
+    if not user or user.username.lower() != 'admin':
+        flash('Acesso negado.', 'danger')
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        name = request.form.get('company_name', '').strip()
+        code = request.form.get('access_code', '').strip()
+        if not (name and code):
+            flash('Nome e código são obrigatórios.', 'warning')
+        else:
+            exists = Company.query.filter_by(access_code=code).first()
+            if exists:
+                flash(f'Empresa com código "{code}" já existe.', 'warning')
+            else:
+                db.session.add(Company(name=name, access_code=code))
+                db.session.commit()
+                flash(f'Empresa "{name}" criada com sucesso!', 'success')
+        return redirect(url_for('admin_companies'))
+
+    companies = Company.query.order_by(Company.name).all()
+    personal_users = User.query.filter(User.company_id.is_(None)).order_by(User.id).all()  # type: ignore
+    pdfs = PdfFile.query.order_by(PdfFile.uploaded_at.desc()).all()
+    return render_template('admin_companies.html', pdfs=pdfs, companies=companies, personal_users=personal_users)
+
+@app.post('/pdfs/add')
+def add_pdf():
+    user = get_logged_user()
+    if not user or user.username.lower() != 'admin':
+        abort(403)
+
+    file = request.files.get('pdf_file')
+    if not file or file.filename == '':
+        flash('Selecione um arquivo PDF.')
+        return redirect(url_for('admin_companies'))
+    if not allowed_file(file.filename):
+        flash('Apenas PDFs são permitidos.')
+        return redirect(url_for('admin_companies'))
+
+    file.stream.seek(0)
+    original = secure_filename(file.filename or "")
+    ts = int(time.time())
+    disk_name = f'{ts}_{original}'
+    save_path = os.path.join(PDF_UPLOAD_DIR, disk_name)
+    file.save(save_path)
+
+    size_bytes = os.path.getsize(save_path)
+    pdf = PdfFile(filename=disk_name, original_name=original, size_bytes=size_bytes)
+    db.session.add(pdf)
+    db.session.commit()
+
+    flash('PDF enviado com sucesso.')
+    return redirect(url_for('admin_companies'))
+
+@app.get('/pdfs/view/<int:file_id>')
+def view_pdf(file_id):
+    user = get_logged_user()
+    if not user or user.username.lower() != 'admin':
+        abort(403)
+    pdf = PdfFile.query.get_or_404(file_id)
+    resp = make_response(send_from_directory(PDF_UPLOAD_DIR, pdf.filename, mimetype='application/pdf', as_attachment=False))
+    resp.headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
+    resp.headers['Cache-Control'] = 'private, no-store, max-age=0'
+    return resp
+
+@app.get('/pdfs/download/<int:file_id>')
+def download_pdf_admin(file_id):
+    user = get_logged_user()
+    if not user or user.username.lower() != 'admin':
+        abort(403)
+    pdf = PdfFile.query.get_or_404(file_id)
+    resp = make_response(send_from_directory(PDF_UPLOAD_DIR, pdf.filename, as_attachment=True, download_name=pdf.original_name))
+    resp.headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
+    resp.headers['Cache-Control'] = 'private, no-store, max-age=0'
+    return resp
+
+@app.post('/pdfs/delete/<int:file_id>')
+def delete_pdf(file_id):
+    user = get_logged_user()
+    if not user or user.username.lower() != 'admin':
+        abort(403)
+
+    pdf = PdfFile.query.get_or_404(file_id)
+    path = os.path.join(PDF_UPLOAD_DIR, pdf.filename)
+
+    try:
+        if os.path.exists(path):
+            os.remove(path)
+        db.session.delete(pdf)
+        db.session.commit()
+        flash('PDF excluído com sucesso.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'[pdfs/delete] erro ao excluir: {e}')
+        flash('Erro ao excluir o PDF.', 'danger')
+
+    return redirect(url_for('admin_companies'))
+
+# Secure by token
+@app.get('/pdfs/secure/<token>')
+def pdf_secure_view(token):
+    file_id = verify_pdf_token(token, max_age_seconds=3600)
+    if not file_id:
+        abort(403)
+    pdf = PdfFile.query.get_or_404(file_id)
+    resp = make_response(send_from_directory(PDF_UPLOAD_DIR, pdf.filename, mimetype='application/pdf', as_attachment=False))
+    resp.headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
+    resp.headers['Cache-Control'] = 'private, no-store, max-age=0'
+    return resp
+
+@app.get('/pdfs/secure-download/<token>')
+def pdf_secure_download(token):
+    file_id = verify_pdf_token(token, max_age_seconds=3600)
+    if not file_id:
+        abort(403)
+    pdf = PdfFile.query.get_or_404(file_id)
+    resp = make_response(send_from_directory(PDF_UPLOAD_DIR, pdf.filename, as_attachment=True, download_name=pdf.original_name))
+    resp.headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
+    resp.headers['Cache-Control'] = 'private, no-store, max-age=0'
+    return resp
+
+@app.get('/pdfs/s/<token>')
+def view_pdf_signed(token):
+    return pdf_secure_view(token)
+
+@app.get('/pdfs/d/<token>')
+def download_pdf_signed(token):
+    return pdf_secure_download(token)
+
+# ------------------------------------------------------------------------------
+# Patients / consults
+# ------------------------------------------------------------------------------
+@app.route('/users')
+def list_users():
+    user = get_logged_user()
+    if not user:
+        return redirect(url_for('login'))
+    if user.username.lower() != 'admin':
+        flash('Acesso negado.', 'danger')
+        return redirect(url_for('index'))
+    users = User.query.order_by(User.id).all()
+    return render_template('users.html', users=users)
 
 @app.route('/add_doctor', methods=['POST'])
 @login_required
@@ -1095,7 +1058,6 @@ def product_result(product_id):
         return "Produto não encontrado", 404
     return render_template('product_result.html', product=product)
 
-# ========= DOWNLOAD PDF (sempre atualizado) =========
 @app.route('/download_pdf/<int:patient_id>')
 def download_pdf(patient_id):
     user = get_logged_user()
@@ -1133,7 +1095,7 @@ def download_pdf(patient_id):
         logo_path=os.path.join(app.root_path, 'static', 'images', 'logo.png')
     )
     static_base = os.path.join(app.root_path, 'static')
-    pdf_bytes: bytes = weasyprint.HTML(string=html, base_url=static_base).write_pdf() #type:ignore
+    pdf_bytes: bytes = weasyprint.HTML(string=html, base_url=static_base).write_pdf()  # type: ignore
 
     cpf_or_id = (patient.cpf or f"id_{patient.id}").replace('.', '').replace('-', '')
     safe_name = re.sub(r'[^A-Za-z0-9_-]+', '_', f"{patient.name}_{cpf_or_id}")[:80] or f"paciente_{patient.id}"
@@ -1143,33 +1105,6 @@ def download_pdf(patient_id):
         as_attachment=True,
         download_name=f"prescription_{safe_name}.pdf"
     )
-
-# ========= Helper opcional para gravar PDF em disco =========
-def regenerate_patient_pdf(patient, diagnostic_text, prescription_text, doctor_name):
-    html = render_template(
-        "result_pdf.html",
-        diagnostic_text=diagnostic_text,
-        prescription_text=prescription_text,
-        doctor_name=doctor_name,
-        patient_info=f"Paciente: {patient.name}\nIdade: {patient.age}\nCPF: {patient.cpf}\nSexo: {patient.gender}\nTelefone: {patient.phone}",
-        logo_path=os.path.join(app.root_path, 'static', 'images', 'logo.png'),
-    )
-
-    base_url = os.path.join(app.root_path, 'static')
-    pdf_bytes: bytes = weasyprint.HTML(string=html, base_url=base_url).write_pdf() #type:ignore
-    if not pdf_bytes:
-        raise RuntimeError("Falha ao gerar PDF (WeasyPrint retornou vazio).")
-
-    cpf_clean = (patient.cpf or "").replace(".", "").replace("-", "") or f"no_cpf_{int(time.time())}"
-    output_folder = os.path.join(app.root_path, "static", "output")
-    os.makedirs(output_folder, exist_ok=True)
-    pdf_filename = f"result_{cpf_clean}.pdf"
-    pdf_path = os.path.join(output_folder, pdf_filename)
-
-    with open(pdf_path, "wb") as f:
-        f.write(pdf_bytes)
-
-    return pdf_path
 
 @app.route('/catalog')
 @login_required
@@ -1212,14 +1147,8 @@ def edit_patient(patient_id):
 
         update_patient(
             patient_id=patient_id,
-            name=name,
-            age=age,
-            cpf=cpf,
-            gender=gender,
-            phone=phone,
-            doctor_id=patient.doctor_id,
-            prescription=prescription,
-            status=status
+            name=name, age=age, cpf=cpf, gender=gender, phone=phone,
+            doctor_id=patient.doctor_id, prescription=prescription, status=status
         )
         return redirect(url_for('catalog'))
 
@@ -1233,12 +1162,12 @@ def patient_result(patient_id):
 
     patient = get_patient_by_id(patient_id)
     if not patient or patient.doctor_id != user.id:
-        abort(403)  # evita renderizar result.html sem 'patient'
+        abort(403)
 
     consults = get_consults_by_patient(patient_id)
     if consults:
         latest = consults[-1].notes
-        parts = latest.split("Prescrição:\n", 1)  # type:ignore
+        parts = latest.split("Prescrição:\n", 1)  # type: ignore
         diagnostic_text  = parts[0].strip()
         prescription_text = parts[1].strip() if len(parts) > 1 else patient.prescription or ""
     else:
@@ -1247,7 +1176,7 @@ def patient_result(patient_id):
 
     return render_template(
         'result.html',
-        patient=patient,  # ✅ sempre presente
+        patient=patient,
         diagnostic_text=diagnostic_text,
         prescription_text=prescription_text,
         doctor_name=getattr(patient.doctor, "name", "")
@@ -1315,14 +1244,9 @@ def toggle_patient_status(patient_id, new_status):
 
     update_patient(
         patient_id=patient_id,
-        name=patient.name,
-        age=patient.age,
-        cpf=patient.cpf,
-        gender=patient.gender,
-        phone=patient.phone,
-        doctor_id=patient.doctor_id,
-        prescription=patient.prescription,
-        status=new_status
+        name=patient.name, age=patient.age, cpf=patient.cpf, gender=patient.gender,
+        phone=patient.phone, doctor_id=patient.doctor_id,
+        prescription=patient.prescription, status=new_status
     )
     return redirect(url_for('catalog'))
 
@@ -1349,37 +1273,15 @@ def api_add_patient():
         return jsonify(success=False, error='Idade inválida'), 400
 
     patient = add_patient(
-        name=name,
-        age=age,
-        cpf=cpf or None,
-        gender=gender or None,
-        phone=phone or None,
-        doctor_id=user.id,
-        prescription=prescription
+        name=name, age=age, cpf=cpf or None, gender=gender or None,
+        phone=phone or None, doctor_id=user.id, prescription=prescription
     )
 
     return jsonify(success=True, patient_id=patient.id), 201
 
-@app.route('/api/patients')
-def api_get_patients():
-    user = get_logged_user()
-    if not user:
-        return jsonify([])
-
-    patients = Patient.query.order_by(Patient.name).all()
-    result = [{
-        'id':          p.id,
-        'name':        p.name,
-        'phone':       p.phone,
-        'doctor_id':   p.doctor_id,
-        'doctor_name': p.doctor.name,
-        'status':      p.status
-    } for p in patients]
-    return jsonify(result)
-
-# ==============================================
-# PRODUCT MANAGEMENT
-# ==============================================
+# ------------------------------------------------------------------------------
+# Products
+# ------------------------------------------------------------------------------
 @app.route('/products')
 @login_required
 def products():
@@ -1501,13 +1403,8 @@ def stock_edit(product_id):
             return redirect(url_for('stock_edit', product_id=product_id))
 
         update_product(
-            product_id=product_id,
-            doctor_id=user.id,
-            name=name,
-            code=code,
-            purchase_price=purchase_price,
-            sale_price=sale_price,
-            quantity=quantity
+            product_id=product_id, doctor_id=user.id, name=name, code=code,
+            purchase_price=purchase_price, sale_price=sale_price, quantity=quantity
         )
         flash('Produto atualizado com sucesso.', 'success')
         return redirect(url_for('products'))
@@ -1529,9 +1426,9 @@ def delete_product(product_id):
     flash('Produto removido.', 'info')
     return redirect(url_for('products'))
 
-# ==============================================
-# SUPPLIERS (com gates Premium onde necessário)
-# ==============================================
+# ------------------------------------------------------------------------------
+# Suppliers
+# ------------------------------------------------------------------------------
 @app.route('/suppliers')
 @login_required
 def suppliers():
@@ -1589,6 +1486,9 @@ def delete_supplier(supplier_id):
         flash('Fornecedor não encontrado ou sem permissão.', 'danger')
     return redirect(url_for('suppliers'))
 
+# ------------------------------------------------------------------------------
+# Quotes
+# ------------------------------------------------------------------------------
 @app.route('/create_quote', methods=['GET', 'POST'])
 @login_required
 @feature_required('quotes_auto')
@@ -1772,9 +1672,9 @@ def delete_quote(quote_id):
     flash('Cotação excluída com sucesso!', 'success')
     return redirect(url_for('quote_index'))
 
-# ==============================================
-# API & CONSULT ROUTES
-# ==============================================
+# ------------------------------------------------------------------------------
+# API & Consult routes quick
+# ------------------------------------------------------------------------------
 @app.route('/api/add_consult', methods=['POST'])
 def api_add_consult():
     user = get_logged_user()
@@ -1882,9 +1782,57 @@ def create_user_event(summary: str, start_datetime: str, end_datetime: str, desc
     }
     service.events().insert(calendarId='primary', body=event).execute()
 
-# ==============================================
-# QUIZ ROUTES
-# ==============================================
+@app.route('/api/events')
+def api_events():
+    doctor_id = request.args.get('doctor_id', type=int)
+    q = Consult.query
+    if doctor_id:
+        q = q.filter_by(doctor_id=doctor_id)
+
+    events = []
+    for c in q.all():
+        if c.time:
+            start = datetime.combine(c.date, c.time).isoformat()
+            events.append({"title": c.notes or "Consulta", "start": start})
+        else:
+            events.append({"title": c.notes or "Consulta", "start": c.date.isoformat(), "allDay": True})
+    return jsonify(events)
+
+@app.route('/submit_consultation', methods=['POST'])
+def submit_consultation():
+    patient_id = request.form.get('patient_id', type=int)
+    doctor_id  = request.form.get('doctor_id', type=int)
+    date_str   = request.form.get('date')
+    time_str   = request.form.get('time', '').strip()
+    notes      = request.form.get('title', '').strip()
+
+    if not doctor_id or not date_str or not notes:
+        return "Missing fields", 400
+
+    day = _br_to_date(date_str)
+    t = None
+    if time_str:
+        t = datetime.strptime(time_str, '%H:%M').time()
+
+    if t:
+        exists = Consult.query.filter_by(doctor_id=doctor_id, date=day, time=t).first()
+        if exists:
+            return "Slot already taken", 409
+
+    if not patient_id:
+        p = Patient(name=notes or "Paciente", status='Ativo')
+        db.session.add(p)
+        db.session.flush()
+        patient_id = p.id
+
+    c = Consult(patient_id=patient_id, doctor_id=doctor_id, date=day, time=t, notes=notes)
+    db.session.add(c)
+    db.session.commit()
+    return "ok", 200
+
+# ------------------------------------------------------------------------------
+# Quiz (Autoavaliação)
+# ------------------------------------------------------------------------------
 @app.route('/quiz')
 def quiz():
     return render_template('quiz.html')
@@ -1892,7 +1840,6 @@ def quiz():
 @app.route('/submit_quiz', methods=['POST'])
 def submit_quiz():
     data = request.get_json() or {}
-    print("DEBUG SUBMIT_QUIZ:", data)
 
     name = data.get('nome', 'Anônimo')
     age_raw = data.get('idade', '0')
@@ -1906,13 +1853,8 @@ def submit_quiz():
         return jsonify(status='error', error='doctor_id ausente'), 400
 
     patient = add_patient(
-        name=name,
-        age=age,
-        cpf=None,
-        gender=None,
-        phone=None,
-        doctor_id=doctor_id,
-        prescription=f"Autoavaliação: {data.get('risco')}"
+        name=name, age=age, cpf=None, gender=None, phone=None,
+        doctor_id=doctor_id, prescription=f"Autoavaliação: {data.get('risco')}"
     )
 
     fatores = data.get('fatores', [])
@@ -1931,18 +1873,12 @@ def submit_quiz():
     else:
         motivacao = ""
 
-    
     qr = add_quiz_result(
-        name=name,
-        age=age,
-        date=datetime.utcnow(),
-
-        # === NOVOS CAMPOS ===
+        name=name, age=age, date=datetime.utcnow(),
         consentimento=data.get('consentimento'),
         nivel_hierarquico=data.get('nivel_hierarquico'),
         setor=data.get('setor'),
 
-        # === respostas cruas ===
         nervosismo=data.get('nervosismo'),
         preocupacao=data.get('preocupacao'),
         interesse=data.get('interesse'),
@@ -1957,7 +1893,6 @@ def submit_quiz():
         relacionamentos=data.get('relacionamentos'),
         hobbies=data.get('hobbies'),
 
-        # === classificações ===
         ansiedade=data.get('ansiedade'),
         depressao=data.get('depressao'),
         estresse=data.get('estresse'),
@@ -1974,7 +1909,6 @@ def submit_quiz():
         patient_id=patient.id
     )
 
-    print("QUIZ RESULT ADDED:", qr)
     patient.quiz_result_id = qr.id
     db.session.commit()
 
@@ -2132,11 +2066,7 @@ def quiz_patient(quiz_id):
         "recomendacao":     "Recomendação Final"
     }
 
-    return render_template(
-        'quiz_patient.html',
-        patient=patient,
-        questions=questions
-    )
+    return render_template('quiz_patient.html', patient=patient, questions=questions)
 
 @app.route('/delete_quiz_result', methods=['POST'])
 def delete_quiz_result():
@@ -2149,9 +2079,96 @@ def delete_quiz_result():
     flash('Resultado deletado.', 'success')
     return redirect(url_for('quiz_results'))
 
-# ==============================================
-# TRAINING (Premium)
-# ==============================================
+# ------------------------------------------------------------------------------
+# QUESTIONNAIRE (SRQ-20)
+# ------------------------------------------------------------------------------
+@app.route('/srq20')
+def srq20():
+    return render_template("questionnaire.html")
+
+@app.route('/submit_srq20', methods=['POST'])
+def submit_srq20():
+    """
+    Recebe JSON do formulário SRQ-20.
+    Espera: sexo, idade, srq_q1..srq_q20, srq20_total, srq20_classificacao, srq20_itens_sim.
+    Parâmetro GET ?admin=ID associa o resultado ao profissional.
+    """
+    try:
+        payload = request.get_json(force=True, silent=False) or {}
+    except Exception:
+        return jsonify({"ok": False, "error": "Invalid JSON"}), 400
+
+    admin_id = request.args.get('admin', type=int)
+
+    name = payload.get('nome') or payload.get('name')  # opcional
+    age = str(payload.get('idade') or '').strip() or None
+    sex = (payload.get('sexo') or '').strip() or None
+
+    srq_total = payload.get('srq20_total')
+    srq_class = payload.get('srq20_classificacao')
+    srq_items_yes = payload.get('srq20_itens_sim') or []
+    srq_q17 = payload.get('srq_q17')
+
+    obj = QuestionnaireResult(
+        created_at=datetime.utcnow(),
+        admin_id=admin_id,
+        name=name,
+        age=age,
+        sex=sex,
+        srq20_total=int(srq_total) if isinstance(srq_total, (int, float, str)) and str(srq_total).isdigit() else None,
+        srq20_classification=srq_class,
+        srq20_items_yes=srq_items_yes if isinstance(srq_items_yes, list) else None,
+        srq_q17=srq_q17 if srq_q17 in ("Sim", "Não") else None,
+        raw_payload=payload
+    )
+    db.session.add(obj)
+    db.session.commit()
+
+    return jsonify({"ok": True, "id": obj.id})
+
+# ---- Lista (privado) ----
+@app.route('/questionnaire_results')
+def questionnaire_results():
+    user = get_logged_user()
+
+    results = QuestionnaireResult.query.order_by(
+        QuestionnaireResult.created_at.desc()
+    ).all()
+
+    # username consistente para os templates
+    username = getattr(user, 'username', None) if user else None
+
+    return render_template(
+        'questionnaire_results.html',
+        results=results,     # objetos ORM (usa br_date(), attrs em EN)
+        user=user,
+        username=username
+    )
+
+# ---- Detalhe (privado) ----
+@app.route('/questionnaire_patient/<int:questionnaire_id>')
+def questionnaire_patient(questionnaire_id):
+    user = get_logged_user()
+    r = QuestionnaireResult.query.get_or_404(questionnaire_id)
+
+    patient = r.to_dict()  # dicionário com chaves PT-BR p/ o template
+    username = getattr(user, 'username', None) if user else None
+    return render_template('questionnaire_patient.html', patient=patient, user=user, username=username)
+
+# ---- Deleção (privado, POST) ----
+@app.route('/delete_questionnaire_result', methods=['POST'])
+def delete_questionnaire_result():
+    qid = request.form.get('questionnaire_id', type=int)
+    if not qid:
+        abort(400)
+    r = QuestionnaireResult.query.get_or_404(qid)
+    db.session.delete(r)
+    db.session.commit()
+    return redirect(url_for('questionnaire_results'))
+
+# ------------------------------------------------------------------------------
+# Training (Premium)
+# ------------------------------------------------------------------------------
 @app.route('/training')
 @login_required
 @feature_required('training')
@@ -2164,9 +2181,9 @@ def training():
 def videos():
     return render_template("videos.html")
 
-# ==============================================
-# SUBSCRIBE / PLANS
-# ==============================================
+# ------------------------------------------------------------------------------
+# Plans
+# ------------------------------------------------------------------------------
 @app.route('/plans')
 def plans():
     user = get_logged_user()
@@ -2184,8 +2201,8 @@ def subscribe():
     link = generate_payment_link(selected, pricing[selected])
     return redirect(link or url_for('plans'))
 
-# ==============================================
-# APPLICATION ENTRY POINT
-# ==============================================
+# ------------------------------------------------------------------------------
+# Entry point
+# ------------------------------------------------------------------------------
 if __name__ == '__main__':
     app.run(debug=True)

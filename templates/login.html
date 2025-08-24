@@ -110,6 +110,18 @@
       </div>
 
       <nav class="hidden md:flex space-x-8 text-sm font-medium">
+        <a href="{{ url_for('hero') }}#empresas"
+          class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
+          Plano para Empresas
+          <span
+            class="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--rafahmed-red)] transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <a href="{{ url_for('hero') }}#palestras"
+          class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
+          Palestras
+          <span
+            class="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--rafahmed-red)] transition-all duration-300 group-hover:w-full"></span>
+        </a>
         <a href="{{ url_for('hero') }}#quem-somos"
           class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
           Quem Somos
@@ -119,12 +131,6 @@
         <a href="{{ url_for('hero') }}#psicologos"
           class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
           Para Psicólogos
-          <span
-            class="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--rafahmed-red)] transition-all duration-300 group-hover:w-full"></span>
-        </a>
-        <a href="{{ url_for('hero') }}#empresas"
-          class="text-[var(--text-dim)] hover:text-[var(--rafahmed-red)] transition-all duration-300 relative group">
-          Para Empresas
           <span
             class="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--rafahmed-red)] transition-all duration-300 group-hover:w-full"></span>
         </a>
@@ -138,13 +144,9 @@
 
       <div class="hidden md:flex items-center space-x-4">
         <a href="/register"
-          class="text-sm font-semibold text-[var(--rafahmed-red)] hover:text-[#ff5169] transition-colors duration-300 px-4 py-2 rounded-full border border-[var(--rafahmed-red)] hover:bg-[var(--rafahmed-red)] hover:text-white">
-          Cadastrar
-        </a>
+          class="text-sm font-semibold text-[var(--rafahmed-red)] hover:text-[#ff5169] transition-colors duration-300 px-4 py-2 rounded-full border border-[var(--rafahmed-red)] hover:bg-[var(--rafahmed-red)] hover:text-white">Cadastrar</a>
         <a href="/login"
-          class="text-sm font-semibold text-[var(--rafahmed-red)] hover:text-[#ff5169] transition-colors duration-300 px-4 py-2 rounded-full border border-[var(--rafahmed-red)] hover:bg-[var(--rafahmed-red)] hover:text-white">
-          Entrar
-        </a>
+          class="text-sm font-semibold text-[var(--rafahmed-red)] hover:text-[#ff5169] transition-colors duration-300 px-4 py-2 rounded-full border border-[var(--rafahmed-red)] hover:bg-[var(--rafahmed-red)] hover:text-white">Entrar</a>
       </div>
     </div>
   </header>

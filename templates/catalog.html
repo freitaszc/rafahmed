@@ -269,170 +269,171 @@
   </script>
 </head>
 
-<body>
-  <!-- Sidebar padronizada -->
-  <div class="sidebar">
-    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Minimizar/Maximizar menu">
-      <i class="fa fa-angle-double-left"></i>
-    </button>
+<!-- Sidebar -->
+<div class="sidebar">
+  <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Minimizar/Maximizar menu">
+    <i class="fa fa-angle-double-left"></i>
+  </button>
 
-    <img src="{{ url_for('static', filename='images/logocompleta.svg') }}" class="sidebar-logo" alt="Logo RafahMed">
+  <img src="{{ url_for('static', filename='images/logocompleta.svg') }}" class="sidebar-logo" alt="Logo RafahMed">
 
-    <a href="{{ url_for('index') }}" class="menu-item" title="Início"><i class="fa fa-home"></i> <span
-        class="label">Início</span></a>
-    <a href="{{ url_for('upload') }}" class="menu-item" title="Ponza Lab"><i class="fa fa-upload"></i> <span
-        class="label">Ponza Lab</span></a>
-    <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-list-alt"></i><span
-        class="label">Autoavaliações</span></a>
-    <a href="{{ url_for('quote_index') }}" class="menu-item" title="Cotações"><i class="fa fa-file-text-o"></i> <span
-        class="label">Cotações</span></a>
-    <a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-users"></i> <span
-        class="label">Pacientes</span></a>
-    <a href="{{ url_for('products') }}" class="menu-item" title="Estoque"><i class="fa fa-archive"></i> <span
-        class="label">Estoque</span></a>
-    <a href="{{ url_for('agenda') }}" class="menu-item" title="Agenda"><i class="fa fa-calendar"></i> <span
-        class="label">Agenda</span></a>
-    <a href="{{ url_for('purchase') }}" class="menu-item" title="Pagamentos"><i class="fa fa-credit-card"></i> <span
-        class="label">Pagamentos</span></a>
-    <a href="{{ url_for('training') }}" class="menu-item" title="Treinamento"><i class="fa fa-play-circle"></i> <span
-        class="label">Treinamento</span></a>
+  <a href="{{ url_for('index') }}" class="menu-item" title="Início"><i class="fa fa-home"></i> <span
+      class="label">Início</span></a>
+  <a href="{{ url_for('upload') }}" class="menu-item" title="Ponza Lab"><i class="fa fa-upload"></i> <span
+      class="label">Ponza Lab</span></a>
+  <a href="{{ url_for('questionnaire_results') }}" class="menu-item" title="Questionários SRQ-20"><i
+      class="fa fa-list-alt"></i><span class="label">SRQ-20</span></a>
+  <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-list-alt"></i>
+    <span class="label">Autoavaliações</span></a>
+  <a href="{{ url_for('quote_index') }}" class="menu-item" title="Cotações"><i class="fa fa-file-text-o"></i>
+    <span class="label">Cotações</span></a>
+  <a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-users"></i> <span
+      class="label">Pacientes</span></a>
+  <a href="{{ url_for('products') }}" class="menu-item" title="Estoque"><i class="fa fa-archive"></i> <span
+      class="label">Estoque</span></a>
+  <a href="{{ url_for('agenda') }}" class="menu-item" title="Agenda"><i class="fa fa-calendar"></i> <span
+      class="label">Agenda</span></a>
+  <a href="{{ url_for('purchase') }}" class="menu-item" title="Pagamentos"><i class="fa fa-credit-card"></i> <span
+      class="label">Pagamentos</span></a>
+  <a href="{{ url_for('training') }}" class="menu-item" title="Treinamento"><i class="fa fa-play-circle"></i>
+    <span class="label">Treinamento</span></a>
 
-    {% if username and username|lower == 'admin' %}
-    <div style="margin:18px 0 8px 0; border-top:1px solid #1f2937;"></div>
-    <a href="{{ url_for('admin_companies') }}" class="menu-item admin" title="Admin"><i class="fa fa-cog"></i> <span
-        class="label">Admin</span></a>
-    {% endif %}
+  {% if username and username|lower == 'admin' %}
+  <div style="margin:18px 0 8px 0; border-top:1px solid #1f2937;"></div>
+  <a href="{{ url_for('admin_companies') }}" class="menu-item admin" title="Admin"><i class="fa fa-cog"></i> <span
+      class="label">Admin</span></a>
+  {% endif %}
 
-    <a href="{{ url_for('logout') }}" class="menu-item logout" title="Sair"><i class="fa fa-sign-out"></i> <span
-        class="label">Sair</span></a>
+  <a href="{{ url_for('logout') }}" class="menu-item logout" title="Sair"><i class="fa fa-sign-out"></i> <span
+      class="label">Sair</span></a>
+</div>
+
+<div class="content">
+  <h2>Catálogo de Pacientes</h2>
+
+  <div class="actions">
+    <button class="btn" onclick="openPatientModal()">Cadastrar Paciente</button>
   </div>
 
-  <div class="content">
-    <h2>Catálogo de Pacientes</h2>
+  <form method="get" action="{{ url_for('catalog') }}" class="actions" style="margin-top:0">
+    <input class="input" type="search" name="search" placeholder="Pesquisar paciente..."
+      value="{{ request.args.get('search','') }}">
+    <select class="select" name="status">
+      <option value="">Todos</option>
+      <option value="Ativo" {% if request.args.get('status')=='Ativo' %}selected{% endif %}>Ativo</option>
+      <option value="Inativo" {% if request.args.get('status')=='Inativo' %}selected{% endif %}>Inativo</option>
+    </select>
+    <button type="submit" class="btn">Filtrar</button>
+  </form>
 
-    <div class="actions">
-      <button class="btn" onclick="openPatientModal()">Cadastrar Paciente</button>
-    </div>
+  <table class="table" aria-label="Tabela de pacientes">
+    <thead>
+      <tr>
+        <th>Paciente</th>
+        <th>Telefone</th>
+        <th>Status</th>
+        <th>Opções</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for patient in patients %}
+      <tr>
+        <td>
+          <a href="{{ url_for('patient_info', patient_id=patient.id) }}"
+            style="color:#cfe0ff;text-decoration:underline;font-weight:700">{{ patient.name }}</a>
+        </td>
+        <td>{{ patient.phone }}</td>
+        <td>
+          <form method="post"
+            action="{{ url_for('toggle_patient_status', patient_id=patient.id, new_status='Ativo' if patient.status != 'Ativo' else 'Inativo') }}"
+            style="display:inline;">
+            <button type="submit" class="badge status-{{ patient.status|lower }}"
+              title="Clique para alternar o status">{{ patient.status }}</button>
+          </form>
+        </td>
+        <td>
+          <form method="post" action="{{ url_for('delete_patient', patient_id=patient.id) }}"
+            onsubmit="return confirm('Deseja realmente remover este paciente?')" style="margin:0;">
+            <button type="submit" title="Remover Paciente"
+              style="background:none;border:none;font-size:18px;color:#93a4bd;cursor:pointer">×</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 
-    <form method="get" action="{{ url_for('catalog') }}" class="actions" style="margin-top:0">
-      <input class="input" type="search" name="search" placeholder="Pesquisar paciente..."
-        value="{{ request.args.get('search','') }}">
-      <select class="select" name="status">
-        <option value="">Todos</option>
-        <option value="Ativo" {% if request.args.get('status')=='Ativo' %}selected{% endif %}>Ativo</option>
-        <option value="Inativo" {% if request.args.get('status')=='Inativo' %}selected{% endif %}>Inativo</option>
-      </select>
-      <button type="submit" class="btn">Filtrar</button>
-    </form>
-
-    <table class="table" aria-label="Tabela de pacientes">
-      <thead>
-        <tr>
-          <th>Paciente</th>
-          <th>Telefone</th>
-          <th>Status</th>
-          <th>Opções</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for patient in patients %}
-        <tr>
-          <td>
-            <a href="{{ url_for('patient_info', patient_id=patient.id) }}"
-              style="color:#cfe0ff;text-decoration:underline;font-weight:700">{{ patient.name }}</a>
-          </td>
-          <td>{{ patient.phone }}</td>
-          <td>
-            <form method="post"
-              action="{{ url_for('toggle_patient_status', patient_id=patient.id, new_status='Ativo' if patient.status != 'Ativo' else 'Inativo') }}"
-              style="display:inline;">
-              <button type="submit" class="badge status-{{ patient.status|lower }}"
-                title="Clique para alternar o status">{{ patient.status }}</button>
-            </form>
-          </td>
-          <td>
-            <form method="post" action="{{ url_for('delete_patient', patient_id=patient.id) }}"
-              onsubmit="return confirm('Deseja realmente remover este paciente?')" style="margin:0;">
-              <button type="submit" title="Remover Paciente"
-                style="background:none;border:none;font-size:18px;color:#93a4bd;cursor:pointer">×</button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+<!-- Modal Paciente -->
+<div id="patientModal" class="modal"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);justify-content:center;align-items:center;z-index:1000">
+  <div class="card"
+    style="background:linear-gradient(145deg,#0f172a,#0b1222);color:var(--text);padding:28px;border-radius:16px;width:90%;max-width:520px;position:relative;border:1px solid rgba(255,255,255,.06);box-shadow:0 24px 60px rgba(0,0,0,.5);text-align:center;font-family:'Montserrat',sans-serif">
+    <button class="close" onclick="closePatientModal()"
+      style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:22px;font-weight:bold;color:#93a4bd;cursor:pointer">×</button>
+    <h3 style="margin:0 0 16px">Novo Paciente</h3>
+    <input class="field" type="text" id="name" placeholder="Nome" required
+      style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)">
+    <input class="field" type="number" id="age" placeholder="Idade" required
+      style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)">
+    <input class="field" type="text" id="cpf" placeholder="CPF"
+      style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)">
+    <input class="field" type="text" id="gender" placeholder="Sexo"
+      style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)">
+    <input class="field" type="text" id="phone" placeholder="Telefone"
+      style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)">
+    <textarea class="field" id="prescription" placeholder="Prescrição (opcional)" rows="4"
+      style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)"></textarea>
+    <button type="button" class="btn" onclick="submitPatient()" style="width:100%">Salvar</button>
   </div>
+</div>
 
-  <!-- Modal Paciente -->
-  <div id="patientModal" class="modal"
-    style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);justify-content:center;align-items:center;z-index:1000">
-    <div class="card"
-      style="background:linear-gradient(145deg,#0f172a,#0b1222);color:var(--text);padding:28px;border-radius:16px;width:90%;max-width:520px;position:relative;border:1px solid rgba(255,255,255,.06);box-shadow:0 24px 60px rgba(0,0,0,.5);text-align:center;font-family:'Montserrat',sans-serif">
-      <button class="close" onclick="closePatientModal()"
-        style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:22px;font-weight:bold;color:#93a4bd;cursor:pointer">×</button>
-      <h3 style="margin:0 0 16px">Novo Paciente</h3>
-      <input class="field" type="text" id="name" placeholder="Nome" required
-        style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)">
-      <input class="field" type="number" id="age" placeholder="Idade" required
-        style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)">
-      <input class="field" type="text" id="cpf" placeholder="CPF"
-        style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)">
-      <input class="field" type="text" id="gender" placeholder="Sexo"
-        style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)">
-      <input class="field" type="text" id="phone" placeholder="Telefone"
-        style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)">
-      <textarea class="field" id="prescription" placeholder="Prescrição (opcional)" rows="4"
-        style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)"></textarea>
-      <button type="button" class="btn" onclick="submitPatient()" style="width:100%">Salvar</button>
-    </div>
+<!-- Modal Consulta -->
+<div id="consultationModal" class="modal"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);justify-content:center;align-items:center;z-index:1000">
+  <div class="card"
+    style="background:linear-gradient(145deg,#0f172a,#0b1222);color:var(--text);padding:28px;border-radius:16px;width:90%;max-width:520px;position:relative;border:1px solid rgba(255,255,255,.06);box-shadow:0 24px 60px rgba(0,0,0,.5);text-align:center;font-family:'Montserrat',sans-serif">
+    <button class="close" onclick="closeConsultationModal()"
+      style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:22px;font-weight:bold;color:#93a4bd;cursor:pointer">×</button>
+    <h3 style="margin:0 0 16px">Nova Consulta</h3>
+    <select id="patient_consultation" class="field" required
+      style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)">
+      <option value="">Selecione o Paciente</option>
+      {% for patient in patients %}<option value="{{ patient.id }}">{{ patient.name }}</option>{% endfor %}
+    </select>
+    <input class="field" type="text" id="consultation_date" placeholder="Data (dd/mm/aaaa)" maxlength="10" required
+      style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)">
+    <textarea id="consultation_notes" class="field" placeholder="Observações" rows="4"
+      style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)"></textarea>
+    <button type="button" class="btn" onclick="submitConsultation()" style="width:100%">Salvar Consulta</button>
   </div>
+</div>
 
-  <!-- Modal Consulta -->
-  <div id="consultationModal" class="modal"
-    style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);justify-content:center;align-items:center;z-index:1000">
-    <div class="card"
-      style="background:linear-gradient(145deg,#0f172a,#0b1222);color:var(--text);padding:28px;border-radius:16px;width:90%;max-width:520px;position:relative;border:1px solid rgba(255,255,255,.06);box-shadow:0 24px 60px rgba(0,0,0,.5);text-align:center;font-family:'Montserrat',sans-serif">
-      <button class="close" onclick="closeConsultationModal()"
-        style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:22px;font-weight:bold;color:#93a4bd;cursor:pointer">×</button>
-      <h3 style="margin:0 0 16px">Nova Consulta</h3>
-      <select id="patient_consultation" class="field" required
-        style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)">
-        <option value="">Selecione o Paciente</option>
-        {% for patient in patients %}<option value="{{ patient.id }}">{{ patient.name }}</option>{% endfor %}
-      </select>
-      <input class="field" type="text" id="consultation_date" placeholder="Data (dd/mm/aaaa)" maxlength="10" required
-        style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)">
-      <textarea id="consultation_notes" class="field" placeholder="Observações" rows="4"
-        style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)"></textarea>
-      <button type="button" class="btn" onclick="submitConsultation()" style="width:100%">Salvar Consulta</button>
-    </div>
-  </div>
-
-  <script>
-    function openPatientModal() { document.getElementById("patientModal").style.display = "flex" }
-    function closePatientModal() { document.getElementById("patientModal").style.display = "none" }
-    function openConsultationModal(patientId = '') { const el = document.getElementById("consultationModal"); el.style.display = "flex"; document.getElementById("patient_consultation").value = patientId; }
-    function closeConsultationModal() { document.getElementById("consultationModal").style.display = "none" }
-    function submitPatient() {
-      const data = { name: val("name"), age: val("age"), cpf: val("cpf"), gender: val("gender"), phone: val("phone"), prescription: val("prescription") };
-      fetch("/api/add_patient", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(r => r.json()).then(res => {
-        if (res.success) { alert("Paciente cadastrado com sucesso!"); closePatientModal(); location.reload(); }
-        else { alert("Erro: " + (res.error || "Erro desconhecido")); }
-      });
-    }
-    function submitConsultation() {
-      const sel = document.getElementById("patient_consultation");
-      const patientName = sel.options[sel.selectedIndex]?.text || "";
-      const data = { title: "Consulta - " + patientName, start: `${formatDateToISO(val("consultation_date"))}`, notes: val("consultation_notes") };
-      fetch("/api/add_event", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(r => r.json()).then(res => {
-        if (res.success) { alert("Consulta adicionada com sucesso!"); closeConsultationModal(); location.reload(); }
-        else { alert("Erro: " + (res.error || "Erro desconhecido")); }
-      });
-    }
-    function val(id) { return document.getElementById(id).value }
-    function formatDateToISO(s) { const [d, m, y] = s.split('/'); return `${y}-${m}-${d}T00:00:00`; }
-    document.getElementById("consultation_date")?.addEventListener("input", function (e) { let v = e.target.value.replace(/\D/g, ''); if (v.length >= 3) v = v.slice(0, 2) + '/' + v.slice(2); if (v.length >= 6) v = v.slice(0, 5) + '/' + v.slice(5, 9); e.target.value = v.slice(0, 10); });
-  </script>
+<script>
+  function openPatientModal() { document.getElementById("patientModal").style.display = "flex" }
+  function closePatientModal() { document.getElementById("patientModal").style.display = "none" }
+  function openConsultationModal(patientId = '') { const el = document.getElementById("consultationModal"); el.style.display = "flex"; document.getElementById("patient_consultation").value = patientId; }
+  function closeConsultationModal() { document.getElementById("consultationModal").style.display = "none" }
+  function submitPatient() {
+    const data = { name: val("name"), age: val("age"), cpf: val("cpf"), gender: val("gender"), phone: val("phone"), prescription: val("prescription") };
+    fetch("/api/add_patient", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(r => r.json()).then(res => {
+      if (res.success) { alert("Paciente cadastrado com sucesso!"); closePatientModal(); location.reload(); }
+      else { alert("Erro: " + (res.error || "Erro desconhecido")); }
+    });
+  }
+  function submitConsultation() {
+    const sel = document.getElementById("patient_consultation");
+    const patientName = sel.options[sel.selectedIndex]?.text || "";
+    const data = { title: "Consulta - " + patientName, start: `${formatDateToISO(val("consultation_date"))}`, notes: val("consultation_notes") };
+    fetch("/api/add_event", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(r => r.json()).then(res => {
+      if (res.success) { alert("Consulta adicionada com sucesso!"); closeConsultationModal(); location.reload(); }
+      else { alert("Erro: " + (res.error || "Erro desconhecido")); }
+    });
+  }
+  function val(id) { return document.getElementById(id).value }
+  function formatDateToISO(s) { const [d, m, y] = s.split('/'); return `${y}-${m}-${d}T00:00:00`; }
+  document.getElementById("consultation_date")?.addEventListener("input", function (e) { let v = e.target.value.replace(/\D/g, ''); if (v.length >= 3) v = v.slice(0, 2) + '/' + v.slice(2); if (v.length >= 6) v = v.slice(0, 5) + '/' + v.slice(5, 9); e.target.value = v.slice(0, 10); });
+</script>
 </body>
 
 </html>

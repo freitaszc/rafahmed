@@ -412,44 +412,35 @@
 
         <img src="{{ url_for('static', filename='images/logocompleta.svg') }}" class="sidebar-logo" alt="Logo RafahMed">
 
-        <a href="{{ url_for('index') }}" class="menu-item" title="Início">
-            <i class="fa fa-home"></i> <span class="label">Início</span>
-        </a>
-        <a href="{{ url_for('upload') }}" class="menu-item" title="Ponza Lab">
-            <i class="fa fa-upload"></i> <span class="label">Ponza Lab</span>
-        </a>
-        <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações">
-            <i class="fa fa-list-alt"></i> <span class="label">Autoavaliações</span>
-        </a>
-        <a href="{{ url_for('quote_index') }}" class="menu-item" title="Cotações">
-            <i class="fa fa-file-text-o"></i> <span class="label">Cotações</span>
-        </a>
-        <a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes">
-            <i class="fa fa-users"></i> <span class="label">Pacientes</span>
-        </a>
-        <a href="{{ url_for('products') }}" class="menu-item" title="Estoque">
-            <i class="fa fa-archive"></i> <span class="label">Estoque</span>
-        </a>
-        <a href="{{ url_for('agenda') }}" class="menu-item" title="Agenda">
-            <i class="fa fa-calendar"></i> <span class="label">Agenda</span>
-        </a>
-        <a href="{{ url_for('purchase') }}" class="menu-item" title="Pagamentos">
-            <i class="fa fa-credit-card"></i> <span class="label">Pagamentos</span>
-        </a>
-        <a href="{{ url_for('training') }}" class="menu-item" title="Treinamento">
-            <i class="fa fa-play-circle"></i> <span class="label">Treinamento</span>
-        </a>
+        <a href="{{ url_for('index') }}" class="menu-item" title="Início"><i class="fa fa-home"></i> <span
+                class="label">Início</span></a>
+        <a href="{{ url_for('upload') }}" class="menu-item" title="Ponza Lab"><i class="fa fa-upload"></i> <span
+                class="label">Ponza Lab</span></a>
+        <a href="{{ url_for('questionnaire_results') }}" class="menu-item" title="Questionários SRQ-20"><i
+                class="fa fa-list-alt"></i><span class="label">SRQ-20</span></a>
+        <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-list-alt"></i>
+            <span class="label">Autoavaliações</span></a>
+        <a href="{{ url_for('quote_index') }}" class="menu-item" title="Cotações"><i class="fa fa-file-text-o"></i>
+            <span class="label">Cotações</span></a>
+        <a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-users"></i> <span
+                class="label">Pacientes</span></a>
+        <a href="{{ url_for('products') }}" class="menu-item" title="Estoque"><i class="fa fa-archive"></i> <span
+                class="label">Estoque</span></a>
+        <a href="{{ url_for('agenda') }}" class="menu-item" title="Agenda"><i class="fa fa-calendar"></i> <span
+                class="label">Agenda</span></a>
+        <a href="{{ url_for('purchase') }}" class="menu-item" title="Pagamentos"><i class="fa fa-credit-card"></i> <span
+                class="label">Pagamentos</span></a>
+        <a href="{{ url_for('training') }}" class="menu-item" title="Treinamento"><i class="fa fa-play-circle"></i>
+            <span class="label">Treinamento</span></a>
 
         {% if username and username|lower == 'admin' %}
         <div style="margin:18px 0 8px 0; border-top:1px solid #1f2937;"></div>
-        <a href="{{ url_for('admin_companies') }}" class="menu-item admin" title="Admin">
-            <i class="fa fa-cog"></i> <span class="label">Admin</span>
-        </a>
+        <a href="{{ url_for('admin_companies') }}" class="menu-item admin" title="Admin"><i class="fa fa-cog"></i> <span
+                class="label">Admin</span></a>
         {% endif %}
 
-        <a href="{{ url_for('logout') }}" class="menu-item logout" title="Sair">
-            <i class="fa fa-sign-out"></i> <span class="label">Sair</span>
-        </a>
+        <a href="{{ url_for('logout') }}" class="menu-item logout" title="Sair"><i class="fa fa-sign-out"></i> <span
+                class="label">Sair</span></a>
     </div>
 
     <!-- Conteúdo -->

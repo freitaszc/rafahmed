@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>SRQ-20 — Resultados</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        :root {
+            --bg-deep: #080b12;
+            --bg-dark: #0b1220;
+            --bg-elev: #111827;
+            --bg-elev-2: #0f172a;
+            --text: #e5e7eb;
+            --text-dim: #cbd5e1;
+            --muted: #94a3b8;
+            --line: #1f2937;
+            --red: #dd1b35;
+            --red-dark: #b81429;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(1000px 600px at 10% 0%, #0b1428 0%, transparent 50%),
+                radial-gradient(900px 600px at 90% 10%, #0a0f1f 0%, transparent 50%),
+                linear-gradient(135deg, var(--bg-deep), var(--bg-dark));
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 250px;
+            background: linear-gradient(180deg, #0b111c 0%, #0a0f1a 100%);
+            padding: 30px 20px;
+            border-right: 1px solid var(--line);
+            box-shadow: 2px 0 14px rgba(0, 0, 0, .35);
+            display: flex;
+            flex-direction: column;
+            transition: width 180ms ease;
+            z-index: 1000
+        }
+
+        .sidebar-toggle {
+            align-self: flex-end;
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid rgba(255, 255, 255, .08);
+            color: #e5e7eb;
+            padding: 6px 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 14px;
+            font-size: 14px;
+            font-weight: 700;
+            transition: background .2s, border-color .2s
+        }
+
+        .sidebar-toggle:hover {
+            background: rgba(221, 27, 53, .10);
+            border-color: rgba(221, 27, 53, .35)
+        }
+
+        .sidebar-toggle i {
+            transition: transform 180ms ease
+        }
+
+        .sidebar-logo {
+            width: 200px;
+            display: block;
+            margin: 0 auto 20px;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .35));
+            transition: width 180ms ease, margin 180ms ease
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 14px;
+            padding: 12px 18px;
+            border-radius: 10px;
+            color: var(--text-dim);
+            text-decoration: none;
+            margin-bottom: 8px;
+            font-weight: 500;
+            transition: background .2s, color .2s, transform .12s
+        }
+
+        .menu-item i {
+            width: 21px;
+            text-align: center;
+            flex: 0 0 21px
+        }
+
+        .sidebar .menu-item .label {
+            font-size: 14px !important;
+            line-height: 1.2;
+            color: var(--text-dim)
+        }
+
+        .sidebar .menu-item i {
+            font-size: 14px !important
+        }
+
+        .menu-item:hover {
+            background: rgba(221, 27, 53, .12);
+            color: var(--red);
+            transform: translateX(4px)
+        }
+
+        .menu-item.logout {
+            color: #94a3b8;
+            margin-top: auto
+        }
+
+        .menu-item.admin {
+            color: #f87171
+        }
+
+        .sidebar.is-collapsed {
+            width: 76px
+        }
+
+        .sidebar.is-collapsed+.content {
+            margin-left: 76px
+        }
+
+        .sidebar.is-collapsed .sidebar-logo {
+            width: 44px;
+            margin: 0 auto 24px
+        }
+
+        .sidebar.is-collapsed .menu-item {
+            justify-content: center;
+            gap: 0;
+            padding: 12px 0
+        }
+
+        .sidebar.is-collapsed .menu-item .label {
+            display: none
+        }
+
+        .sidebar.is-collapsed .sidebar-toggle i {
+            transform: rotate(180deg)
+        }
+
+        /* Conteúdo & Botões */
+        .content {
+            margin-left: 250px;
+            flex: 1;
+            padding: 40px;
+            transition: margin-left 180ms ease
+        }
+
+        h2 {
+            font-size: 34px;
+            font-weight: 700;
+            text-align: center;
+            margin: 0 0 26px;
+            position: relative
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--red), #ff6b8a);
+            border-radius: 2px;
+            box-shadow: 0 0 12px rgba(221, 27, 53, .35)
+        }
+
+        .actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--red);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 18px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: .25s;
+            text-decoration: none
+        }
+
+        .btn:hover {
+            background: var(--red-dark);
+            transform: translateY(-1px)
+        }
+
+        .table {
+            width: 100%;
+            max-width: 1120px;
+            margin: 20px auto 0;
+            border-collapse: collapse;
+            background: linear-gradient(145deg, var(--bg-elev), #223049);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, .45), 0 0 0 1px rgba(255, 255, 255, .03) inset
+        }
+
+        .table th,
+        .table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--line);
+            text-align: center
+        }
+
+        .table th {
+            background: #121c2b;
+            color: #cfe0ff;
+            font-weight: 800
+        }
+
+        .table tr:hover {
+            background: #0f1929;
+            cursor: pointer
+        }
+
+        .delete-button {
+            background: none;
+            border: none;
+            font-size: 18px;
+            font-weight: bold;
+            color: #93a4bd;
+            cursor: pointer;
+            line-height: 1
+        }
+
+        .delete-button:hover {
+            color: #c53030
+        }
+
+        .label {
+            display: block;
+            font-size: 12px;
+            color: #93a4bd
+        }
+
+        .value {
+            font-weight: 800
+        }
+
+        .chip {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-weight: 800;
+            font-size: 12px;
+            border: 1px solid #334155;
+            background: #0b1626;
+            color: #cbd5e1;
+        }
+
+        .chip-red {
+            border-color: #7f1d1d;
+            background: #3b0a0a;
+            color: #fecaca
+        }
+
+        .chip-amber {
+            border-color: #7c4a03;
+            background: #3a2503;
+            color: #fde68a
+        }
+
+        .chip-green {
+            border-color: #14532d;
+            background: #06291a;
+            color: #bbf7d0
+        }
+    </style>
+    <script>
+        function toggleSidebar() {
+            const s = document.querySelector('.sidebar');
+            s.classList.toggle('is-collapsed');
+            localStorage.setItem('sidebarCollapsed', s.classList.contains('is-collapsed') ? '1' : '0');
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('sidebarCollapsed') === '1') {
+                document.querySelector('.sidebar')?.classList.add('is-collapsed');
+            }
+        });
+        function rowClick(url) { window.open(url, '_blank'); }
+    </script>
+</head>
+
+<body>
+    <div class="sidebar">
+        <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Minimizar/Maximizar menu">
+            <i class="fa fa-angle-double-left"></i>
+        </button>
+        <img src="{{ url_for('static', filename='images/logocompleta.svg') }}" class="sidebar-logo" alt="Logo RafahMed">
+
+        <a href="{{ url_for('index') }}" class="menu-item" title="Início"><i class="fa fa-home"></i> <span
+                class="label">Início</span></a>
+        <a href="{{ url_for('upload') }}" class="menu-item" title="Ponza Lab"><i class="fa fa-upload"></i> <span
+                class="label">Ponza Lab</span></a>
+        <a href="{{ url_for('questionnaire_results') }}" class="menu-item" title="Questionários SRQ-20"><i
+                class="fa fa-list-alt"></i><span class="label">SRQ-20</span></a>
+        <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-upload"></i> <span
+                class="label">Autoavaliações</span></a>
+        <a href="{{ url_for('quote_index') }}" class="menu-item" title="Cotações"><i class="fa fa-file-text-o"></i>
+            <span class="label">Cotações</span></a>
+        <a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-users"></i> <span
+                class="label">Pacientes</span></a>
+        <a href="{{ url_for('products') }}" class="menu-item" title="Estoque"><i class="fa fa-archive"></i> <span
+                class="label">Estoque</span></a>
+        <a href="{{ url_for('agenda') }}" class="menu-item" title="Agenda"><i class="fa fa-calendar"></i> <span
+                class="label">Agenda</span></a>
+        <a href="{{ url_for('purchase') }}" class="menu-item" title="Pagamentos"><i class="fa fa-credit-card"></i> <span
+                class="label">Pagamentos</span></a>
+        <a href="{{ url_for('training') }}" class="menu-item" title="Treinamento"><i class="fa fa-play-circle"></i>
+            <span class="label">Treinamento</span></a>
+        {% if username and username|lower == 'admin' %}
+        <div style="margin:18px 0 8px 0; border-top:1px solid #1f2937;"></div>
+        <a href="{{ url_for('admin_companies') }}" class="menu-item admin" title="Admin"><i class="fa fa-cog"></i> <span
+                class="label">Admin</span></a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}" class="menu-item logout" title="Sair"><i class="fa fa-sign-out"></i> <span
+                class="label">Sair</span></a>
+    </div>
+
+    <div class="content">
+        <h2>SRQ-20 — Resultados</h2>
+
+        <div class="actions">
+            <a href="{{ url_for('srq20') }}?admin={{ user.id }}" target="_blank" class="btn">Gerar link do SRQ-20</a>
+        </div>
+
+        {% if results %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Total (0–20)</th>
+                    <th>Classificação</th>
+                    <th>Ideação (Q17)</th>
+                    <th>Data</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                <tr>
+                    <td onclick="rowClick('{{ url_for('questionnaire_patient', questionnaire_id=result.id) }}')">
+                        {{ result.name or '—' }}
+                        <span class="label">Sexo: {{ result.sex or '—' }} | Idade: {{ result.age or '—' }}</span>
+                    </td>
+
+                    <td onclick="rowClick('{{ url_for('questionnaire_patient', questionnaire_id=result.id) }}')">
+                        <span class="chip">{{ result.srq20_total if result.srq20_total is not none else '—' }}</span>
+                    </td>
+
+                    <td onclick="rowClick('{{ url_for('questionnaire_patient', questionnaire_id=result.id) }}')">
+                        {% set cls = result.srq20_classification or '' %}
+                        {% set chipClass = 'chip' %}
+                        {% if 'Provável' in cls %}{% set chipClass = 'chip chip-red' %}
+                        {% elif 'Risco' in cls %}{% set chipClass = 'chip chip-amber' %}
+                        {% elif 'Sem indicativo' in cls %}{% set chipClass = 'chip chip-green' %}{% endif %}
+                        <span class="{{ chipClass }}">{{ cls or '—' }}</span>
+                    </td>
+
+                    <td onclick="rowClick('{{ url_for('questionnaire_patient', questionnaire_id=result.id) }}')">
+                        {% if result.srq_q17 is not none %}
+                        {% if result.srq_q17 == 'Sim' %}
+                        <span class="chip chip-red">Sim</span>
+                        {% else %}
+                        <span class="chip chip-green">Não</span>
+                        {% endif %}
+                        {% else %}
+                        <span class="chip">—</span>
+                        {% endif %}
+                    </td>
+
+                    <td onclick="rowClick('{{ url_for('questionnaire_patient', questionnaire_id=result.id) }}')">
+                        {% if result.br_date is defined and result.br_date is callable %}
+                        {{ result.br_date() }}
+                        {% else %}
+                        {{ result.data or '—' }}
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <form method="post" action="{{ url_for('delete_questionnaire_result') }}"
+                            onsubmit="return confirm('Deseja realmente remover este resultado?')" style="margin:0;">
+                            <input type="hidden" name="questionnaire_id" value="{{ result.id }}">
+                            <button type="submit" class="delete-button" title="Deletar Resultado">×</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="text-align:center;color:var(--muted)">Nenhum resultado de SRQ-20 encontrado.</p>
+        {% endif %}
+    </div>
+</body>
+
+</html>

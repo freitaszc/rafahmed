@@ -135,10 +135,14 @@ class Consult(db.Model):
     doctor_id  = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=False)
     notes      = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    date = db.Column(db.Date, nullable = False)
+    time = db.Column(db.Time, nullable = False)
 
-    def __init__(self, patient_id: int, doctor_id: int, notes: Optional[str] = None):
+    def __init__(self, patient_id: int, doctor_id: int, date, time=None, notes: Optional[str] = None):
         self.patient_id = patient_id
         self.doctor_id  = doctor_id
+        self.date       = date
+        self.time       = time
         self.notes      = notes
 
 class QuizResult(db.Model):
@@ -220,3 +224,81 @@ class PdfFile(db.Model):
         self.filename      = filename
         self.original_name = original_name
         self.size_bytes    = size_bytes
+
+class DoctorAvailability(db.Model):
+    __tablename__ = 'doctor_availability'
+    id = db.Column(db.Integer, primary_key=True)
+    doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=False)
+    weekday = db.Column(db.Integer, nullable=False)
+    start_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False)
+    slot_minutes = db.Column(db.Integer, nullable=False, default=30)
+
+    doctor = db.relationship('Doctor', backref='availabilities')
+
+    def __init__(self, doctor_id: int, weekday: int, start_time, end_time, slot_minutes: int = 30):
+        self.doctor_id = doctor_id
+        self.weekday = weekday
+        self.start_time = start_time
+        self.end_time = end_time
+        self.slot_minutes = slot_minutes
+
+class QuestionnaireResult(db.Model):
+    __tablename__ = 'questionnaire_results'
+
+    id          = db.Column(db.Integer, primary_key=True)
+    created_at  = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    admin_id    = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
+    admin       = db.relationship('User', backref='questionnaire_results', foreign_keys=[admin_id])
+
+    name        = db.Column(db.String(180), nullable=True)
+    age         = db.Column(db.String(30), nullable=True)
+    sex         = db.Column(db.String(30), nullable=True)
+
+    srq20_total           = db.Column(db.Integer, nullable=True)
+    srq20_classification  = db.Column(db.String(120), nullable=True)
+    srq20_items_yes       = db.Column(db.JSON, nullable=True)
+    raw_payload           = db.Column(db.JSON, nullable=True)
+
+    srq_q17     = db.Column(db.String(10), nullable=True)  # "Sim"/"Não"
+
+    def __init__(self, **kwargs):
+        """
+        Permite inicializar um QuestionnaireResult com qualquer campo válido.
+        Exemplo:
+            QuestionnaireResult(
+                admin_id=1,
+                name="João",
+                age="32",
+                sex="Masculino",
+                srq20_total=12,
+                srq20_classification="Alto",
+                srq20_items_yes=["q1", "q4", "q7"],
+                srq_q17="Não",
+                raw_payload={...}
+            )
+        """
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+    def br_date(self) -> str:
+        dt = self.created_at or datetime.utcnow()
+        return dt.strftime('%d/%m/%Y')
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "data": self.br_date(),
+            "admin_id": self.admin_id,
+            "nome": self.name,
+            "idade": self.age,
+            "sexo": self.sex,
+            "srq20_total": self.srq20_total,
+            "srq20_classificacao": self.srq20_classification,
+            "srq20_itens_sim": self.srq20_items_yes or [],
+            "srq_q17": self.srq_q17,
+            **(self.raw_payload or {})
+        }
+

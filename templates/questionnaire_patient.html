@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>SRQ-20 - {{ patient.nome }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        :root {
+            --bg-deep: #080c14;
+            --bg-dark: #0d1624;
+            --elev: #1a2435;
+            --text: #e5e7eb;
+            --muted: #cbd5e1;
+            --line: #1f2a3b;
+            --red: #dd1b35;
+            --red-dark: #b81429
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(1000px 600px at 10% 0%, #0b1428 0%, transparent 50%),
+                radial-gradient(900px 600px at 90% 10%, #0a0f1f 0%, transparent 50%),
+                linear-gradient(135deg, var(--bg-deep), var(--bg-dark));
+            min-height: 100vh;
+            display: flex
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 250px;
+            background: linear-gradient(180deg, #0b111c 0%, #0a0f1a 100%);
+            padding: 30px 20px;
+            border-right: 1px solid var(--line);
+            box-shadow: 2px 0 14px rgba(0, 0, 0, .35);
+            display: flex;
+            flex-direction: column;
+            transition: width 180ms ease;
+            z-index: 1000
+        }
+
+        .sidebar-toggle {
+            align-self: flex-end;
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid rgba(255, 255, 255, .08);
+            color: #e5e7eb;
+            padding: 6px 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 14px;
+            font-size: 14px;
+            font-weight: 700
+        }
+
+        .sidebar-toggle i {
+            transition: transform 180ms ease
+        }
+
+        .sidebar-logo {
+            width: 200px;
+            display: block;
+            margin: 0 auto 20px;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .35))
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 14px;
+            padding: 12px 18px;
+            border-radius: 10px;
+            color: var(--muted);
+            text-decoration: none;
+            margin-bottom: 8px;
+            font-weight: 500;
+            transition: .2s
+        }
+
+        .menu-item i {
+            width: 21px;
+            text-align: center;
+            flex: 0 0 21px
+        }
+
+        .menu-item:hover {
+            background: rgba(221, 27, 53, .12);
+            color: var(--red);
+            transform: translateX(4px)
+        }
+
+        .menu-item.logout {
+            color: #94a3b8;
+            margin-top: auto
+        }
+
+        .menu-item.admin {
+            color: #f87171
+        }
+
+        .sidebar.is-collapsed {
+            width: 76px
+        }
+
+        .sidebar.is-collapsed+.content {
+            margin-left: 76px
+        }
+
+        .sidebar.is-collapsed .sidebar-logo {
+            width: 44px;
+            margin: 0 auto 24px
+        }
+
+        .sidebar.is-collapsed .menu-item {
+            justify-content: center;
+            gap: 0;
+            padding: 12px 0
+        }
+
+        .sidebar.is-collapsed .menu-item .label {
+            display: none
+        }
+
+        .sidebar.is-collapsed .sidebar-toggle i {
+            transform: rotate(180deg)
+        }
+
+        .content {
+            margin-left: 250px;
+            flex: 1;
+            padding: 32px
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: linear-gradient(145deg, var(--elev), #223049);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .25)
+        }
+
+        h2 {
+            font-size: 26px;
+            color: #fff;
+            margin-bottom: 20px;
+            text-align: center
+        }
+
+        .response-item {
+            margin-top: 15px;
+            padding: 12px;
+            border-left: 4px solid var(--red);
+            background-color: #0f1929;
+            border-radius: 6px
+        }
+
+        .response-question {
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #cfe0ff
+        }
+
+        .response-answer {
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: unset !important;
+            font-size: 15px;
+            color: #e5e7eb
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid #334155;
+            background: #0b1420;
+            color: #cbd5e1;
+            font-size: 12px;
+            font-weight: 700
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--red);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: .25s;
+            text-decoration: none
+        }
+
+        .btn:hover {
+            background: var(--red-dark);
+            transform: translateY(-1px)
+        }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            margin-top: 24px
+        }
+
+        .alert-suicide {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            background: rgba(127, 29, 29, .35);
+            border: 1px solid rgba(239, 68, 68, .35);
+            color: #fecaca
+        }
+    </style>
+    <script>
+        function toggleSidebar() {
+            const s = document.querySelector('.sidebar');
+            s.classList.toggle('is-collapsed');
+            localStorage.setItem('sidebarCollapsed', s.classList.contains('is-collapsed') ? '1' : '0')
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('sidebarCollapsed') === '1') {
+                document.querySelector('.sidebar')?.classList.add('is-collapsed')
+            }
+        })
+    </script>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Minimizar/Maximizar menu">
+            <i class="fa fa-angle-double-left"></i>
+        </button>
+
+        <img src="{{ url_for('static', filename='images/logocompleta.svg') }}" class="sidebar-logo" alt="Logo RafahMed">
+
+        <a href="{{ url_for('index') }}" class="menu-item" title="Início"><i class="fa fa-home"></i> <span
+                class="label">Início</span></a>
+        <a href="{{ url_for('upload') }}" class="menu-item" title="Ponza Lab"><i class="fa fa-upload"></i> <span
+                class="label">Ponza Lab</span></a>
+        <a href="{{ url_for('questionnaire_results') }}" class="menu-item" title="Questionários SRQ-20"><i
+                class="fa fa-list-alt"></i><span class="label">SRQ-20</span></a>
+        <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-list-alt"></i>
+            <span class="label">Autoavaliações</span></a>
+        <a href="{{ url_for('quote_index') }}" class="menu-item" title="Cotações"><i class="fa fa-file-text-o"></i><span
+                class="label">Cotações</span></a>
+        <a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-users"></i> <span
+                class="label">Pacientes</span></a>
+        <a href="{{ url_for('products') }}" class="menu-item" title="Estoque"><i class="fa fa-archive"></i> <span
+                class="label">Estoque</span></a>
+        <a href="{{ url_for('agenda') }}" class="menu-item" title="Agenda"><i class="fa fa-calendar"></i> <span
+                class="label">Agenda</span></a>
+        <a href="{{ url_for('purchase') }}" class="menu-item" title="Pagamentos"><i class="fa fa-credit-card"></i> <span
+                class="label">Pagamentos</span></a>
+        <a href="{{ url_for('training') }}" class="menu-item" title="Treinamento"><i class="fa fa-play-circle"></i><span
+                class="label">Treinamento</span></a>
+
+        {% if username and username|lower == 'admin' %}
+        <div style="margin:18px 0 8px 0; border-top:1px solid #1f2937;"></div>
+        <a href="{{ url_for('admin_companies') }}" class="menu-item admin" title="Admin"><i class="fa fa-cog"></i> <span
+                class="label">Admin</span></a>
+        {% endif %}
+
+        <a href="{{ url_for('logout') }}" class="menu-item logout" title="Sair"><i class="fa fa-sign-out"></i> <span
+                class="label">Sair</span></a>
+    </div>
+
+    <div class="content">
+        <div class="container">
+            <h2>SRQ-20 — Detalhes do Paciente</h2>
+
+            {# Mapa das perguntas para rótulos legíveis #}
+            {% set srq_labels = {
+            'srq_q1': 'Você tem dores de cabeça com frequência?',
+            'srq_q2': 'Tem falta de apetite?',
+            'srq_q3': 'Dorme mal?',
+            'srq_q4': 'Assusta-se com facilidade?',
+            'srq_q5': 'Tem tremores nas mãos?',
+            'srq_q6': 'Sente-se nervoso(a), tenso(a) ou preocupado(a)?',
+            'srq_q7': 'Tem má digestão?',
+            'srq_q8': 'Tem dificuldade de pensar com clareza?',
+            'srq_q9': 'Tem se sentido triste ultimamente?',
+            'srq_q10': 'Tem chorado mais do que de costume?',
+            'srq_q11': 'Encontra dificuldade para aproveitar suas atividades diárias?',
+            'srq_q12': 'Tem dificuldades para tomar decisões?',
+            'srq_q13': 'Seu trabalho diário tem sofrido por causa do seu estado?',
+            'srq_q14': 'É incapaz de desempenhar um papel útil na sua vida?',
+            'srq_q15': 'Perdeu o interesse pelas coisas?',
+            'srq_q16': 'Sente que você é uma pessoa inútil?',
+            'srq_q17': 'Tem tido a ideia de acabar com a vida?',
+            'srq_q18': 'Sente-se cansado(a) o tempo todo?',
+            'srq_q19': 'Sente desconforto estomacal?',
+            'srq_q20': 'Cansa-se com facilidade?'
+            } %}
+
+            <div class="grid-2">
+                <div class="response-item">
+                    <div class="response-question">Nome</div>
+                    <div class="response-answer">{{ patient.nome or 'Não informado' }}</div>
+                </div>
+                <div class="response-item">
+                    <div class="response-question">Idade</div>
+                    <div class="response-answer">{{ patient.idade or 'Não informado' }}</div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="response-item">
+                    <div class="response-question">Sexo</div>
+                    <div class="response-answer">{{ patient.sexo or 'Não informado' }}</div>
+                </div>
+                <div class="response-item">
+                    <div class="response-question">Data de Resposta</div>
+                    <div class="response-answer">{{ patient.data or '—' }}</div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="response-item">
+                    <div class="response-question">Pontuação Total (0–20)</div>
+                    <div class="response-answer">
+                        <span class="badge">{{ patient.srq20_total if patient.srq20_total is defined else '—' }}</span>
+                    </div>
+                </div>
+                <div class="response-item">
+                    <div class="response-question">Classificação</div>
+                    <div class="response-answer">
+                        <span class="badge" style="border-color:#475569; background:#0b1626;">
+                            {{ patient.srq20_classificacao if patient.srq20_classificacao is defined else '—' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="response-item">
+                <div class="response-question">Itens marcados “Sim”</div>
+                <div class="response-answer">
+                    {% if patient.srq20_itens_sim is defined and patient.srq20_itens_sim %}
+                    <ul style="margin:0; padding-left:18px; list-style: disc;">
+                        {% for code in patient.srq20_itens_sim %}
+                        <li>{{ srq_labels.get(code, code) }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    Nenhum ou não informado
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="response-item">
+                <div class="response-question">Ideação suicida (Item 17)</div>
+                <div class="response-answer">
+                    {% set ideacao = (patient['srq_q17'] if patient['srq_q17'] is defined else None) %}
+                    {% if ideacao %}
+                    {{ ideacao }}
+                    {% else %}
+                    Não informado
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if patient['srq_q17'] is defined and patient['srq_q17'] == 'Sim' %}
+            <div class="alert-suicide">
+                <strong>Atenção:</strong> item 17 marcado como “Sim”. Oriente contato imediato com suporte.
+                <ul style="margin:8px 0 0 18px;">
+                    <li>Brasil: Ligue <strong>188 (CVV)</strong> — 24h.</li>
+                    <li>Procure serviço de urgência se houver risco iminente.</li>
+                </ul>
+            </div>
+            {% endif %}
+
+            <div class="response-item" style="margin-top:16px;">
+                <div class="response-question">Observações</div>
+                <div class="response-answer" style="color:var(--muted);">
+                    O SRQ-20 é uma <strong>triagem</strong>. Pontos de corte usuais: geral ≥8; literatura brasileira
+                    utiliza variações por sexo (ex.: ≥5 homens, ≥7 mulheres). A interpretação deve ser feita por
+                    profissional habilitado.
+                </div>
+            </div>
+
+            <div class="actions">
+                <a href="{{ url_for('questionnaire_results') }}" class="btn">Voltar aos Resultados</a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
