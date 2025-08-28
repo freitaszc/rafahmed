@@ -2,15 +2,19 @@
 <html lang="pt-br">
 
 <head>
-  <meta charset="UTF-8">
-  <title>Administração – RafahMed</title>
-  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <title>Admin — Empresas | RafahMed</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+
   <style>
     :root {
-      --bg-deep: #080c14;
-      --bg-dark: #0d1624;
-      --bg-elev: #1a2435;
+      --bg-deep: #080b12;
+      --bg-dark: #0b1220;
+      --bg-elev: #111827;
+      --bg-elev-2: #0f172a;
       --text: #e5e7eb;
       --text-dim: #cbd5e1;
       --line: #1f2a3b;
@@ -26,58 +30,182 @@
 
     body {
       margin: 0;
+      display: flex;
+      min-height: 100vh;
       font-family: 'Montserrat', sans-serif;
-      background: linear-gradient(135deg, var(--bg-deep), var(--bg-dark));
+      background:
+        radial-gradient(1000px 600px at 10% 0%, #0b1428 0%, transparent 50%),
+        radial-gradient(900px 600px at 90% 10%, #0a0f1f 0%, transparent 50%),
+        linear-gradient(135deg, var(--bg-deep), var(--bg-dark));
       color: var(--text);
     }
 
-    .top-menu {
-      background: linear-gradient(180deg, #0b1423, var(--bg-dark));
-      padding: 12px 0;
+    /* SIDEBAR */
+    .sidebar {
+      width: 250px;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #0b111c, #0a0f1a);
+      padding: 30px 20px;
+      border-right: 1px solid #1f2937;
+      box-shadow: 2px 0 14px rgba(0, 0, 0, .35);
       display: flex;
-      justify-content: center;
-      gap: 16px;
-      border-bottom: 1px solid var(--line);
-      position: relative;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+      flex-direction: column;
+      transition: width 180ms ease;
     }
 
-    .top-menu img {
-      position: absolute;
-      left: 20px;
-      height: 40px;
-      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .5))
+    .sidebar-toggle {
+      align-self: flex-end;
+      background: rgba(255, 255, 255, .03);
+      border: 1px solid rgba(255, 255, 255, .08);
+      color: #e5e7eb;
+      padding: 6px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 14px;
     }
 
-    .top-menu a {
-      font-weight: 700;
+    .sidebar-toggle:hover {
+      background: rgba(221, 27, 53, .10);
+      border-color: rgba(221, 27, 53, .35)
+    }
+
+    .sidebar-logo {
+      width: 200px;
+      display: block;
+      margin: 0 auto 20px;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .35));
+      transition: width 180ms ease, margin 180ms ease;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
       font-size: 14px;
+      padding: 12px 18px;
+      border-radius: 10px;
       color: var(--text-dim);
       text-decoration: none;
-      padding: 8px 12px;
-      border-radius: 10px;
-      transition: .2s;
+      margin-bottom: 8px;
+      font-weight: 600;
+      transition: background .2s, color .2s, transform .12s;
     }
 
-    .top-menu a:hover {
-      background: rgba(221, 27, 53, .12);
-      color: var(--red)
-    }
-
-    .content {
-      max-width: 1100px;
-      margin: 20px auto;
-      padding: 0 16px
-    }
-
-    .header {
+    .menu-item i {
+      width: 21px;
       text-align: center;
-      margin-bottom: 18px
+      flex: 0 0 21px
     }
 
-    .header h2 {
-      font-size: 26px;
-      margin: 0 0 10px
+    .menu-item:hover {
+      background: rgba(221, 27, 53, .12);
+      color: var(--red);
+      transform: translateX(4px)
+    }
+
+    .menu-item.active {
+      background: rgba(221, 27, 53, .16);
+      color: #fff
+    }
+
+    .menu-item.admin {
+      color: var(--red);
+    }
+
+    .menu-item.admin:hover {
+      background: rgba(221, 27, 53, .18);
+      color: #fff;
+    }
+
+    .sidebar-spacer {
+      flex: 1 1 auto
+    }
+
+    .menu-item.logout {
+      color: #e5e7eb
+    }
+
+    /* collapsed */
+    .sidebar.is-collapsed {
+      width: 76px
+    }
+
+    .sidebar.is-collapsed .sidebar-logo {
+      width: 44px;
+      margin: 0 auto 24px
+    }
+
+    .sidebar.is-collapsed .menu-item {
+      justify-content: center;
+      gap: 0;
+      padding: 12px 0
+    }
+
+    .sidebar.is-collapsed .menu-item .label {
+      display: none
+    }
+
+    /* CONTENT */
+    .content {
+      flex-grow: 1;
+      padding: 40px;
+      min-width: 0
+    }
+
+    h2 {
+      font-size: 28px;
+      font-weight: 800;
+      text-align: center;
+      margin: 0 0 20px
+    }
+
+    .section-box {
+      margin: 28px 0;
+      padding: 20px;
+      border-radius: 16px;
+      background: linear-gradient(145deg, var(--bg-elev), var(--bg-elev-2));
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .35), 0 0 0 1px rgba(255, 255, 255, .04) inset;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line)
+    }
+
+    .section-header h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700
+    }
+
+    .catalog-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: linear-gradient(145deg, var(--bg-elev), #223049);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .45), 0 0 0 1px rgba(255, 255, 255, .03) inset
+    }
+
+    .catalog-table th,
+    .catalog-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: center
+    }
+
+    .catalog-table th {
+      background: #121c2b;
+      color: #cfe0ff;
+      font-weight: 800
+    }
+
+    .catalog-table tr:hover {
+      background: #0f1929
     }
 
     .menu-button {
@@ -99,172 +227,128 @@
       transform: translateY(-2px) scale(1.03)
     }
 
-    .catalog-table {
+    .text-input {
+      font-family: 'Montserrat', sans-serif;
       width: 100%;
-      border-collapse: collapse;
-      background: linear-gradient(145deg, var(--bg-elev), #223049);
+      padding: 12px;
       border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, .45), 0 0 0 1px rgba(255, 255, 255, .03) inset;
+      border: 2px solid var(--input-bd);
+      background: var(--input-bg);
+      color: var(--text);
+      outline: none;
+      margin-bottom: 12px;
     }
 
-    .catalog-table th,
-    .catalog-table td {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--line);
-      text-align: center;
+    .text-input:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(221, 27, 53, .12)
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .55);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000
+    }
+
+    .modal-card {
+      background: linear-gradient(145deg, #0f172a, #0b1222);
+      color: var(--text);
+      padding: 22px;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 420px;
       position: relative;
+      border: 1px solid rgba(255, 255, 255, .06);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, .5)
     }
 
-    .catalog-table th {
-      background: #121c2b;
-      color: #cfe0ff;
-      font-weight: 800
-    }
-
-    .catalog-table tr:hover {
-      background: #0f1929
+    .close-x {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 22px;
+      font-weight: bold;
+      color: #93a4bd;
+      cursor: pointer
     }
 
     .delete-btn {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
       background: none;
       border: none;
       font-size: 18px;
-      font-weight: bold;
-      color: #9fb0c9;
-      cursor: pointer;
-      transition: .2s;
+      font-weight: 900;
+      color: #93a4bd;
+      cursor: pointer
     }
 
     .delete-btn:hover {
       color: var(--red)
     }
 
-    .details-row {
-      display: none;
-      background: #0f1929
+    @media (max-width: 900px) {
+      .content {
+        padding: 28px
+      }
     }
-
-    .details-cell {
-      padding: 0;
-      border: none
-    }
-
-    .pdf-actions a,
-    .pdf-actions form button {
-      display: inline-block;
-      margin: 0 6px;
-      font-size: 12px;
-      text-decoration: none;
-      padding: 8px 12px;
-      border-radius: 10px;
-      border: none;
-      cursor: pointer;
-      transition: .2s;
-      background: rgba(221, 27, 53, .12);
-      color: #e9edf7;
-    }
-
-    .pdf-actions a:hover,
-    .pdf-actions form button:hover {
-      background: rgba(221, 27, 53, .22)
-    }
-
-    #pdfSearch {
-      width: 320px;
-      max-width: 90%;
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 2px solid var(--input-bd);
-      background: var(--input-bg);
-      color: var(--text);
-      outline: none;
-      transition: .2s;
-      font-size: 14px;
-    }
-
-    #pdfSearch:focus {
-      border-color: var(--red);
-      box-shadow: 0 0 0 3px rgba(221, 27, 53, .12)
-    }
-
-    /* BOX PADRÃO DE SEÇÃO */
-    .section-box {
-      margin: 28px 0;
-      padding: 20px;
-      border-radius: 16px;
-      background: linear-gradient(145deg, var(--bg-elev), #223049);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, .35), 0 0 0 1px rgba(255, 255, 255, .04) inset;
-    }
-
-    /* Cabeçalho da seção: título sempre no topo */
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 0 0 12px 0;
-      /* sem margem acima, espaço abaixo */
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .section-header h3 {
-      margin: 0;
-      /* garante título colado no topo do box */
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    .section-header .spacer {
-      flex: 1
-    }
-
-    /* empurra ações para a direita */
   </style>
 </head>
 
 <body>
-  <!-- MENU SUPERIOR -->
-  <div class="top-menu">
-    <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo">
-    <a href="{{ url_for('index') }}">Início</a>
-    <a href="{{ url_for('upload') }}">Ponza Lab</a>
-    <a href="{{ url_for('questionnaire_results') }}">SRQ-20</a>
-    <a href="{{ url_for('quote_index') }}">Cotações</a>
-    <a href="{{ url_for('catalog') }}">Pacientes</a>
-    <a href="{{ url_for('products') }}">Estoque</a>
-    <a href="{{ url_for('agenda') }}">Agenda</a>
-    <a href="{{ url_for('logout') }}">Sair</a>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Minimizar/Maximizar menu">
+      <i class="fa fa-angle-double-left"></i>
+    </button>
+
+    <img src="{{ url_for('static', filename='images/logocompleta.svg') }}" class="sidebar-logo" alt="RafahMed" />
+
+    <a href="{{ url_for('index') }}" class="menu-item"><i class="fa fa-home"></i><span class="label">Início</span></a>
+    <a href="{{ url_for('upload') }}" class="menu-item"><i class="fa fa-upload"></i><span class="label">Ponza
+        Lab</span></a>
+    <a href="{{ url_for('questionnaire_results') }}" class="menu-item"><i class="fa fa-list-alt"></i><span
+        class="label">SRQ-20</span></a>
+    <a href="{{ url_for('quiz_results') }}" class="menu-item"><i class="fa fa-list-alt"></i><span
+        class="label">Autoavaliações</span></a>
+    <a href="{{ url_for('quote_index') }}" class="menu-item"><i class="fa fa-file-text-o"></i><span
+        class="label">Cotações</span></a>
+    <a href="{{ url_for('catalog') }}" class="menu-item"><i class="fa fa-users"></i><span
+        class="label">Pacientes</span></a>
+    <a href="{{ url_for('products') }}" class="menu-item"><i class="fa fa-archive"></i><span
+        class="label">Estoque</span></a>
+    <a href="{{ url_for('agenda') }}" class="menu-item"><i class="fa fa-calendar"></i><span
+        class="label">Agenda</span></a>
+    <a href="{{ url_for('purchase') }}" class="menu-item"><i class="fa fa-credit-card"></i><span
+        class="label">Pagamentos</span></a>
+    <a href="{{ url_for('training') }}" class="menu-item"><i class="fa fa-play-circle"></i><span
+        class="label">Treinamento</span></a>
+
+    {% if username and username|lower == 'admin' %}
+    <div style="margin:18px 0 8px; border-top:1px solid #1f2937;"></div>
+    <a href="{{ url_for('admin_companies') }}" class="menu-item admin"><i class="fa fa-building"></i><span
+        class="label">Admin — Empresas</span></a>
+    <a href="{{ url_for('admin_pdfs') }}" class="menu-item admin"><i class="fa fa-folder-open"></i><span
+        class="label">Admin — Repositório</span></a>
+    <a href="{{ url_for('admin_availability_page') }}" class="menu-item admin"><i class="fa fa-clock-o"></i><span
+        class="label">Admin — Disponibilidade</span></a>
+    {% endif %}
+
+    <div class="sidebar-spacer"></div>
+    <a href="{{ url_for('logout') }}" class="menu-item logout"><i class="fa fa-sign-out"></i><span
+        class="label">Sair</span></a>
   </div>
 
+  <!-- Content -->
   <div class="content">
-    <div class="header">
-      <h2>Administração de Empresas e Usuários</h2>
-      <button class="menu-button" onclick="openCompanyModal()">Cadastrar Empresa</button>
-    </div>
+    <h2>Administração de Empresas</h2>
 
-    <!-- MODAL ADICIONAR EMPRESA -->
-    <div id="addCompanyModal"
-      style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);justify-content:center;align-items:center;z-index:1000;">
-      <div
-        style="background:linear-gradient(145deg,#0f172a,#0b1222);color:var(--text);padding:22px;border-radius:16px;width:90%;max-width:360px;position:relative;border:1px solid rgba(255,255,255,.06);box-shadow:0 24px 60px rgba(0,0,0,.5)">
-        <button onclick="closeCompanyModal()"
-          style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:22px;font-weight:bold;color:#93a4bd;cursor:pointer;">×</button>
-        <h2 style="text-align:center;margin:8px 0 14px">Cadastrar Empresa</h2>
-        <form method="post" action="{{ url_for('add_company') }}">
-          <input type="text" name="company_name" placeholder="Nome da Empresa" required
-            style="width:95%;padding:12px;border-radius:12px;border:2px solid var(--input-bd);background:var(--input-bg);color:var(--text);margin-bottom:10px; font-family: 'Montserrat', sans-serif;">
-          <input type="text" name="access_code" placeholder="Código de Acesso" required
-            style="width:95%;padding:12px;border-radius:12px;border:2px solid var(--input-bd);background:var(--input-bg);color:var(--text);margin-bottom:14px;font-family: 'Montserrat', sans-serif;">
-          <div style="display:flex;justify-content:center">
-            <button type="submit" class="menu-button" style="width:100%">Salvar</button>
-          </div>
-        </form>
-      </div>
+    <div style="text-align:center; margin-bottom:10px">
+      <button class="menu-button" onclick="openCompanyModal()">Cadastrar Empresa</button>
     </div>
 
     <!-- EMPRESAS -->
@@ -274,7 +358,7 @@
       </div>
 
       {% if companies %}
-      <table class="catalog-table" id="tblEmpresas">
+      <table class="catalog-table">
         <thead>
           <tr>
             <th>Empresa</th>
@@ -283,39 +367,51 @@
         </thead>
         <tbody>
           {% for comp in companies %}
-          <tr onclick="toggleDetails({{ loop.index0 }})">
-            <td>
+          <tr>
+            <td style="text-align:left">
               {{ comp.name }}
               <form method="post" action="{{ url_for('delete_company', company_id=comp.id) }}"
                 onsubmit="return confirm('Deseja realmente excluir esta empresa?')" style="display:inline;">
-                <button class="delete-btn" title="Excluir Empresa">×</button>
+                <button class="delete-btn" title="Excluir">×</button>
               </form>
             </td>
             <td>{{ comp.access_code }}</td>
           </tr>
-          <tr class="details-row" id="detail-{{ loop.index0 }}">
-            <td colspan="2" class="details-cell">
-              {% if comp.users %}
-              <table class="catalog-table" style="margin:10px;">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>E-mail</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for u in comp.users %}
-                  <tr>
-                    <td>{{ u.id }}</td>
-                    <td>{{ u.username }}</td>
-                    <td>{{ u.email }}</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p style="text-align:center; color:#93a4bd">Nenhuma empresa cadastrada.</p>
+      {% endif %}
+    </div>
+
+    <!-- USUÁRIOS -->
+    <div class="section-box">
+      <div class="section-header">
+        <h3>Usuários</h3>
+      </div>
+
+      {% if users %}
+      <table class="catalog-table">
+        <thead>
+          <tr>
+            <th style="text-align:left">ID</th>
+            <th>Username</th>
+            <th>E-mail</th>
+            <th>Empresa</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td style="text-align:left">{{ u.id }}</td>
+            <td>{{ u.username }}</td>
+            <td>{{ u.email }}</td>
+            <td>
+              {% if u.company %}
+              {{ u.company.name }}
               {% else %}
-              <p style="padding:10px;color:var(--text-dim)">Nenhum usuário vinculado.</p>
+              <span style="color:#93a4bd">—</span>
               {% endif %}
             </td>
           </tr>
@@ -323,119 +419,39 @@
         </tbody>
       </table>
       {% else %}
-      <p style="text-align:center;color:#93a4bd">Nenhuma empresa cadastrada.</p>
+      <p style="text-align:center; color:#93a4bd">Nenhum usuário cadastrado.</p>
       {% endif %}
     </div>
 
-    <!-- USUÁRIOS PESSOAIS -->
-    <div class="section-box">
-      <div class="section-header">
-        <h3>Usuários Pessoais</h3>
-      </div>
+  </div>
 
-      {% if personal_users %}
-      <table class="catalog-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Username</th>
-            <th>E-mail</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for u in personal_users %}
-          <tr>
-            <td>{{ u.id }}</td>
-            <td>{{ u.username }}</td>
-            <td>{{ u.email }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% else %}
-      <p style="text-align:center;color:#93a4bd">Sem usuários pessoais.</p>
-      {% endif %}
-    </div>
-
-    <!-- REPOSITÓRIO DE ARQUIVOS -->
-    <div class="section-box">
-      <div class="section-header">
-        <h3>Repositório de Arquivos</h3>
-        <div class="spacer"></div>
-        <button class="menu-button" onclick="openPdfModal()">Adicionar PDF</button>
-        <input id="pdfSearch" type="text" placeholder="Buscar por nome..." oninput="filterPdfs()">
-      </div>
-
-      <!-- MODAL ADICIONAR PDF -->
-      <div id="addPdfModal"
-        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);justify-content:center;align-items:center;z-index:1000;">
-        <div
-          style="background:linear-gradient(145deg,#0f172a,#0b1222);color:var(--text);padding:22px;border-radius:16px;width:90%;max-width:420px;position:relative;border:1px solid rgba(255,255,255,.06);box-shadow:0 24px 60px rgba(0,0,0,.5)">
-          <button onclick="closePdfModal()"
-            style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:22px;font-weight:bold;color:#93a4bd;cursor:pointer;">×</button>
-          <h2 style="text-align:center;margin:8px 0 14px">Adicionar PDF</h2>
-          <form method="post" action="{{ url_for('add_pdf') }}" enctype="multipart/form-data">
-            <input type="file" name="pdf_file" accept="application/pdf" required
-              style="width:95%;padding:12px;border-radius:12px;border:2px solid var(--input-bd);background:var(--input-bg);color:var(--text);margin-bottom:10px; font-family: 'Montserrat', sans-serif;">
-            <div style="display:flex;justify-content:center">
-              <button type="submit" class="menu-button" style="width:100%">Enviar</button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- LISTA DE PDFs -->
-      {% if pdfs %}
-      <table class="catalog-table" id="tblPdfs">
-        <thead>
-          <tr>
-            <th style="text-align:left">Nome</th>
-            <th>Tamanho</th>
-            <th>Enviado em</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for p in pdfs %}
-          <tr data-name="{{ p.original_name | lower }}">
-            <td style="text-align:left">{{ p.original_name }}</td>
-            <td>{{ (p.size_bytes/1024)|round(1) }} KB</td>
-            <td>{{ p.uploaded_at.strftime('%d/%m/%Y %H:%M') }}</td>
-            <td class="pdf-actions">
-              <a href="{{ url_for('view_pdf', file_id=p.id) }}" target="_blank">Visualizar</a>
-              <a href="{{ url_for('download_pdf_admin', file_id=p.id) }}">Download</a>
-              <form method="post" action="{{ url_for('delete_pdf', file_id=p.id) }}" style="display:inline;"
-                onsubmit="return confirm('Excluir este PDF?')">
-                <button type="submit">Excluir</button>
-              </form>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% else %}
-      <p style="text-align:center;color:#93a4bd">Nenhum PDF enviado ainda.</p>
-      {% endif %}
+  <!-- Modal -->
+  <div id="addCompanyModal" class="modal">
+    <div class="modal-card">
+      <button class="close-x" onclick="closeCompanyModal()">×</button>
+      <h2 style="text-align:center; margin:8px 0 14px">Cadastrar Empresa</h2>
+      <form method="post" action="{{ url_for('admin_companies') }}">
+        <input class="text-input" type="text" name="name" placeholder="Nome da Empresa" required />
+        <input class="text-input" type="text" name="code" placeholder="Código de Acesso" />
+        <button type="submit" class="menu-button" style="width:100%">Salvar</button>
+      </form>
     </div>
   </div>
 
   <script>
+    function toggleSidebar() {
+      const sb = document.querySelector('.sidebar');
+      sb.classList.toggle('is-collapsed');
+      localStorage.setItem('sidebarCollapsed', sb.classList.contains('is-collapsed') ? '1' : '0');
+      setTimeout(() => window.dispatchEvent(new Event('resize')), 220);
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem('sidebarCollapsed') === '1') {
+        document.querySelector('.sidebar')?.classList.add('is-collapsed');
+      }
+    });
     function openCompanyModal() { document.getElementById('addCompanyModal').style.display = 'flex' }
     function closeCompanyModal() { document.getElementById('addCompanyModal').style.display = 'none' }
-    function toggleDetails(idx) {
-      const row = document.getElementById('detail-' + idx);
-      row.style.display = (row.style.display === 'table-row' ? 'none' : 'table-row');
-    }
-    function openPdfModal() { document.getElementById('addPdfModal').style.display = 'flex' }
-    function closePdfModal() { document.getElementById('addPdfModal').style.display = 'none' }
-    function filterPdfs() {
-      const q = (document.getElementById('pdfSearch').value || '').trim().toLowerCase();
-      const rows = document.querySelectorAll('#tblPdfs tbody tr');
-      rows.forEach(r => {
-        const name = r.getAttribute('data-name') || '';
-        r.style.display = name.includes(q) ? 'table-row' : 'none';
-      });
-    }
   </script>
 </body>
 

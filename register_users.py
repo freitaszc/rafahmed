@@ -11,9 +11,9 @@ def main():
 
     app = Flask(__name__)
 
-    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'instance'))
-    os.makedirs(base_dir, exist_ok=True)
-    DATABASE_URL = os.getenv('DATABASE_URL') or f'sqlite:///{os.path.join(base_dir, "web.db")}'
+    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'instance'))
+    os.makedirs(BASE_DIR, exist_ok=True)
+    DATABASE_URL = os.getenv('DATABASE_URL') or f'sqlite:///{os.path.join(BASE_DIR, "web.db")}'
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
     db.init_app(app)
 

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Bem-vindo | RafahMed</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --bg-deep: #080b12;
+            --bg-dark: #0b1220;
+            --bg-elev: #111827;
+            --bg-elev-2: #0f172a;
+            --text: #e5e7eb;
+            --text-dim: #cbd5e1;
+            --muted: #94a3b8;
+            --stroke: #1f2937;
+            --red: #dd1b35;
+            --red-dark: #b81429;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(1000px 600px at 10% 0%, #0b1428 0%, transparent 50%),
+                radial-gradient(900px 600px at 90% 10%, #0a0f1f 0%, transparent 50%),
+                linear-gradient(135deg, var(--bg-deep), var(--bg-dark));
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 28px;
+        }
+
+        .wrap {
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0 0 14px;
+            font-size: 32px;
+            font-weight: 800;
+        }
+
+        p {
+            color: var(--text-dim);
+            margin-bottom: 26px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            color: #fff;
+            background: linear-gradient(135deg, var(--red), var(--red-dark));
+            text-decoration: none;
+            box-shadow: 0 12px 30px rgba(221, 27, 53, .28);
+            transition: .25s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px) scale(1.02)
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <h1>Bem-vindo ao RafahMed</h1>
+        <p>Você já pode começar a usar o sistema normalmente.</p>
+        <a class="btn" href="{{ next or url_for('index') }}">Continuar</a>
+    </div>
+</body>
+
+</html>

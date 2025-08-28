@@ -159,6 +159,11 @@
       transition: margin-left 180ms ease
     }
 
+    .scheduling {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 16px;
+    }
+
     .btn {
       display: inline-flex;
       align-items: center;
@@ -388,21 +393,18 @@
       <h3 style="margin-top:6px;margin-bottom:18px">Agendar Consulta</h3>
 
       <!-- Médico -->
-      <select id="doctor" required>
+      <select id="doctor" class="scheduling" required>
         <option value="">Selecione o médico</option>
       </select>
 
       <!-- Observação / Nome do paciente -->
-      <input type="text" id="title" placeholder="Observação / Nome do Paciente" required>
+      <input type="text" id="title" class="scheduling" placeholder="Observação / Nome do Paciente" required>
 
       <!-- Data -->
-      <input type="date" id="date" required>
+      <input type="date" id="date" class="scheduling" placeholder="dd/mm/aaaa" required>
 
       <!-- Horário (opcional) + Slots -->
-      <input type="time" id="time" placeholder="Horário (opcional)">
-      <select id="slot">
-        <option value="">— horários disponíveis —</option>
-      </select>
+      <input type="time" id="time" class="scheduling" placeholder="Horário (opcional)">
 
       <button onclick="submitEvent()" class="btn" style="width:100%">Salvar</button>
     </div>
@@ -454,7 +456,7 @@
 
     async function updateSlots() {
       const doctorId = document.getElementById('doctor').value;
-      const dateISO = document.getElementById('date').value; // yyyy-mm-dd
+      const dateISO = document.getElementById('date').value;
       const slotSel = document.getElementById('slot');
 
       slotSel.innerHTML = '<option value="">— horários disponíveis —</option>';
@@ -485,7 +487,7 @@
     async function submitEvent() {
       const title = document.getElementById("title").value.trim();
       const dateISO = document.getElementById("date").value;
-      const time = document.getElementById("time").value || ""; // opcional
+      const time = document.getElementById("time").value || "";
       const doctorId = document.getElementById("doctor").value;
 
       if (!title || !dateISO || !doctorId) {

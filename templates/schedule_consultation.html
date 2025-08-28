@@ -8,9 +8,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
   <style>
     :root {
       --bg-deep: #080b12;
@@ -22,27 +19,24 @@
       --muted: #94a3b8;
       --stroke: #1f2937;
       --red: #dd1b35;
-      --red-dark: #b81429;
+      --red-dark: #b81429
     }
 
     body {
       font-family: 'Montserrat', sans-serif;
-      background:
-        radial-gradient(1000px 600px at 10% 0%, #0b1428 0%, transparent 50%),
-        radial-gradient(900px 600px at 90% 10%, #0a0f1f 0%, transparent 50%),
-        linear-gradient(135deg, var(--bg-deep) 0%, var(--bg-dark) 100%);
+      background: radial-gradient(1000px 600px at 10% 0%, #0b1428 0%, transparent 50%), radial-gradient(900px 600px at 90% 10%, #0a0f1f 0%, transparent 50%), linear-gradient(135deg, var(--bg-deep) 0%, var(--bg-dark) 100%);
       color: var(--text);
-      margin: 0;
+      margin: 0
     }
 
     .card {
       background: linear-gradient(145deg, var(--bg-elev) 0%, var(--bg-elev-2) 100%);
       border: 1px solid rgba(255, 255, 255, .06);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, .45);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, .45)
     }
 
     label {
-      color: var(--text-dim);
+      color: var(--text-dim)
     }
 
     .input,
@@ -54,13 +48,13 @@
       background: var(--bg-elev-2);
       color: var(--text);
       outline: none;
-      transition: .2s;
+      transition: .2s
     }
 
     .input:focus,
     .select:focus {
       border-color: var(--red);
-      box-shadow: 0 0 0 4px rgba(221, 27, 53, .12);
+      box-shadow: 0 0 0 4px rgba(221, 27, 53, .12)
     }
 
     .btn {
@@ -73,16 +67,21 @@
       border-radius: .6rem;
       cursor: pointer;
       transition: .25s;
-      box-shadow: 0 12px 30px rgba(221, 27, 53, .28);
+      box-shadow: 0 12px 30px rgba(221, 27, 53, .28)
     }
 
     .btn:hover {
       transform: translateY(-2px) scale(1.02);
-      box-shadow: 0 18px 44px rgba(221, 27, 53, .38);
+      box-shadow: 0 18px 44px rgba(221, 27, 53, .38)
     }
 
     a.link {
-      color: #93c5fd;
+      color: #93c5fd
+    }
+
+    .helper {
+      font-size: .82rem;
+      color: var(--muted)
     }
   </style>
 </head>
@@ -111,18 +110,25 @@
         </div>
 
         <div>
-          <label for="date" class="block text-sm font-medium">Data desejada</label>
-          <input type="text" name="date" id="date" required class="input" placeholder="dd/mm/aaaa">
+          <label for="doctor" class="block text-sm font-medium">Médico</label>
+          <select name="doctor_id" id="doctor" required class="select" onchange="loadDates()">
+            <option value="">Selecione um médico</option>
+            {% for d in doctors %}<option value="{{ d.id }}">{{ d.name }}</option>{% endfor %}
+          </select>
+          <div class="helper mt-1">Datas e horários são definidos pela disponibilidade do médico.</div>
         </div>
 
         <div>
-          <label for="time" class="block text-sm font-medium">Horário desejado</label>
-          <select name="time" id="time" required class="select">
-            <option value="">Selecione um horário</option>
-            {% for hour in range(8, 18) %}
-            <option value="{{ " %02d" % hour }}:00">{{ "%02d" % hour }}:00</option>
-            <option value="{{ " %02d" % hour }}:30">{{ "%02d" % hour }}:30</option>
-            {% endfor %}
+          <label for="date" class="block text-sm font-medium">Data disponível</label>
+          <select name="date" id="date" required class="select" disabled onchange="refreshTimes()">
+            <option value="">Selecione um médico primeiro</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="time" class="block text-sm font-medium">Horário disponível</label>
+          <select name="time" id="time" required class="select" disabled>
+            <option value="">Selecione a data</option>
           </select>
         </div>
 
@@ -143,13 +149,68 @@
     }
     function isValidCPF(cpf) {
       if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
-      let sum = 0; for (let i = 0; i < 9; i++) sum += parseInt(cpf[i]) * (10 - i);
+      let sum = 0; for (let i = 0; i < 9; i++)sum += parseInt(cpf[i]) * (10 - i);
       let d1 = (sum * 10) % 11; if (d1 === 10 || d1 === 11) d1 = 0; if (d1 !== parseInt(cpf[9])) return false;
-      sum = 0; for (let i = 0; i < 10; i++) sum += parseInt(cpf[i]) * (11 - i);
-      let d2 = (sum * 10) % 11; if (d2 === 10 || d2 === 11) d2 = 0; if (d2 !== parseInt(cpf[10])) return false;
-      return true;
+      sum = 0; for (let i = 0; i < 10; i++)sum += parseInt(cpf[i]) * (11 - i);
+      let d2 = (sum * 10) % 11; if (d2 === 10 || d2 === 11) d2 = 0; if (d2 !== parseInt(cpf[10])) return false; return true;
     }
-    flatpickr("#date", { dateFormat: "d/m/Y", locale: "pt" });
+
+    async function loadDates() {
+      const doctor = document.getElementById('doctor').value;
+      const dateSel = document.getElementById('date');
+      const timeSel = document.getElementById('time');
+      dateSel.innerHTML = ''; dateSel.disabled = true; timeSel.innerHTML = ''; timeSel.disabled = true;
+      if (!doctor) { dateSel.innerHTML = '<option value="">Selecione um médico primeiro</option>'; return; }
+
+      dateSel.innerHTML = '<option value="">Carregando datas...</option>';
+      try {
+        const r = await fetch(`{{ url_for('api_available_days') }}?doctor_id=${encodeURIComponent(doctor)}&days=90&_=${Date.now()}`, { cache: 'no-store' });
+        const days = await r.json();
+        dateSel.innerHTML = '';
+        if (Array.isArray(days) && days.length) {
+          dateSel.disabled = false;
+          dateSel.appendChild(new Option('Selecione uma data', ''));
+          days.forEach(d => dateSel.appendChild(new Option(d, d)));
+        } else {
+          dateSel.appendChild(new Option('Sem datas disponíveis', ''));
+        }
+      } catch (e) {
+        console.error(e); dateSel.innerHTML = '<option value="">Erro ao carregar datas</option>';
+      }
+    }
+
+    async function refreshTimes() {
+      const doctor = document.getElementById('doctor').value;
+      const datePt = document.getElementById('date').value;
+      const timeSel = document.getElementById('time');
+      timeSel.innerHTML = ''; timeSel.disabled = true;
+      if (!doctor || !datePt) { timeSel.innerHTML = '<option value="">Selecione a data</option>'; return; }
+
+      try {
+        const r = await fetch(`{{ url_for('api_available_slots') }}?doctor_id=${encodeURIComponent(doctor)}&date=${encodeURIComponent(datePt)}&_=${Date.now()}`, { cache: 'no-store' });
+        const slots = await r.json();
+        if (Array.isArray(slots) && slots.length) {
+          timeSel.disabled = false;
+          timeSel.appendChild(new Option('Selecione um horário', ''));
+          slots.forEach(s => timeSel.appendChild(new Option(s, s)));
+        } else {
+          timeSel.appendChild(new Option('Sem horários disponíveis nessa data', ''));
+        }
+      } catch (e) {
+        console.error(e); timeSel.appendChild(new Option('Erro ao carregar horários', ''));
+      }
+    }
+
+    document.getElementById('cpf').addEventListener('input', e => {
+      let v = e.target.value.replace(/\D/g, '').slice(0, 11);
+      v = v.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+      e.target.value = v;
+    });
+    document.getElementById('phone').addEventListener('input', e => {
+      let v = e.target.value.replace(/\D/g, '').slice(0, 11);
+      v = v.replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d{1,4})$/, '$1-$2');
+      e.target.value = v;
+    });
   </script>
 </body>
 

@@ -3,7 +3,7 @@ import io
 import re
 import jwt
 import json
-import time
+import time as pytime  # <- alias para evitar confusão com Consult.time
 import base64
 import secrets
 import mimetypes
@@ -11,11 +11,12 @@ from io import BytesIO
 from functools import wraps
 from datetime import datetime, timedelta
 from collections import defaultdict
-
+from typing import Any, Optional
 import weasyprint
 from dotenv import load_dotenv
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
+# ⚠️ REMOVIDO: from flask_login import login_required
 from flask import (
     Flask, render_template, request, redirect, url_for, session, flash, jsonify,
     get_flashed_messages, abort, send_file, send_from_directory, make_response, current_app
@@ -25,7 +26,7 @@ from werkzeug.utils import secure_filename
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from sqlalchemy import text, inspect, desc, or_
+from sqlalchemy import text, inspect, desc, or_, and_  # <- and_ adicionado
 from sqlalchemy.exc import OperationalError
 
 from google.oauth2.credentials import Credentials
@@ -52,8 +53,13 @@ from records import (
 
 from models import (
     db, User, Company, Supplier, Quote, QuoteResponse, Doctor, Consult, Patient,
-    QuizResult, PdfFile, DoctorAvailability, QuestionnaireResult
+    QuizResult, PdfFile, DoctorAvailability, QuestionnaireResult, DoctorDateAvailability
 )
+
+# --- Helpers de tipagem p/ SQLAlchemy (evita falsos positivos do Pylance) ---
+from typing import cast
+# Coluna TIME de Consult (pode ser NULL), usada em filtros com comparações
+TIME_COL = cast(Any, Consult.time)
 
 # ------------------------------------------------------------------------------
 # App & DB
@@ -61,11 +67,17 @@ from models import (
 load_dotenv()
 app = Flask(__name__)
 
-# DB config
-base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'instance'))
-os.makedirs(base_dir, exist_ok=True)
-db_path = os.path.join(base_dir, 'web.db')
+# DB/config dirs
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'instance'))
+os.makedirs(BASE_DIR, exist_ok=True)
+db_path = os.path.join(BASE_DIR, 'web.db')
 DATABASE_URL = os.getenv('DATABASE_URL') or f'sqlite:///{db_path}'
+
+# static dir + uploads (gerais)
+STATIC_DIR = os.path.join(app.root_path, 'static')
+os.makedirs(STATIC_DIR, exist_ok=True)
+UPLOAD_FOLDER = os.path.join(STATIC_DIR, 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -215,23 +227,9 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def is_plan_active(user):
-    if user.username.lower() == 'admin':
-        return True
-    if not getattr(user, 'plan', None) or getattr(user, 'plan_status', '') != 'active':
-        if getattr(user, 'trial_until', None) and user.trial_until >= datetime.utcnow():
-            return True
-        return False
-    if getattr(user, 'plan_expires_at', None) and user.plan_expires_at < datetime.utcnow():
-        return False
-    return True
-
+# Agora não precisamos mais validar plano, sempre libera
 def has_feature(user, feature):
-    req = FEATURES.get(feature, 99)
-    lvl = PLAN_LEVELS.get((getattr(user, 'plan', None) or 'standard'), 1)
-    if getattr(user, 'trial_until', None) and user.trial_until >= datetime.utcnow():
-        return True
-    return lvl >= req
+    return True
 
 def feature_required(feature):
     def inner(f):
@@ -240,33 +238,37 @@ def feature_required(feature):
             user = get_logged_user()
             if not user:
                 return redirect(url_for('login'))
-            if user.username.lower() == 'admin':
-                return f(*args, **kwargs)
-            if not is_plan_active(user):
-                flash('Sua assinatura está inativa ou expirada.', 'danger')
-                return redirect(url_for('plans', next=request.path))
-            if not has_feature(user, feature):
-                flash('Seu plano não dá acesso a esta funcionalidade. Faça upgrade.', 'warning')
-                return redirect(url_for('plans', next=request.path))
             return f(*args, **kwargs)
         return wrapper
     return inner
 
-# Expor helpers no Jinja
+# Expor helpers no Jinja (mantendo compatibilidade nos templates)
 app.jinja_env.globals.update(
     has_feature=has_feature,
-    PLAN_LEVELS=PLAN_LEVELS,
-    PLAN_PRICES=PLAN_PRICES,
     pdf_token=generate_pdf_token,
     make_pdf_token=generate_pdf_token
 )
+
+def parse_int(value: Any) -> Optional[int]:
+    try:
+        if value is None:
+            return None
+        if isinstance(value, str):
+            s = value.strip()
+            if s == "":
+                return None
+            return int(s)
+        return int(value)
+    except (TypeError, ValueError):
+        return None
 
 # ------------------------------------------------------------------------------
 # Public pages & auth
 # ------------------------------------------------------------------------------
 @app.route('/schedule_consultation')
 def schedule_consultation():
-    return render_template('schedule_consultation.html')
+    doctors = Doctor.query.order_by(Doctor.name).all()
+    return render_template('schedule_consultation.html', doctors=doctors)
 
 @app.route('/')
 def hero():
@@ -362,8 +364,6 @@ def login():
         else:
             session['user_id']  = user.id
             session['username'] = user.username
-            if not is_plan_active(user):
-                return redirect(url_for('plans'))
             return redirect(url_for('index'))
 
     return render_template('login.html', error=error)
@@ -543,7 +543,7 @@ def upload():
             diagnostic, prescription = result
 
             if not cpf:
-                cpf = f"no_cpf_{int(time.time())}"
+                cpf = f"no_cpf_{int(pytime.time())}"
 
             patient = add_patient(
                 name=name,
@@ -563,7 +563,7 @@ def upload():
             uploads_folder = os.path.join(app.root_path, "static", "uploads")
             os.makedirs(uploads_folder, exist_ok=True)
 
-            filename    = secure_filename(pdf_file.filename)
+            filename    = secure_filename(str(pdf_file.filename))
             upload_path = os.path.join(uploads_folder, filename)
             pdf_file.save(upload_path)
 
@@ -626,7 +626,7 @@ def upload():
 
         cpf_clean = (patient.cpf or '').replace('.', '').replace('-', '') if patient else ''
         if not cpf_clean:
-            cpf_clean = f"no_cpf_{int(time.time())}"
+            cpf_clean = f"no_cpf_{int(pytime.time())}"
 
         output_folder = os.path.join(app.root_path, "static", "output")
         os.makedirs(output_folder, exist_ok=True)
@@ -668,7 +668,7 @@ def upload():
     return render_template('upload.html')
 
 # ------------------------------------------------------------------------------
-# Pagamentos (Pacotes + Assinatura)
+# Pagamentos (Pacotes de Análises)
 # ------------------------------------------------------------------------------
 @app.route('/purchase', methods=['GET', 'POST'])
 def purchase():
@@ -679,78 +679,12 @@ def purchase():
         if not valor:
             flash('Selecione um pacote válido.', 'warning')
             return redirect(url_for('purchase'))
+
+        # Usa função existente para gerar link de pagamento (Mercado Pago, etc.)
         link = generate_payment_link(pacote, valor)
         return redirect(link or url_for('pagamento_falha'))
+
     return render_template('purchase.html')
-
-@app.route('/subscribe_pix', methods=['POST'])
-@login_required
-def subscribe_pix():
-    user = get_logged_user()
-    if not user:
-        return redirect(url_for('login'))
-
-    plan = (request.form.get('plan') or '').lower()
-    if plan not in PLAN_PRICES:
-        flash('Plano inválido.', 'danger')
-        return redirect(url_for('purchase'))
-
-    amount = PLAN_PRICES[plan]
-    txid = f"RAF-{secrets.token_hex(5).upper()}"
-    payload = build_pix_payload(
-        key=PIX_KEY, name=PIX_NAME, city=PIX_CITY, amount=amount,
-        txid=txid, description=f"{PIX_DESC} {plan.upper()}"
-    )
-    qr_b64 = make_qr_base64(payload)
-
-    return render_template(
-        'pix_checkout.html',
-        plan=plan, amount=amount, pix_key=PIX_KEY, pix_cnpj=PIX_CNPJ,
-        payload=payload, qr_b64=qr_b64, txid=txid
-    )
-
-@app.route('/confirm_pix', methods=['POST'])
-@login_required
-def confirm_pix():
-    user = get_logged_user()
-    if not user:
-        return redirect(url_for('login'))
-
-    plan = (request.form.get('plan') or '').lower()
-    txid = request.form.get('txid') or ''
-    file = request.files.get('receipt')
-
-    receipt_url = None
-    if file and file.filename:
-        folder = os.path.join(app.root_path, 'static', 'pix_receipts')
-        os.makedirs(folder, exist_ok=True)
-        fname = secure_filename(f"{user.id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{file.filename}")
-        saved_path = os.path.join(folder, fname)
-        file.save(saved_path)
-        receipt_url = url_for('static', filename=f'pix_receipts/{fname}', _external=True)
-
-    try:
-        send_pix_receipt_admin(
-            admin_phone=ADMIN_WHATSAPP,
-            user_name=user.username,
-            user_id=user.id,
-            user_email=getattr(user, "email", "") or "",
-            plan=plan,
-            amount=PLAN_PRICES.get(plan, 0.0),
-            txid=txid,
-            receipt_url=receipt_url,
-            payload_text=request.form.get('payload')
-        )
-    except Exception as e:
-        app.logger.error(f"[pix] falha ao notificar admin no WhatsApp: {e}")
-
-    user.plan = plan if plan in PLAN_PRICES else 'standard'
-    user.plan_status = 'pending'
-    user.plan_expires_at = None
-    db.session.commit()
-
-    flash('Comprovante recebido! Sua assinatura ficará ativa assim que validarmos o pagamento.', 'success')
-    return redirect(url_for('plans'))
 
 # ------------------------------------------------------------------------------
 # Agenda / disponibilidade
@@ -773,6 +707,250 @@ def api_doctors():
 def _br_to_date(s: str):
     return datetime.strptime(s, '%d/%m/%Y').date()
 
+@app.route('/admin/doctor/<int:doctor_id>/delete', methods=['POST'])
+@login_required
+def delete_doctor_route(doctor_id):
+    doc = Doctor.query.get(doctor_id)
+    if not doc:
+        return jsonify({"ok": False, "error": "Médico não encontrado."}), 404
+
+    try:
+        DoctorDateAvailability.query.filter_by(doctor_id=doctor_id).delete(synchronize_session=False)
+        DoctorAvailability.query.filter_by(doctor_id=doctor_id).delete(synchronize_session=False)
+        Patient.query.filter_by(doctor_id=doctor_id).update({"doctor_id": None}, synchronize_session=False)
+        Consult.query.filter_by(doctor_id=doctor_id).delete(synchronize_session=False)
+        db.session.delete(doc)
+        db.session.commit()
+        return jsonify({"ok": True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+@app.route('/availability', methods=['GET', 'POST'])
+@login_required
+def availability():
+    # Apenas admin
+    user = get_logged_user()
+    if not user or user.username.lower() != 'admin':
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+
+    raw_doctor_id = request.args.get('doctor_id')  # Optional[str]
+
+    if request.method == 'POST':
+        data = request.get_json(silent=True) or {}
+        if raw_doctor_id is None:
+            raw_doctor_id = data.get('doctor_id')
+
+        doctor_id = parse_int(raw_doctor_id)
+        if doctor_id is None:
+            return jsonify({"ok": False, "error": "doctor_id inválido"}), 400
+
+        blocks = data.get('blocks') or []
+        if not isinstance(blocks, list):
+            return jsonify({"ok": False, "error": "`blocks` deve ser uma lista"}), 400
+
+        new_rows = []
+        for i, b in enumerate(blocks):
+            if not isinstance(b, dict):
+                return jsonify({"ok": False, "error": f"blocks[{i}] deve ser um objeto"}), 400
+
+            weekday = parse_int(b.get('weekday'))
+            if weekday is None or weekday < 0 or weekday > 6:
+                return jsonify({"ok": False, "error": f"blocks[{i}].weekday inválido (0..6)"}), 400
+
+            start_raw = str(b.get('start', ''))
+            end_raw   = str(b.get('end', ''))
+            try:
+                start_t = datetime.strptime(start_raw, '%H:%M').time()
+                end_t   = datetime.strptime(end_raw,   '%H:%M').time()
+            except ValueError:
+                return jsonify({"ok": False, "error": f"blocks[{i}] horários inválidos (use HH:MM)"}), 400
+
+            slot = parse_int(b.get('slot'))
+            if slot is None or slot <= 0:
+                slot = 30
+
+            if end_t <= start_t:
+                return jsonify({"ok": False, "error": f"blocks[{i}] end deve ser maior que start"}), 400
+
+            new_rows.append(
+                DoctorAvailability(
+                    doctor_id=doctor_id,
+                    weekday=weekday,
+                    start_time=start_t,
+                    end_time=end_t,
+                    slot_minutes=slot
+                )
+            )
+
+        DoctorAvailability.query.filter_by(doctor_id=doctor_id).delete(synchronize_session=False)
+        db.session.add_all(new_rows)
+        db.session.commit()
+        return jsonify({"ok": True})
+
+    # GET: listar disponibilidade de um médico
+    doctor_id = parse_int(raw_doctor_id)
+    if doctor_id is None:
+        return jsonify([])
+
+    rows = DoctorAvailability.query.filter_by(doctor_id=doctor_id).all()
+    return jsonify([
+        {
+            "weekday": r.weekday,
+            "start": r.start_time.strftime('%H:%M'),
+            "end":   r.end_time.strftime('%H:%M'),
+            "slot":  r.slot_minutes
+        } for r in rows
+    ])
+
+DID_COL  = cast(Any, Consult.doctor_id)  
+DATE_COL = cast(Any, Consult.date)       
+TIME_COL = cast(Any, Consult.time)      
+DA_DID_COL  = cast(Any, DoctorDateAvailability.doctor_id)
+
+@app.route('/availability_dates', methods=['GET', 'POST'])
+@login_required
+def availability_dates():
+    # apenas admin
+    user = get_logged_user()
+    if not user or user.username.lower() != 'admin':
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+
+    raw_doctor_id = request.args.get('doctor_id') or (request.get_json(silent=True) or {}).get('doctor_id')
+    doctor_id = parse_int(raw_doctor_id)
+    if doctor_id is None:
+        return jsonify({"ok": False, "error": "doctor_id inválido"}), 400
+
+    if request.method == 'GET':
+        rows = DoctorDateAvailability.query.filter_by(doctor_id=doctor_id).order_by(
+            DoctorDateAvailability.day.asc(), DoctorDateAvailability.start_time.asc()
+        ).all()
+        return jsonify([
+            {
+                "id": r.id,
+                "day": r.day.strftime('%d/%m/%Y'),
+                "start": r.start_time.strftime('%H:%M'),
+                "end": r.end_time.strftime('%H:%M'),
+                "slot": r.slot_minutes
+            } for r in rows
+        ])
+
+    data = request.get_json(silent=True) or {}
+    blocks = data.get('blocks') or []
+    if not isinstance(blocks, list):
+        return jsonify({"ok": False, "error": "`blocks` deve ser lista"}), 400
+    
+    print("[availability_dates] received blocks:", data)
+
+    # capturar blocos antigos p/ descobrir quais foram removidos
+    old_rows = DoctorDateAvailability.query.filter_by(doctor_id=doctor_id).all()
+    old_set = {
+        (r.day, r.start_time.strftime('%H:%M'), r.end_time.strftime('%H:%M'))
+        for r in old_rows
+    }
+
+    new_rows = []
+    new_set = set()
+    for i, b in enumerate(blocks):
+        try:
+            day_pt = str(b.get('day', '')).strip()          # dd/mm/aaaa
+            start_raw = str(b.get('start', '')).strip()     # HH:MM
+            end_raw = str(b.get('end', '')).strip()         # HH:MM
+            slot = parse_int(b.get('slot')) or 30
+
+            day = datetime.strptime(day_pt, '%d/%m/%Y').date()
+            start_t = datetime.strptime(start_raw, '%H:%M').time()
+            end_t = datetime.strptime(end_raw, '%H:%M').time()
+            if end_t <= start_t:
+                return jsonify({"ok": False, "error": f"blocks[{i}] end deve ser > start"}), 400
+
+            new_rows.append(DoctorDateAvailability(
+                doctor_id=doctor_id,
+                day=day,
+                start_time=start_t,
+                end_time=end_t,
+                slot_minutes=slot
+            ))
+            new_set.add((day, start_raw, end_raw))
+        except Exception as e:
+            return jsonify({"ok": False, "error": f"blocks[{i}] inválido ({e})"}), 400
+
+    # sobrescrever
+    DoctorDateAvailability.query.filter_by(doctor_id=doctor_id).delete(synchronize_session=False)
+
+    for nr in new_rows:
+        db.session.add(nr)
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"ok": False, "error": f"Erro ao salvar disponibilidade: {e}"}), 500
+
+    # identificar blocos removidos e apagar consultas dentro deles
+    removed = old_set - new_set
+    for day, start_s, end_s in removed:
+        s_t = datetime.strptime(start_s, '%H:%M').time()
+        e_t = datetime.strptime(end_s, '%H:%M').time()
+        Consult.query.filter(
+            and_(
+                DID_COL == doctor_id,
+                DATE_COL == day,
+                TIME_COL.isnot(None),
+                TIME_COL >= s_t,
+                TIME_COL <  e_t,
+            )
+        ).delete(synchronize_session=False)
+    db.session.commit()
+
+    return jsonify({"ok": True})
+
+@app.route('/api/available_days')
+def api_available_days():
+    doctor_id = request.args.get('doctor_id', type=int)
+    days_ahead = request.args.get('days', default=45, type=int)
+    if not doctor_id:
+        return jsonify([])
+
+    today = datetime.utcnow().date()
+    end_day = today + timedelta(days=days_ahead)
+
+    day_rows = DoctorDateAvailability.query.filter(
+        DA_DID_COL == doctor_id,
+        DoctorDateAvailability.day >= today,
+        DoctorDateAvailability.day <= end_day
+    ).all()
+
+    by_day = {}
+    for r in day_rows:
+        by_day.setdefault(r.day, []).append(r)
+
+    result = []
+    for day, blocks in sorted(by_day.items()):
+        taken = {
+            c.time.strftime('%H:%M')
+            for c in Consult.query.filter_by(doctor_id=doctor_id, date=day)
+                                  .filter(Consult.time != None).all()
+        }
+
+        free_count = 0
+        for b in blocks:
+            cur = datetime.combine(day, b.start_time)
+            end = datetime.combine(day, b.end_time)
+            step = timedelta(minutes=b.slot_minutes or 30)
+            while cur <= end - step + timedelta(seconds=1):
+                hm = cur.strftime('%H:%M')
+                if hm not in taken:
+                    free_count += 1
+                cur += step
+
+        if free_count > 0:
+            # 🔴 Aqui antes retornava `day.isoformat()` ou similar
+            result.append(day.strftime('%d/%m/%Y'))
+
+    return jsonify(result)
+
+
 @app.route('/api/available_slots')
 def api_available_slots():
     doctor_id = request.args.get('doctor_id', type=int)
@@ -780,16 +958,20 @@ def api_available_slots():
     if not doctor_id or not date_str:
         return jsonify([])
 
-    day = _br_to_date(date_str)
-    weekday = day.weekday()
+    try:
+        day = datetime.strptime(date_str, '%d/%m/%Y').date()
+    except ValueError:
+        return jsonify([])
 
-    blocks = DoctorAvailability.query.filter_by(doctor_id=doctor_id, weekday=weekday).all()
+    blocks = DoctorDateAvailability.query.filter_by(doctor_id=doctor_id, day=day).all()
     if not blocks:
+        # nada cadastrado pra essa data -> nada disponível
         return jsonify([])
 
     taken = {
         c.time.strftime('%H:%M')
-        for c in Consult.query.filter_by(doctor_id=doctor_id, date=day).filter(Consult.time != None).all()
+        for c in Consult.query.filter_by(doctor_id=doctor_id, date=day)
+                              .filter(TIME_COL.isnot(None)).all()
     }
 
     free = []
@@ -805,76 +987,31 @@ def api_available_slots():
 
     return jsonify(sorted(free))
 
-@app.route('/availability', methods=['GET', 'POST'])
+@app.route('/admin/availability')
 @login_required
-def availability():
-    # usa o usuário autenticado via sessão
+def admin_availability_page():
     user = get_logged_user()
-    if not user:
-        return jsonify({"ok": False, "error": "unauthorized"}), 401
-    doc_id = user.id
-
-    if request.method == 'POST':
-        data = request.get_json(silent=True) or {}
-        blocks = data.get('blocks') or []
-        if not isinstance(blocks, list):
-            return jsonify({"ok": False, "error": "`blocks` deve ser uma lista"}), 400
-
-        new_rows = []
-        for i, b in enumerate(blocks):
-            if not isinstance(b, dict):
-                return jsonify({"ok": False, "error": f"blocks[{i}] deve ser um objeto"}), 400
-            try:
-                weekday = int(b.get('weekday'))  # type: ignore
-            except (TypeError, ValueError):
-                return jsonify({"ok": False, "error": f"blocks[{i}].weekday inválido"}), 400
-            if weekday < 0 or weekday > 6:
-                return jsonify({"ok": False, "error": f"blocks[{i}].weekday fora do intervalo 0..6"}), 400
-            try:
-                start_t = datetime.strptime(str(b.get('start', '')), '%H:%M').time()
-                end_t   = datetime.strptime(str(b.get('end', '')), '%H:%M').time()
-            except ValueError:
-                return jsonify({"ok": False, "error": f"blocks[{i}] horários inválidos (use HH:MM)"}), 400
-            try:
-                slot = int(b.get('slot', 30))
-            except (TypeError, ValueError):
-                slot = 30
-            if end_t <= start_t:
-                return jsonify({"ok": False, "error": f"blocks[{i}] end deve ser maior que start"}), 400
-
-            new_rows.append(
-                DoctorAvailability(
-                    doctor_id=doc_id, weekday=weekday,
-                    start_time=start_t, end_time=end_t, slot_minutes=slot
-                )
-            )
-
-        DoctorAvailability.query.filter_by(doctor_id=doc_id).delete(synchronize_session=False)
-        db.session.add_all(new_rows)
-        db.session.commit()
-        return jsonify({"ok": True})
-
-    rows = DoctorAvailability.query.filter_by(doctor_id=doc_id).all()
-    return jsonify([
-        {
-            "weekday": r.weekday,
-            "start": r.start_time.strftime('%H:%M'),
-            "end":   r.end_time.strftime('%H:%M'),
-            "slot":  r.slot_minutes
-        } for r in rows
-    ])
+    if not user or user.username.lower() != 'admin':
+        flash('Acesso negado.', 'danger')
+        return redirect(url_for('login'))
+    docs = Doctor.query.order_by(Doctor.name).all()
+    return render_template('admin_availability.html', doctors=docs, user=user)
 
 # ------------------------------------------------------------------------------
 # Companies / PDFs (admin)
 # ------------------------------------------------------------------------------
 ALLOWED_EXTENSIONS = {'pdf'}
-PDF_UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'uploads', 'pdfs')
+PDF_UPLOAD_DIR = os.path.join(app.root_path, 'uploads', 'pdfs')  # repositório admin
 os.makedirs(PDF_UPLOAD_DIR, exist_ok=True)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+# ---------------------------
+# Admin — empresas (criar & listar)
+# ---------------------------
 @app.route('/admin/companies', methods=['GET', 'POST'])
+@login_required
 def admin_companies():
     user = get_logged_user()
     if not user or user.username.lower() != 'admin':
@@ -882,53 +1019,106 @@ def admin_companies():
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        name = request.form.get('company_name', '').strip()
-        code = request.form.get('access_code', '').strip()
-        if not (name and code):
-            flash('Nome e código são obrigatórios.', 'warning')
-        else:
-            exists = Company.query.filter_by(access_code=code).first()
-            if exists:
-                flash(f'Empresa com código "{code}" já existe.', 'warning')
-            else:
-                db.session.add(Company(name=name, access_code=code))
-                db.session.commit()
-                flash(f'Empresa "{name}" criada com sucesso!', 'success')
+        name = (request.form.get('name') or '').strip()
+        code = (request.form.get('code') or '').strip()
+        if not name:
+            flash('Nome da empresa é obrigatório.', 'danger')
+            return redirect(url_for('admin_companies'))
+        comp = Company(name=name, access_code=code)
+        db.session.add(comp)
+        db.session.commit()
+        flash('Empresa criada com sucesso!', 'success')
         return redirect(url_for('admin_companies'))
 
     companies = Company.query.order_by(Company.name).all()
-    personal_users = User.query.filter(User.company_id.is_(None)).order_by(User.id).all()  # type: ignore
-    pdfs = PdfFile.query.order_by(PdfFile.uploaded_at.desc()).all()
-    return render_template('admin_companies.html', pdfs=pdfs, companies=companies, personal_users=personal_users)
+    users = User.query.order_by(User.id).all()  # <<<<<<<<<< ADICIONE ESTA LINHA
 
-@app.post('/pdfs/add')
-def add_pdf():
+    return render_template(
+        'admin_companies.html',
+        companies=companies,
+        users=users
+    )
+
+# ---------------------------
+# Admin — deletar empresa
+# ---------------------------
+@app.route('/admin/companies/<int:company_id>/delete', methods=['POST'])
+@login_required
+def delete_company(company_id):
     user = get_logged_user()
     if not user or user.username.lower() != 'admin':
-        abort(403)
+        flash('Acesso negado.', 'danger')
+        return redirect(url_for('login'))
 
-    file = request.files.get('pdf_file')
-    if not file or file.filename == '':
-        flash('Selecione um arquivo PDF.')
-        return redirect(url_for('admin_companies'))
-    if not allowed_file(file.filename):
-        flash('Apenas PDFs são permitidos.')
+    comp = Company.query.get(company_id)
+    if not comp:
+        flash('Empresa não encontrada.', 'warning')
         return redirect(url_for('admin_companies'))
 
-    file.stream.seek(0)
-    original = secure_filename(file.filename or "")
-    ts = int(time.time())
-    disk_name = f'{ts}_{original}'
-    save_path = os.path.join(PDF_UPLOAD_DIR, disk_name)
-    file.save(save_path)
+    db.session.delete(comp)
+    db.session.commit()
+    flash('Empresa removida.', 'success')
+    return redirect(url_for('admin_companies'))
 
-    size_bytes = os.path.getsize(save_path)
-    pdf = PdfFile(filename=disk_name, original_name=original, size_bytes=size_bytes)
+# ---------------------------
+# Admin — repositório de PDFs (página separada)
+# ---------------------------
+@app.route('/admin/pdfs', methods=['GET'])
+@login_required
+def admin_pdfs():
+    user = get_logged_user()
+    if not user or user.username.lower() != 'admin':
+        flash('Acesso negado.', 'danger')
+        return redirect(url_for('login'))
+
+    pdfs = []
+    if 'PdfFile' in globals():
+        q = PdfFile.query
+        if hasattr(PdfFile, 'created_at'):
+            # evita acesso direto ao atributo p/ satisfazer o Pylance
+            q = q.order_by(desc(getattr(PdfFile, 'created_at')))
+        elif hasattr(PdfFile, 'id'):
+            q = q.order_by(desc(getattr(PdfFile, 'id')))
+        pdfs = q.all()
+
+    return render_template('admin_pdfs.html', pdfs=pdfs, upload_url=url_for('upload_pdf'))
+
+# ---------------------------
+# Admin — upload de PDF (salva em PDF_UPLOAD_DIR)
+# ---------------------------
+@app.route('/admin/pdfs/upload', methods=['POST'])
+@login_required
+def upload_pdf():
+    user = get_logged_user()
+    if not user or user.username.lower() != 'admin':
+        flash('Acesso negado.', 'danger')
+        return redirect(url_for('login'))
+
+    f = request.files.get('file')
+    if f is None or not getattr(f, 'filename', None):
+        flash('Selecione um arquivo.', 'danger')
+        return redirect(url_for('admin_pdfs'))
+
+    original_name = str(f.filename)
+    filename = secure_filename(original_name)
+    if not filename:
+        flash('Nome de arquivo inválido.', 'danger')
+        return redirect(url_for('admin_pdfs'))
+
+    disk_path = os.path.join(PDF_UPLOAD_DIR, filename)
+    f.save(disk_path)
+
+    try:
+        size_bytes = os.path.getsize(disk_path)
+    except OSError:
+        size_bytes = 0
+
+    pdf = PdfFile(filename=filename, original_name=original_name, size_bytes=size_bytes)
     db.session.add(pdf)
     db.session.commit()
 
-    flash('PDF enviado com sucesso.')
-    return redirect(url_for('admin_companies'))
+    flash('Arquivo enviado com sucesso!', 'success')
+    return redirect(url_for('admin_pdfs'))
 
 @app.get('/pdfs/view/<int:file_id>')
 def view_pdf(file_id):
@@ -947,32 +1137,38 @@ def download_pdf_admin(file_id):
     if not user or user.username.lower() != 'admin':
         abort(403)
     pdf = PdfFile.query.get_or_404(file_id)
-    resp = make_response(send_from_directory(PDF_UPLOAD_DIR, pdf.filename, as_attachment=True, download_name=pdf.original_name))
+    resp = make_response(send_from_directory(PDF_UPLOAD_DIR, pdf.filename, as_attachment=True, download_name=getattr(pdf, 'original_name', pdf.filename)))
     resp.headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
     resp.headers['Cache-Control'] = 'private, no-store, max-age=0'
     return resp
 
-@app.post('/pdfs/delete/<int:file_id>')
-def delete_pdf(file_id):
+@app.route('/admin/pdfs/<int:pdf_id>/delete', methods=['POST'])
+@login_required
+def delete_pdf(pdf_id):
     user = get_logged_user()
     if not user or user.username.lower() != 'admin':
-        abort(403)
+        flash('Acesso negado.', 'danger')
+        return redirect(url_for('login'))
 
-    pdf = PdfFile.query.get_or_404(file_id)
-    path = os.path.join(PDF_UPLOAD_DIR, pdf.filename)
+    if 'PdfFile' not in globals():
+        flash('Modelo PdfFile não encontrado.', 'danger')
+        return redirect(url_for('admin_pdfs'))
+
+    pdf = PdfFile.query.get(pdf_id)
+    if not pdf:
+        flash('Arquivo não encontrado.', 'warning')
+        return redirect(url_for('admin_pdfs'))
 
     try:
-        if os.path.exists(path):
-            os.remove(path)
-        db.session.delete(pdf)
-        db.session.commit()
-        flash('PDF excluído com sucesso.', 'success')
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f'[pdfs/delete] erro ao excluir: {e}')
-        flash('Erro ao excluir o PDF.', 'danger')
+        if getattr(pdf, 'path', None) and os.path.exists(pdf.path):
+            os.remove(pdf.path)
+    except Exception:
+        pass
 
-    return redirect(url_for('admin_companies'))
+    db.session.delete(pdf)
+    db.session.commit()
+    flash('Arquivo removido.', 'success')
+    return redirect(url_for('admin_pdfs'))
 
 # Secure by token
 @app.get('/pdfs/secure/<token>')
@@ -992,7 +1188,7 @@ def pdf_secure_download(token):
     if not file_id:
         abort(403)
     pdf = PdfFile.query.get_or_404(file_id)
-    resp = make_response(send_from_directory(PDF_UPLOAD_DIR, pdf.filename, as_attachment=True, download_name=pdf.original_name))
+    resp = make_response(send_from_directory(PDF_UPLOAD_DIR, pdf.filename, as_attachment=True, download_name=getattr(pdf, 'original_name', pdf.filename)))
     resp.headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
     resp.headers['Cache-Control'] = 'private, no-store, max-age=0'
     return resp
@@ -1024,15 +1220,19 @@ def list_users():
 def add_doctor_route():
     user = get_logged_user()
     if not user:
-        return redirect(url_for('login'))
-    name = request.form.get('name', '').strip()
-    phone = request.form.get('phone', '').strip()
+        return jsonify(ok=False, error="Unauthorized"), 403
+
+    data = request.get_json(silent=True) or {}
+    name = (data.get('name') or request.form.get('name') or '').strip()
+    specialty = (data.get('specialty') or request.form.get('specialty') or '').strip()
+
     if not name:
-        flash('Nome e CRM são obrigatórios.', 'warning')
-        return redirect(url_for('upload'))
-    add_doctor(name=name, phone=phone)
-    flash('Médico adicionado com sucesso.', 'success')
-    return redirect(url_for('upload'))
+        return jsonify(ok=False, error="Nome do médico é obrigatório"), 400
+
+    # registra no banco
+    doctor = add_doctor(name=name, phone=None)
+    return jsonify(ok=True, doctor={"id": doctor.id, "name": doctor.name})
+
 
 @app.route('/save_consult/<int:patient_id>', methods=['POST'])
 @login_required
@@ -1700,34 +1900,96 @@ def api_add_consult():
 
 @app.route('/submit_patient_consultation', methods=['POST'])
 def submit_patient_consultation():
-    name  = request.form.get('name','').strip()
-    cpf   = request.form.get('cpf','').strip()
-    phone = request.form.get('phone','').strip()
-    start = request.form.get('start','')
-    if not start:
-        return "Data de início ausente", 400
+    """
+    Agendamento público (página Agendar Consulta) — valida contra DoctorDateAvailability
+    e grava a consulta. Cria o paciente automaticamente.
+    """
+    name     = (request.form.get('name')  or '').strip()
+    cpf      = (request.form.get('cpf')   or '').strip()
+    phone    = (request.form.get('phone') or '').strip()
+    doctor_id = request.form.get('doctor_id', type=int)
+    date_br   = (request.form.get('date') or '').strip()   # dd/mm/aaaa
+    time_hm   = (request.form.get('time') or '').strip()   # HH:MM
+
+    if not (name and doctor_id and date_br and time_hm):
+        return "Campos obrigatórios ausentes.", 400
+
+    # Converter data e hora
+    try:
+        day = datetime.strptime(date_br, "%d/%m/%Y").date()
+    except ValueError:
+        return "Data inválida. Use dd/mm/aaaa.", 400
 
     try:
-        date_part, time_part = start.split('T')
-        day, month, year     = date_part.split('/')
-        date_iso             = f"{year}-{month}-{day}"
-        hh, mm               = map(int, time_part.split(':'))
-        start_iso            = f"{date_iso}T{hh:02d}:{mm:02d}:00"
-        end_iso              = f"{date_iso}T{(hh+1)%24:02d}:{mm:02d}:00"
-    except Exception:
-        return "Formato inválido", 400
+        t = datetime.strptime(time_hm, '%H:%M').time()
+    except ValueError:
+        return "Horário inválido. Use HH:MM.", 400
+
+    # 1) Buscar blocos explícitos para a DATA escolhida
+    blocks = DoctorDateAvailability.query.filter_by(doctor_id=doctor_id, day=day).all()
+    if not blocks:
+        return "Médico sem disponibilidade nessa data.", 409
+
+    # 2) Calcular todos os slots disponíveis do(s) bloco(s) do dia
+    free = set()
+    for b in blocks:
+        cur  = datetime.combine(day, b.start_time)
+        end  = datetime.combine(day, b.end_time)
+        step = timedelta(minutes=b.slot_minutes or 30)
+        # inclui o último slot que termina exatamente em end
+        while cur <= end - step + timedelta(seconds=1):
+            free.add(cur.strftime('%H:%M'))
+            cur += step
+
+    if time_hm not in free:
+        return "Horário fora da disponibilidade.", 409
+
+    # 3) Checar se já está ocupado
+    taken = {
+        c.time.strftime('%H:%M')
+        for c in Consult.query.filter_by(doctor_id=doctor_id, date=day)
+                              .filter(TIME_COL.isnot(None)).all()
+    }
+    if time_hm in taken:
+        return "Horário já reservado.", 409
+
+    # 4) Criar paciente e consulta
+    patient = add_patient(
+        name=name, age=None, cpf=cpf or None, gender=None, phone=phone or None,
+        doctor_id=doctor_id, prescription=None
+    )
+
+    c = Consult(
+        patient_id=patient.id,
+        doctor_id=doctor_id,
+        date=day,
+        time=t,
+        notes=f"Consulta — {name}"
+    )
+    db.session.add(c)
+    db.session.commit()
+
+    # 5) Agendar no Google Calendar do admin (duração = slot do bloco correspondente; fallback 60 min)
+    slot_minutes = 60
+    for b in blocks:
+        if b.start_time <= t < b.end_time:
+            slot_minutes = b.slot_minutes or 60
+            break
+
+    start_iso = datetime.combine(day, t).strftime("%Y-%m-%dT%H:%M:%S")
+    end_iso   = (datetime.combine(day, t) + timedelta(minutes=slot_minutes)).strftime("%Y-%m-%dT%H:%M:%S")
+
+    doctor = Doctor.query.get(doctor_id)
+    summary = f"Consulta — {name} (Dr(a). {doctor.name})" if doctor else f"Consulta — {name}"
+    description = f"CPF: {cpf}\nTelefone: {phone}\nData: {date_br}\nHorário: {time_hm}"
 
     try:
-        create_user_event(
-            summary=f"Consulta Agendada: {name}",
-            start_datetime=start_iso,
-            end_datetime=end_iso,
-            description=f"CPF: {cpf}\nTel: {phone}"
-        )
-        return redirect(url_for('hero'))
+        create_admin_event(summary=summary, start_datetime=start_iso, end_datetime=end_iso, description=description)
     except Exception as e:
-        app.logger.error(f"Erro ao agendar no Google: {e}")
-        return "Erro ao agendar", 500
+        current_app.logger.error(f"[Calendar] Erro ao agendar no calendário do admin: {e}")
+        return redirect(url_for('hero'))
+
+    return redirect(url_for('hero'))
 
 @app.route('/authorize_calendar')
 def authorize_calendar():
@@ -1758,6 +2020,7 @@ def oauth2callback():
     )
     flow.fetch_token(authorization_response=request.url)
     creds = flow.credentials  # type: ignore
+
     session["credentials"] = {
         "token": creds.token,
         "refresh_token": creds.refresh_token,
@@ -1766,7 +2029,24 @@ def oauth2callback():
         "client_secret": creds.client_secret,
         "scopes": creds.scopes,
     }
+
+    u = get_logged_user()
+    if u and u.username.lower() == 'admin':
+        admin_creds_path = os.path.join(BASE_DIR, 'admin_google_creds.json')
+        with open(admin_creds_path, 'w') as f:
+            f.write(creds.to_json())
+
     return redirect(url_for("agenda"))
+
+@app.after_request
+def no_cache_for_availability(resp):
+    if request.path.startswith(('/api/available_slots',
+                                '/api/available_days',
+                                '/availability')):
+        resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        resp.headers['Pragma'] = 'no-cache'
+        resp.headers['Expires'] = '0'
+    return resp
 
 def create_user_event(summary: str, start_datetime: str, end_datetime: str, description: str) -> None:
     info = session.get("credentials")
@@ -1798,29 +2078,89 @@ def api_events():
             events.append({"title": c.notes or "Consulta", "start": c.date.isoformat(), "allDay": True})
     return jsonify(events)
 
+def create_admin_event(summary: str, start_datetime: str, end_datetime: str, description: str) -> None:
+    """
+    Usa as credenciais persistidas do admin (instance/admin_google_creds.json)
+    para criar um evento no calendário principal dele.
+    """
+    admin_creds_path = os.path.join(BASE_DIR, 'admin_google_creds.json')
+    if not os.path.exists(admin_creds_path):
+        raise Exception("Admin ainda não autorizou o Google Calendar. Entre como admin e acesse /authorize_calendar.")
+
+    from google.oauth2.credentials import Credentials as OAuthCreds
+    with open(admin_creds_path, 'r') as f:
+        admin_json = f.read()
+    creds = OAuthCreds.from_authorized_user_info(json.loads(admin_json))
+
+    service = build("calendar", "v3", credentials=creds)
+    event = {
+        "summary":     summary,
+        "description": description,
+        "start": {"dateTime": start_datetime, "timeZone": "America/Sao_Paulo"},
+        "end":   {"dateTime": end_datetime,   "timeZone": "America/Sao_Paulo"},
+    }
+    service.events().insert(calendarId='primary', body=event).execute()
+
 @app.route('/submit_consultation', methods=['POST'])
 def submit_consultation():
+    """
+    Agendamento interno (ex.: agenda/admin) — valida contra DoctorDateAvailability
+    e grava a consulta. Cria o paciente se não foi informado.
+    """
     patient_id = request.form.get('patient_id', type=int)
     doctor_id  = request.form.get('doctor_id', type=int)
-    date_str   = request.form.get('date')
-    time_str   = request.form.get('time', '').strip()
-    notes      = request.form.get('title', '').strip()
+    date_str   = (request.form.get('date') or '').strip()   # dd/mm/aaaa
+    time_str   = (request.form.get('time') or '').strip()   # HH:MM (opcional)
+    notes      = (request.form.get('title') or '').strip()
 
     if not doctor_id or not date_str or not notes:
         return "Missing fields", 400
 
-    day = _br_to_date(date_str)
+    # Data BR
+    try:
+        day = datetime.strptime(date_str, '%d/%m/%Y').date()
+    except ValueError:
+        return "Invalid date (use dd/mm/aaaa)", 400
+
+    # Hora (opcional)
     t = None
     if time_str:
-        t = datetime.strptime(time_str, '%H:%M').time()
+        try:
+            t = datetime.strptime(time_str, '%H:%M').time()
+        except ValueError:
+            return "Invalid time (use HH:MM)", 400
 
+    # Se houver horário, validar contra blocos da DATA (não mais por weekday)
     if t:
-        exists = Consult.query.filter_by(doctor_id=doctor_id, date=day, time=t).first()
-        if exists:
+        blocks = DoctorDateAvailability.query.filter_by(doctor_id=doctor_id, day=day).all()
+        if not blocks:
+            return "No availability for this date", 409
+
+        # slots já ocupados nesse dia
+        taken = {
+            c.time.strftime('%H:%M')
+            for c in Consult.query.filter_by(doctor_id=doctor_id, date=day)
+                                  .filter(TIME_COL.isnot(None)).all()
+        }
+
+        # construir set de horários livres com base nos blocos
+        free = set()
+        for b in blocks:
+            cur  = datetime.combine(day, b.start_time)
+            end  = datetime.combine(day, b.end_time)
+            step = timedelta(minutes=b.slot_minutes or 30)
+            while cur <= end - step + timedelta(seconds=1):
+                free.add(cur.strftime('%H:%M'))
+                cur += step
+
+        if time_str not in free:
+            return "Selected time is outside availability", 409
+        if time_str in taken:
             return "Slot already taken", 409
 
+    # Criar paciente se não veio ID
     if not patient_id:
-        p = Patient(name=notes or "Paciente", status='Ativo')
+        p = Patient(name=notes or "Paciente", status='Ativo', doctor_id=doctor_id)
         db.session.add(p)
         db.session.flush()
         patient_id = p.id
@@ -1829,6 +2169,7 @@ def submit_consultation():
     db.session.add(c)
     db.session.commit()
     return "ok", 200
+
 
 # ------------------------------------------------------------------------------
 # Quiz (Autoavaliação)

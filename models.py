@@ -302,3 +302,18 @@ class QuestionnaireResult(db.Model):
             **(self.raw_payload or {})
         }
 
+class DoctorDateAvailability(db.Model):
+    __tablename__ = 'doctor_date_availability'
+    id = db.Column(db.Integer, primary_key=True)
+    doctor_id = db.Column(db.Integer, index=True, nullable=False)
+    day = db.Column(db.Date, index=True, nullable=False)
+    start_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False)
+    slot_minutes = db.Column(db.Integer, nullable=False, default=30)
+
+    def __init__(self, doctor_id: int, day, start_time, end_time, slot_minutes: int = 30):
+        self.doctor_id = doctor_id
+        self.day = day
+        self.start_time = start_time
+        self.end_time = end_time
+        self.slot_minutes = slot_minutes
