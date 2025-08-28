@@ -15,3 +15,6 @@ google-auth>=2.0.0
 google-api-python-client>=2.0.0
 google-auth-oauthlib>=0.5.0
 qrcode[pil]
+Flask-Migrate==4.0.5
+alembic>=1.13.0
+
