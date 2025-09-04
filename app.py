@@ -319,8 +319,6 @@ def terms():
 def register():
     if request.method == 'GET':
         coming_from_register_post = session.pop('register_flash', None)
-        if not coming_from_register_post:
-            get_flashed_messages()
         return render_template('register.html')
 
     username     = (request.form.get('username', '')).strip()

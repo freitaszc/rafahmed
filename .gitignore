@@ -33,3 +33,18 @@ keys/
 .vscode/
 .idea/
 
+# Flask instance folder (local configs, SQLite DBs, etc.)
+instance/
+
+# Alembic cache
+migrations/versions/__pycache__/
+
+# SQLite databases
+*.db
+*.sqlite3
+
+# WeasyPrint / temp files (if your project generates PDFs)
+*.pdf
+tmp/
+temp/
+
