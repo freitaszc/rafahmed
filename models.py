@@ -4,6 +4,7 @@ from typing import Optional
 
 db = SQLAlchemy()
 
+
 class User(db.Model):
     __tablename__ = 'users'
     id            = db.Column(db.Integer, primary_key=True)
@@ -15,10 +16,10 @@ class User(db.Model):
     profile_image = db.Column(db.String(200), default='images/user-icon.png')
     company_id    = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=True)
     company       = db.relationship('Company', backref='users')
-    plan = db.Column(db.String(20), default='standard')        
-    plan_status = db.Column(db.String(20), default='inactive')
-    plan_expires_at = db.Column(db.DateTime, nullable=True)      
-    trial_until = db.Column(db.DateTime, nullable=True)
+    plan          = db.Column(db.String(20), default='standard')
+    plan_status   = db.Column(db.String(20), default='inactive')
+    plan_expires_at = db.Column(db.DateTime, nullable=True)
+    trial_until     = db.Column(db.DateTime, nullable=True)
 
     def __init__(self, username: str, email: str, password_hash: str,
                  name: Optional[str] = None, birthdate: Optional[date] = None,
@@ -45,13 +46,14 @@ class Company(db.Model):
     def __repr__(self) -> str:
         return f"<Company {self.name} ({self.access_code})>"
 
+
 class Supplier(db.Model):
     __tablename__ = 'suppliers'
     id      = db.Column(db.Integer, primary_key=True)
     name    = db.Column(db.String(120), nullable=False)
     email   = db.Column(db.String(120))
     phone   = db.Column(db.String(20))
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False) 
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     user    = db.relationship('User', backref='suppliers')
 
@@ -60,6 +62,7 @@ class Supplier(db.Model):
         self.email   = email
         self.phone   = phone
         self.user_id = user_id
+
 
 class Quote(db.Model):
     __tablename__ = 'quotes'
@@ -74,6 +77,7 @@ class Quote(db.Model):
         self.items     = items
         self.suppliers = suppliers
 
+
 class QuoteResponse(db.Model):
     __tablename__ = 'quote_responses'
     id           = db.Column(db.Integer, primary_key=True)
@@ -87,6 +91,7 @@ class QuoteResponse(db.Model):
         self.supplier_id = supplier_id
         self.answers     = answers
 
+
 class Doctor(db.Model):
     __tablename__ = 'doctors'
     id    = db.Column(db.Integer, primary_key=True)
@@ -96,6 +101,7 @@ class Doctor(db.Model):
     def __init__(self, name: str, phone: Optional[str] = None):
         self.name  = name
         self.phone = phone
+
 
 class Patient(db.Model):
     __tablename__ = 'patients'
@@ -109,15 +115,15 @@ class Patient(db.Model):
     prescription = db.Column(db.Text, nullable=True)
     status       = db.Column(db.String(20), default='Ativo', nullable=False)
     created_at   = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    quiz_result_id = db.Column(db.Integer, db.ForeignKey('quiz_results.id'), nullable=True)  # <-- Adicione este campo
 
     doctor       = db.relationship('Doctor', backref='patients')
-    quiz_result  = db.relationship('QuizResult', foreign_keys=[quiz_result_id], uselist=False, backref='patient_ref')
+    # One-to-one via QuizResult.patient_id
+    quiz_result  = db.relationship('QuizResult', back_populates='patient', uselist=False)
 
     def __init__(self, name: str, age: Optional[int] = None, cpf: Optional[str] = None,
                  gender: Optional[str] = None, phone: Optional[str] = None,
                  doctor_id: Optional[int] = None, prescription: Optional[str] = None,
-                 status: str = 'Ativo', quiz_result_id: Optional[int] = None):
+                 status: str = 'Ativo'):
         self.name         = name
         self.age          = age
         self.cpf          = cpf
@@ -126,7 +132,7 @@ class Patient(db.Model):
         self.doctor_id    = doctor_id
         self.prescription = prescription
         self.status       = status
-        self.quiz_result_id = quiz_result_id
+
 
 class Consult(db.Model):
     __tablename__ = 'consults'
@@ -135,8 +141,8 @@ class Consult(db.Model):
     doctor_id  = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=False)
     notes      = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    date = db.Column(db.Date, nullable = False)
-    time = db.Column(db.Time, nullable = False)
+    date       = db.Column(db.Date, nullable=False)
+    time       = db.Column(db.Time, nullable=True)
 
     def __init__(self, patient_id: int, doctor_id: int, date, time=None, notes: Optional[str] = None):
         self.patient_id = patient_id
@@ -144,6 +150,7 @@ class Consult(db.Model):
         self.date       = date
         self.time       = time
         self.notes      = notes
+
 
 class QuizResult(db.Model):
     __tablename__ = 'quiz_results'
@@ -153,46 +160,47 @@ class QuizResult(db.Model):
     age              = db.Column(db.Integer)
     date             = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # — respostas brutas —
+    # — raw answers —
     consentimento     = db.Column(db.String(64))
     nivel_hierarquico = db.Column(db.String(64))
     setor             = db.Column(db.String(128))
     estresse_raw      = db.Column(db.String(64))
-    nervosismo       = db.Column(db.String(50))
-    preocupacao      = db.Column(db.String(50))
-    interesse        = db.Column(db.String(50))
-    depressao_raw    = db.Column(db.String(50))
-    estresse_raw     = db.Column(db.String(50))
-    hora_extra       = db.Column(db.String(50))
-    sono             = db.Column(db.String(50))
-    atividade_fisica = db.Column(db.String(50))
-    fatores          = db.Column(db.PickleType)
-    motivacao        = db.Column(db.String(255))
-    pronto_socorro   = db.Column(db.String(10))
-    relacionamentos  = db.Column(db.String(50))
-    hobbies          = db.Column(db.String(50))
-    ansiedade        = db.Column(db.String(20))
-    depressao        = db.Column(db.String(20))
-    estresse         = db.Column(db.String(20))
-    qualidade        = db.Column(db.String(20))
-    risco            = db.Column(db.String(20))
-    ansiedade_cor    = db.Column(db.String(7))
-    depressao_cor    = db.Column(db.String(7))
-    estresse_cor     = db.Column(db.String(7))
-    qualidade_cor    = db.Column(db.String(7))
-    risco_cor        = db.Column(db.String(7))
-    recomendacao     = db.Column(db.String(255))
+    nervosismo        = db.Column(db.String(50))
+    preocupacao       = db.Column(db.String(50))
+    interesse         = db.Column(db.String(50))
+    depressao_raw     = db.Column(db.String(50))
+    hora_extra        = db.Column(db.String(50))
+    sono              = db.Column(db.String(50))
+    atividade_fisica  = db.Column(db.String(50))
+    fatores           = db.Column(db.PickleType)
+    motivacao         = db.Column(db.String(255))
+    pronto_socorro    = db.Column(db.String(10))
+    relacionamentos   = db.Column(db.String(50))
+    hobbies           = db.Column(db.String(50))
+    ansiedade         = db.Column(db.String(20))
+    depressao         = db.Column(db.String(20))
+    estresse          = db.Column(db.String(20))
+    qualidade         = db.Column(db.String(20))
+    risco             = db.Column(db.String(20))
+    ansiedade_cor     = db.Column(db.String(7))
+    depressao_cor     = db.Column(db.String(7))
+    estresse_cor      = db.Column(db.String(7))
+    qualidade_cor     = db.Column(db.String(7))
+    risco_cor         = db.Column(db.String(7))
+    recomendacao      = db.Column(db.String(255))
 
-    # Referência ao usuário (médico)
-    doctor_id        = db.Column(db.Integer, db.ForeignKey('users.id'))
+    # Reference to the user
+    doctor_id   = db.Column(db.Integer, db.ForeignKey('users.id'))
 
-    # Associação reversa: quiz tem o id do paciente
-    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=True)  # <-- Adicione este campo
+    # Associate 1-1 with the patient
+    patient_id  = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=True, unique=True)
+    patient     = db.relationship('Patient', back_populates='quiz_result', uselist=False)
 
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             if hasattr(self, key):
                 setattr(self, key, value)
+
 
 class Product(db.Model):
     __tablename__ = 'products'
@@ -212,26 +220,14 @@ class Product(db.Model):
         self.quantity       = quantity
         self.status         = status
 
-class PdfFile(db.Model):
-    __tablename__ = 'pdf_files'
-    id            = db.Column(db.Integer, primary_key=True)
-    filename      = db.Column(db.String(255), nullable=False)
-    original_name = db.Column(db.String(255), nullable=False)      
-    size_bytes    = db.Column(db.Integer, nullable=False, default=0)
-    uploaded_at   = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-
-    def __init__(self, filename: str, original_name: str, size_bytes: int = 0):
-        self.filename      = filename
-        self.original_name = original_name
-        self.size_bytes    = size_bytes
 
 class DoctorAvailability(db.Model):
     __tablename__ = 'doctor_availability'
-    id = db.Column(db.Integer, primary_key=True)
-    doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=False)
-    weekday = db.Column(db.Integer, nullable=False)
-    start_time = db.Column(db.Time, nullable=False)
-    end_time = db.Column(db.Time, nullable=False)
+    id           = db.Column(db.Integer, primary_key=True)
+    doctor_id    = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=False)
+    weekday      = db.Column(db.Integer, nullable=False)
+    start_time   = db.Column(db.Time, nullable=False)
+    end_time     = db.Column(db.Time, nullable=False)
     slot_minutes = db.Column(db.Integer, nullable=False, default=30)
 
     doctor = db.relationship('Doctor', backref='availabilities')
@@ -242,6 +238,7 @@ class DoctorAvailability(db.Model):
         self.start_time = start_time
         self.end_time = end_time
         self.slot_minutes = slot_minutes
+
 
 class QuestionnaireResult(db.Model):
     __tablename__ = 'questionnaire_results'
@@ -302,13 +299,14 @@ class QuestionnaireResult(db.Model):
             **(self.raw_payload or {})
         }
 
+
 class DoctorDateAvailability(db.Model):
     __tablename__ = 'doctor_date_availability'
-    id = db.Column(db.Integer, primary_key=True)
-    doctor_id = db.Column(db.Integer, index=True, nullable=False)
-    day = db.Column(db.Date, index=True, nullable=False)
-    start_time = db.Column(db.Time, nullable=False)
-    end_time = db.Column(db.Time, nullable=False)
+    id           = db.Column(db.Integer, primary_key=True)
+    doctor_id    = db.Column(db.Integer, db.ForeignKey('doctors.id'), index=True, nullable=False)
+    day          = db.Column(db.Date, index=True, nullable=False)
+    start_time   = db.Column(db.Time, nullable=False)
+    end_time     = db.Column(db.Time, nullable=False)
     slot_minutes = db.Column(db.Integer, nullable=False, default=30)
 
     def __init__(self, doctor_id: int, day, start_time, end_time, slot_minutes: int = 30):
@@ -317,3 +315,44 @@ class DoctorDateAvailability(db.Model):
         self.start_time = start_time
         self.end_time = end_time
         self.slot_minutes = slot_minutes
+
+
+class SecureFile(db.Model):
+    __tablename__ = "secure_files"
+
+    id            = db.Column(db.Integer, primary_key=True)
+    owner_user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    kind          = db.Column(db.String(40),  nullable=False)
+    filename      = db.Column(db.String(255), nullable=False)
+    mime_type     = db.Column(db.String(100), nullable=False)
+    size_bytes    = db.Column(db.Integer,     nullable=False)
+    data          = db.Column(db.LargeBinary, nullable=False)  # ENCRYPTED
+    created_at    = db.Column(db.DateTime,    default=datetime.utcnow, nullable=False)
+
+    owner = db.relationship("User", backref="secure_files", foreign_keys=[owner_user_id])
+
+    def __init__(self, owner_user_id, kind, filename, mime_type, size_bytes, data):
+        self.owner_user_id = owner_user_id
+        self.kind          = kind
+        self.filename      = filename
+        self.mime_type     = mime_type
+        self.size_bytes    = size_bytes
+        self.data          = data
+
+
+class PdfFile(db.Model):
+    __tablename__ = 'pdf_files'
+    id            = db.Column(db.Integer, primary_key=True)
+    filename      = db.Column(db.String(255), nullable=False)
+    original_name = db.Column(db.String(255), nullable=False)
+    size_bytes    = db.Column(db.Integer, nullable=False, default=0)
+    uploaded_at   = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    secure_file_id = db.Column(db.Integer, db.ForeignKey('secure_files.id'), index=True, nullable=True)
+    secure_file    = db.relationship('SecureFile', foreign_keys=[secure_file_id])
+
+    def __init__(self, filename: str, original_name: str, size_bytes: int = 0, secure_file_id: Optional[int] = None):
+        self.filename       = filename
+        self.original_name  = original_name
+        self.size_bytes     = size_bytes
+        self.secure_file_id = secure_file_id

@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Função auxiliar para garantir valores válidos
+# Function to guarantee good values
 def get_env_str(var_name: str, default: str = "") -> str:
     value = os.getenv(var_name, default)
     if value is None or value.strip() == "":
@@ -19,7 +19,7 @@ def get_env_int(var_name: str, default: int) -> int:
     except ValueError:
         raise ValueError(f"Valor inválido para {var_name}, deve ser um número inteiro.")
 
-# Carregar variáveis com validação segura
+# Load variables validating securely
 SMTP_SERVER: str = get_env_str("SMTP_SERVER")
 SMTP_PORT: int = get_env_int("SMTP_PORT", 587)
 SMTP_USERNAME: str = get_env_str("SMTP_USERNAME")

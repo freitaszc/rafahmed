@@ -197,8 +197,11 @@ def delete_patient_record(patient_id: int) -> None:
 #
 # ── CONSULT ───────────────────────────────────────────────────────────────────
 #
-def add_consult(patient_id, doctor_id, notes):
-    consult = Consult(patient_id=patient_id, doctor_id=doctor_id, notes=notes)
+def add_consult(patient_id, doctor_id, notes, date=None, time=None):
+    if date is None:
+        date = datetime.utcnow().date()
+        
+    consult = Consult(patient_id=patient_id, doctor_id=doctor_id, notes=notes, date=date, time=time)
     db.session.add(consult)
     db.session.commit()
     return consult

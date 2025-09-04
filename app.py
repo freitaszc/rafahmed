@@ -1,71 +1,69 @@
 import os
 import io
 import re
-import jwt
 import json
-import time as pytime  # <- alias para evitar confusão com Consult.time
 import base64
 import secrets
-import mimetypes
+import tempfile
+import time as pytime
 from io import BytesIO
 from functools import wraps
 from datetime import datetime, timedelta
 from collections import defaultdict
-from typing import Any, Optional
+from typing import Any, Optional, cast
+
 import weasyprint
 from dotenv import load_dotenv
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+from cryptography.fernet import Fernet
 
-# ⚠️ REMOVIDO: from flask_login import login_required
 from flask import (
     Flask, render_template, request, redirect, url_for, session, flash, jsonify,
-    get_flashed_messages, abort, send_file, send_from_directory, make_response, current_app
+    get_flashed_messages, abort, send_file, make_response, current_app
 )
+
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from sqlalchemy import text, inspect, desc, or_, and_  # <- and_ adicionado
-from sqlalchemy.exc import OperationalError
+from sqlalchemy import text, inspect, desc, and_
 
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import Flow
 
 from prescription import analyze_pdf
-from whatsapp import send_pdf_whatsapp, send_quote_whatsapp, send_pix_receipt_admin
+from whatsapp import send_pdf_whatsapp, send_quote_whatsapp
 from mercado_pago import generate_payment_link
 from email_utils import send_email_quote
+import qrcode
 
 from records import (
     get_suppliers_by_user, add_supplier_db, update_supplier_db, delete_supplier_db,
     update_product, get_product_by_id, get_products, save_products,
     is_package_available, update_package_usage, get_package_info,
-    get_user_by_id, get_user_by_username, create_user, get_company_by_id,
-    get_company_by_access_code, create_company, add_supplier_record, get_suppliers,
-    add_quote, get_quotes, add_quote_response, get_responses_by_quote,
-    add_doctor, get_doctors, get_doctor_by_id, add_patient, get_patient_by_id,
-    get_patients_by_doctor, update_patient, delete_patient_record, add_consult,
-    get_consults_by_patient, update_prescription_in_consult,
-    add_quiz_result, get_quiz_results_by_doctor, get_quiz_results_by_doctor_and_range,
+    add_doctor, get_patient_by_id, get_patients_by_doctor, update_patient,
+    delete_patient_record, add_patient, add_consult, get_consults_by_patient,
+    add_quiz_result, get_quiz_results_by_doctor
 )
 
 from models import (
     db, User, Company, Supplier, Quote, QuoteResponse, Doctor, Consult, Patient,
-    QuizResult, PdfFile, DoctorAvailability, QuestionnaireResult, DoctorDateAvailability
+    QuizResult, PdfFile, DoctorAvailability, QuestionnaireResult, DoctorDateAvailability,
+    SecureFile
 )
-
-# --- Helpers de tipagem p/ SQLAlchemy (evita falsos positivos do Pylance) ---
-from typing import cast
-# Coluna TIME de Consult (pode ser NULL), usada em filtros com comparações
-TIME_COL = cast(Any, Consult.time)
 
 # ------------------------------------------------------------------------------
 # App & DB
 # ------------------------------------------------------------------------------
 load_dotenv()
 app = Flask(__name__)
+
+# Fernet
+FILE_ENC_KEY = os.getenv("FILE_ENC_KEY")
+if not FILE_ENC_KEY:
+    raise RuntimeError("Missing FILE_ENC_KEY env var. Generate one: python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'")
+FERNET = Fernet(FILE_ENC_KEY)
 
 # DB/config dirs
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'instance'))
@@ -81,7 +79,8 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = secrets.token_hex(32)
+# Use stable secret key if provided; otherwise generate one (sessions/tokens persist across restarts if set)
+app.secret_key = os.getenv("APP_SECRET_KEY") or secrets.token_hex(32)
 
 db.init_app(app)
 migrate = Migrate(app, db)
@@ -95,22 +94,49 @@ def ensure_tables():
 ensure_tables()
 
 # ------------------------------------------------------------------------------
-# PDF secure tokens
+# Files secure tokens
 # ------------------------------------------------------------------------------
-def _pdf_serializer():
-    return URLSafeTimedSerializer(current_app.secret_key, salt="pdf-protection-v1")  # type: ignore
+# replace _pdf_serializer/generate_pdf_token/verify_pdf_token with generic versions
+def _file_serializer():
+    return URLSafeTimedSerializer(current_app.secret_key, salt="file-token-v1")  # type: ignore
 
-def generate_pdf_token(file_id: int) -> str:
-    s = _pdf_serializer()
-    return s.dumps({"fid": int(file_id)})
+def generate_file_token(file_id: int) -> str:
+    return _file_serializer().dumps({"fid": int(file_id)})
 
-def verify_pdf_token(token: str, max_age_seconds: int = 3600) -> int | None:
-    s = _pdf_serializer()
+def verify_file_token(token: str, max_age_seconds: int = 3600) -> Optional[int]:
     try:
-        data = s.loads(token, max_age=max_age_seconds)
+        data = _file_serializer().loads(token, max_age=max_age_seconds)
         return int(data.get("fid"))
     except (BadSignature, SignatureExpired, ValueError, TypeError):
         return None
+
+@app.get("/files/<int:file_id>")
+def file_download_auth(file_id):
+    user = get_logged_user()
+    if not user:
+        abort(403)
+    raw, sf = read_secure_file_bytes(file_id)
+    # Optional: add per-file ACL checks here (e.g., owner_user_id == user.id) depending on kind
+    resp = make_response(raw)
+    resp.headers["Content-Type"] = sf.mime_type
+    resp.headers["Content-Disposition"] = f'inline; filename="{sf.filename}"'
+    resp.headers["Cache-Control"] = "no-store"
+    resp.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
+    return resp
+
+@app.get("/files/signed/<token>")
+def file_download_signed(token):
+    file_id = verify_file_token(token, max_age_seconds=3600)
+    if not file_id:
+        abort(403)
+    raw, sf = read_secure_file_bytes(file_id)
+    resp = make_response(raw)
+    resp.headers["Content-Type"] = sf.mime_type
+    resp.headers["Content-Disposition"] = f'inline; filename="{sf.filename}"'
+    resp.headers["Cache-Control"] = "no-store"
+    resp.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
+    return resp
+
 
 # ------------------------------------------------------------------------------
 # Subscription / PIX
@@ -167,7 +193,6 @@ def build_pix_payload(key: str, name: str, city: str, amount: float, txid: str, 
 
 def make_qr_base64(payload: str) -> str | None:
     try:
-        import qrcode
         from PIL import Image  # noqa: F401
         img = qrcode.make(payload)
         buf = io.BytesIO()
@@ -245,8 +270,8 @@ def feature_required(feature):
 # Expor helpers no Jinja (mantendo compatibilidade nos templates)
 app.jinja_env.globals.update(
     has_feature=has_feature,
-    pdf_token=generate_pdf_token,
-    make_pdf_token=generate_pdf_token
+    pdf_token=generate_file_token,
+    make_pdf_token=generate_file_token
 )
 
 def parse_int(value: Any) -> Optional[int]:
@@ -398,12 +423,17 @@ def update_personal_info():
     user.email = email
     img = request.files.get("profile_image")
     if img and img.filename:
-        folder = os.path.join(app.root_path, "static/profile_images")
-        os.makedirs(folder, exist_ok=True)
-        fn = f"{user.username}_profile.png"
-        path = os.path.join(folder, fn)
-        img.save(path)
-        user.profile_image = f"profile_images/{fn}"
+        from werkzeug.utils import secure_filename
+        raw = img.read()
+        sf = save_secure_file(
+            owner_user_id=user.id,
+            kind="profile_image",
+            filename=secure_filename(img.filename),
+            mime_type=img.mimetype,
+            raw_bytes=raw,
+        )
+        # store only the ID or a signed URL
+        user.profile_image = f"/files/{sf.id}"  # or store sf.id in a new user.profile_image_id column
     db.session.commit()
     return redirect(url_for("account"))
 
@@ -428,13 +458,7 @@ def update_password():
 
 @app.route('/remove_profile_image', methods=['POST'])
 def remove_profile_image():
-    user = get_logged_user()
-    if not user:
-        return redirect(url_for('login'))
-    if user.profile_image and user.profile_image != 'images/user-icon.png':
-        p = os.path.join(app.root_path, "static", user.profile_image)
-        if os.path.exists(p):
-            os.remove(p)
+    user = get_logged_user() or abort(403)
     user.profile_image = 'images/user-icon.png'
     db.session.commit()
     return redirect(url_for("account"))
@@ -560,14 +584,23 @@ def upload():
             if not pdf_file or not pdf_file.filename:
                 return render_template('upload.html', error='Por favor, selecione um arquivo PDF.')
 
-            uploads_folder = os.path.join(app.root_path, "static", "uploads")
-            os.makedirs(uploads_folder, exist_ok=True)
+            raw_pdf = pdf_file.read()
+            filename = secure_filename(pdf_file.filename or "doc.pdf")
 
-            filename    = secure_filename(str(pdf_file.filename))
-            upload_path = os.path.join(uploads_folder, filename)
-            pdf_file.save(upload_path)
+            orig_sf = save_secure_file(
+                owner_user_id=user.id,
+                kind="original_pdf",
+                filename=filename,
+                mime_type=pdf_file.mimetype or "application/pdf",
+                raw_bytes=raw_pdf,
+            )
 
-            result = analyze_pdf(upload_path)
+            # analyze using a temp file
+            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=True) as tmp:
+                tmp.write(raw_pdf)
+                tmp.flush()
+                result = analyze_pdf(tmp.name)
+
             if not isinstance(result, (list, tuple)) or len(result) != 8:
                 flash('Erro ao processar o PDF.', 'danger')
                 return render_template('upload.html')
@@ -609,37 +642,34 @@ def upload():
             f"Telefone: {phone}"
         )
 
-        # Geração do PDF
         html = render_template(
             "result_pdf.html",
             diagnostic_text=diagnostic,
             prescription_text=prescription,
             doctor_name=doctor_name,
             patient_info=session['patient_info'],
-            logo_path=os.path.join(app.root_path, 'static', 'images', 'logo.png')
+            logo_path=url_for('static', filename='images/logo.png', _external=False)
         )
         static_base = os.path.join(app.root_path, 'static')
         pdf_bytes = weasyprint.HTML(string=html, base_url=static_base).write_pdf()
-        if not pdf_bytes:
-            flash('Erro ao gerar o PDF.', 'danger')
-            return render_template('upload.html')
 
-        cpf_clean = (patient.cpf or '').replace('.', '').replace('-', '') if patient else ''
-        if not cpf_clean:
-            cpf_clean = f"no_cpf_{int(pytime.time())}"
+        # Save analyzed report securely
+        cpf_clean = (cpf or "").replace(".", "").replace("-", "").strip()
+        safe_name = f"result_{cpf_clean or 'no_cpf'}.pdf"
+        an_sf = save_secure_file(
+            owner_user_id=user.id,
+            kind="analyzed_pdf",
+            filename=safe_name,
+            mime_type="application/pdf",
+            raw_bytes=pdf_bytes,
+        )
 
-        output_folder = os.path.join(app.root_path, "static", "output")
-        os.makedirs(output_folder, exist_ok=True)
-        pdf_filename = f"result_{cpf_clean}.pdf"
-        pdf_path     = os.path.join(output_folder, pdf_filename)
-        with open(pdf_path, 'wb') as f:
-            f.write(pdf_bytes)
+        # Links to send (signed, 1h TTL when used)
+        analyzed_link = url_for('file_download_signed', token=generate_file_token(an_sf.id), _external=True)
 
-        analyzed_link = url_for('static', filename=f"output/{pdf_filename}", _external=True)
         original_link = None
         if not using_manual:
-            original_link = url_for('static', filename=f"uploads/{filename}", _external=True)
-
+            original_link = url_for('file_download_signed', token=generate_file_token(orig_sf.id), _external=True)
         try:
             send_pdf_whatsapp(
                 doctor_name=doctor_name,
@@ -666,6 +696,7 @@ def upload():
         )
 
     return render_template('upload.html')
+
 
 # ------------------------------------------------------------------------------
 # Pagamentos (Pacotes de Análises)
@@ -803,9 +834,9 @@ def availability():
         } for r in rows
     ])
 
-DID_COL  = cast(Any, Consult.doctor_id)  
-DATE_COL = cast(Any, Consult.date)       
-TIME_COL = cast(Any, Consult.time)      
+DID_COL  = cast(Any, Consult.doctor_id)
+DATE_COL = cast(Any, Consult.date)
+TIME_COL = cast(Any, Consult.time)
 DA_DID_COL  = cast(Any, DoctorDateAvailability.doctor_id)
 
 @app.route('/availability_dates', methods=['GET', 'POST'])
@@ -839,7 +870,7 @@ def availability_dates():
     blocks = data.get('blocks') or []
     if not isinstance(blocks, list):
         return jsonify({"ok": False, "error": "`blocks` deve ser lista"}), 400
-    
+
     print("[availability_dates] received blocks:", data)
 
     # capturar blocos antigos p/ descobrir quais foram removidos
@@ -930,7 +961,7 @@ def api_available_days():
         taken = {
             c.time.strftime('%H:%M')
             for c in Consult.query.filter_by(doctor_id=doctor_id, date=day)
-                                  .filter(Consult.time != None).all()
+                                  .filter(Consult.time.is_not(None)).all() #type:ignore
         }
 
         free_count = 0
@@ -945,7 +976,6 @@ def api_available_days():
                 cur += step
 
         if free_count > 0:
-            # 🔴 Aqui antes retornava `day.isoformat()` ou similar
             result.append(day.strftime('%d/%m/%Y'))
 
     return jsonify(result)
@@ -1031,13 +1061,32 @@ def admin_companies():
         return redirect(url_for('admin_companies'))
 
     companies = Company.query.order_by(Company.name).all()
-    users = User.query.order_by(User.id).all()  # <<<<<<<<<< ADICIONE ESTA LINHA
+    users = User.query.order_by(User.id).all()
 
     return render_template(
         'admin_companies.html',
         companies=companies,
         users=users
     )
+
+def save_secure_file(*, owner_user_id, kind, filename, mime_type, raw_bytes):
+    token = FERNET.encrypt(raw_bytes)
+    obj = SecureFile(
+        owner_user_id=owner_user_id,
+        kind=kind,
+        filename=filename or "file.bin",
+        mime_type=mime_type or "application/octet-stream",
+        size_bytes=len(raw_bytes),
+        data=token,
+    )
+    db.session.add(obj)
+    db.session.commit()
+    return obj
+
+def read_secure_file_bytes(file_id: int) -> tuple[bytes, SecureFile]:
+    sf = SecureFile.query.get_or_404(file_id)
+    raw = FERNET.decrypt(sf.data)
+    return raw, sf
 
 # ---------------------------
 # Admin — deletar empresa
@@ -1071,16 +1120,7 @@ def admin_pdfs():
         flash('Acesso negado.', 'danger')
         return redirect(url_for('login'))
 
-    pdfs = []
-    if 'PdfFile' in globals():
-        q = PdfFile.query
-        if hasattr(PdfFile, 'created_at'):
-            # evita acesso direto ao atributo p/ satisfazer o Pylance
-            q = q.order_by(desc(getattr(PdfFile, 'created_at')))
-        elif hasattr(PdfFile, 'id'):
-            q = q.order_by(desc(getattr(PdfFile, 'id')))
-        pdfs = q.all()
-
+    pdfs = PdfFile.query.order_by(desc(getattr(PdfFile, 'uploaded_at'))).all()
     return render_template('admin_pdfs.html', pdfs=pdfs, upload_url=url_for('upload_pdf'))
 
 # ---------------------------
@@ -1092,28 +1132,34 @@ def upload_pdf():
     user = get_logged_user()
     if not user or user.username.lower() != 'admin':
         flash('Acesso negado.', 'danger')
-        return redirect(url_for('login'))
+        return redirect(url_for('admin_pdfs'))
 
     f = request.files.get('file')
     if f is None or not getattr(f, 'filename', None):
         flash('Selecione um arquivo.', 'danger')
         return redirect(url_for('admin_pdfs'))
 
-    original_name = str(f.filename)
-    filename = secure_filename(original_name)
-    if not filename:
-        flash('Nome de arquivo inválido.', 'danger')
-        return redirect(url_for('admin_pdfs'))
+    from werkzeug.utils import secure_filename
+    raw = f.read()
 
-    disk_path = os.path.join(PDF_UPLOAD_DIR, filename)
-    f.save(disk_path)
+    original_name: str = f.filename or "upload.pdf"
+    safe_name: str = secure_filename(original_name)
+    mime: str = (getattr(f, 'mimetype', None) or "application/pdf")
 
-    try:
-        size_bytes = os.path.getsize(disk_path)
-    except OSError:
-        size_bytes = 0
+    sf = save_secure_file(
+        owner_user_id=user.id,
+        kind="admin_pdf",
+        filename=safe_name,
+        mime_type=mime,
+        raw_bytes=raw
+    )
 
-    pdf = PdfFile(filename=filename, original_name=original_name, size_bytes=size_bytes)
+    pdf = PdfFile(
+        filename=sf.filename,
+        original_name=original_name,
+        size_bytes=sf.size_bytes,
+        secure_file_id=sf.id,  # link to bytes
+    )
     db.session.add(pdf)
     db.session.commit()
 
@@ -1126,10 +1172,9 @@ def view_pdf(file_id):
     if not user or user.username.lower() != 'admin':
         abort(403)
     pdf = PdfFile.query.get_or_404(file_id)
-    resp = make_response(send_from_directory(PDF_UPLOAD_DIR, pdf.filename, mimetype='application/pdf', as_attachment=False))
-    resp.headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
-    resp.headers['Cache-Control'] = 'private, no-store, max-age=0'
-    return resp
+    if not pdf.secure_file_id:
+        abort(404)
+    return redirect(url_for('file_download_auth', file_id=pdf.secure_file_id))
 
 @app.get('/pdfs/download/<int:file_id>')
 def download_pdf_admin(file_id):
@@ -1137,9 +1182,35 @@ def download_pdf_admin(file_id):
     if not user or user.username.lower() != 'admin':
         abort(403)
     pdf = PdfFile.query.get_or_404(file_id)
-    resp = make_response(send_from_directory(PDF_UPLOAD_DIR, pdf.filename, as_attachment=True, download_name=getattr(pdf, 'original_name', pdf.filename)))
-    resp.headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
-    resp.headers['Cache-Control'] = 'private, no-store, max-age=0'
+    if not pdf.secure_file_id:
+        abort(404)
+    # force attachment if you prefer:
+    raw, sf = read_secure_file_bytes(pdf.secure_file_id)
+    resp = make_response(raw)
+    resp.headers["Content-Type"] = sf.mime_type
+    resp.headers["Content-Disposition"] = f'attachment; filename="{pdf.original_name or sf.filename}"'
+    resp.headers["Cache-Control"] = "no-store"
+    resp.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
+    return resp
+
+@app.get('/pdfs/s/<token>')
+def view_pdf_signed(token):
+    file_id = verify_file_token(token, max_age_seconds=3600)
+    if not file_id:
+        abort(403)
+    return redirect(url_for('file_download_auth', file_id=file_id))
+
+@app.get('/pdfs/d/<token>')
+def download_pdf_signed(token):
+    file_id = verify_file_token(token, max_age_seconds=3600)
+    if not file_id:
+        abort(403)
+    raw, sf = read_secure_file_bytes(file_id)
+    resp = make_response(raw)
+    resp.headers["Content-Type"] = sf.mime_type
+    resp.headers["Content-Disposition"] = f'attachment; filename="{sf.filename}"'
+    resp.headers["Cache-Control"] = "no-store"
+    resp.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
     return resp
 
 @app.route('/admin/pdfs/<int:pdf_id>/delete', methods=['POST'])
@@ -1169,37 +1240,6 @@ def delete_pdf(pdf_id):
     db.session.commit()
     flash('Arquivo removido.', 'success')
     return redirect(url_for('admin_pdfs'))
-
-# Secure by token
-@app.get('/pdfs/secure/<token>')
-def pdf_secure_view(token):
-    file_id = verify_pdf_token(token, max_age_seconds=3600)
-    if not file_id:
-        abort(403)
-    pdf = PdfFile.query.get_or_404(file_id)
-    resp = make_response(send_from_directory(PDF_UPLOAD_DIR, pdf.filename, mimetype='application/pdf', as_attachment=False))
-    resp.headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
-    resp.headers['Cache-Control'] = 'private, no-store, max-age=0'
-    return resp
-
-@app.get('/pdfs/secure-download/<token>')
-def pdf_secure_download(token):
-    file_id = verify_pdf_token(token, max_age_seconds=3600)
-    if not file_id:
-        abort(403)
-    pdf = PdfFile.query.get_or_404(file_id)
-    resp = make_response(send_from_directory(PDF_UPLOAD_DIR, pdf.filename, as_attachment=True, download_name=getattr(pdf, 'original_name', pdf.filename)))
-    resp.headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
-    resp.headers['Cache-Control'] = 'private, no-store, max-age=0'
-    return resp
-
-@app.get('/pdfs/s/<token>')
-def view_pdf_signed(token):
-    return pdf_secure_view(token)
-
-@app.get('/pdfs/d/<token>')
-def download_pdf_signed(token):
-    return pdf_secure_download(token)
 
 # ------------------------------------------------------------------------------
 # Patients / consults
@@ -2140,7 +2180,7 @@ def submit_consultation():
         taken = {
             c.time.strftime('%H:%M')
             for c in Consult.query.filter_by(doctor_id=doctor_id, date=day)
-                                  .filter(TIME_COL.isnot(None)).all()
+                                  .filter(Consult.time.is_not(None)).all() #type:ignore
         }
 
         # construir set de horários livres com base nos blocos
@@ -2219,7 +2259,6 @@ def submit_quiz():
         consentimento=data.get('consentimento'),
         nivel_hierarquico=data.get('nivel_hierarquico'),
         setor=data.get('setor'),
-
         nervosismo=data.get('nervosismo'),
         preocupacao=data.get('preocupacao'),
         interesse=data.get('interesse'),
@@ -2233,7 +2272,6 @@ def submit_quiz():
         pronto_socorro=data.get('pronto_socorro'),
         relacionamentos=data.get('relacionamentos'),
         hobbies=data.get('hobbies'),
-
         ansiedade=data.get('ansiedade'),
         depressao=data.get('depressao'),
         estresse=data.get('estresse'),
@@ -2245,14 +2283,11 @@ def submit_quiz():
         qualidade_cor=data.get('qualidade_cor'),
         risco_cor=data.get('risco_cor'),
         recomendacao=data.get('recomendacao'),
-
         doctor_id=doctor_id,
         patient_id=patient.id
     )
 
-    patient.quiz_result_id = qr.id
     db.session.commit()
-
     return jsonify(status='ok', quiz_id=qr.id)
 
 @app.route('/selfevaluation')

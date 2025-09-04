@@ -7,7 +7,7 @@ from models import db, Company
 def main():
     load_dotenv()
 
-    # configure a minimal Flask app just to bind SQLAlchemy
+    # Flask app just to bind SQLAlchemy
     app = Flask(__name__)
     DATABASE_URL = os.getenv('DATABASE_URL') or 'sqlite:///web.db'
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
