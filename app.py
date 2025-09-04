@@ -44,13 +44,13 @@ from records import (
     is_package_available, update_package_usage, get_package_info,
     add_doctor, get_patient_by_id, get_patients_by_doctor, update_patient,
     delete_patient_record, add_patient, add_consult, get_consults_by_patient,
-    add_quiz_result, get_quiz_results_by_doctor
+    add_quiz_result, get_quiz_results_by_doctor, delete_product_record
 )
 
 from models import (
     db, User, Company, Supplier, Quote, QuoteResponse, Doctor, Consult, Patient,
     QuizResult, PdfFile, DoctorAvailability, QuestionnaireResult, DoctorDateAvailability,
-    SecureFile
+    SecureFile, Product, UserPackage
 )
 
 # ------------------------------------------------------------------------------
@@ -1550,31 +1550,38 @@ def products():
     if not user:
         return redirect(url_for('login'))
 
-    produtos           = get_products(user.id)
     category_filter    = request.args.get('category', '')
     via_filter         = request.args.get('application_route', '')
     status_filter      = request.args.get('status', '')
-    stock_filter       = request.args.get('stock_filter', 'all')
-    search             = request.args.get('search', '').lower()
+    stock_filter       = request.args.get('stock_filter', 'all')  # all | in_stock | min_stock
+    search             = (request.args.get('search', '') or '').lower()
 
-    def keep(p):
-        return (
-            (not category_filter or p.get('category') == category_filter) and
-            (not via_filter      or p.get('application_route') == via_filter) and
-            (not status_filter   or p.get('status') == status_filter) and
-            (stock_filter != 'in_stock' or p.get('quantity', 0) > 0) and
-            (stock_filter != 'min_stock' or p.get('quantity', 0) <= p.get('min_stock', 0)) and
-            (not search or search in p.get('name', '').lower())
-        )
+    q = Product.query.filter_by(doctor_id=user.id)
 
-    filtered = [p for p in produtos if keep(p)]
-    categories         = sorted({p.get('category','')         for p in produtos if p.get('category')})
-    application_routes = sorted({p.get('application_route','') for p in produtos if p.get('application_route')})
+    if category_filter:
+        q = q.filter(Product.category == category_filter)
+    if via_filter:
+        q = q.filter(Product.application_route == via_filter)
+    if status_filter:
+        q = q.filter(Product.status == status_filter)
+    if search:
+        q = q.filter(Product.name.ilike(f'%{search}%'))
+
+    products_list = q.order_by(Product.created_at.desc()).all()
+
+    if stock_filter == 'in_stock':
+        products_list = [p for p in products_list if (p.quantity or 0) > 0]
+    elif stock_filter == 'min_stock':
+        products_list = [p for p in products_list if (p.quantity or 0) <= (p.min_stock or 0)]
+
+    categories         = sorted({p.category for p in products_list if p.category})
+    application_routes = sorted({p.application_route for p in products_list if p.application_route})
 
     return render_template('products.html',
-                           products=filtered,
+                           products=products_list,
                            categories=categories,
                            application_routes=application_routes)
+
 
 @app.route('/add_product', methods=['POST'])
 def add_product_route():
@@ -1673,18 +1680,14 @@ def stock_edit(product_id):
     return render_template('stock_edit.html', product=product)
 
 @app.route('/delete_product/<int:product_id>', methods=['POST'])
+@login_required
 def delete_product(product_id):
     user = get_logged_user()
     if not user:
         return redirect(url_for('login'))
 
-    produtos = get_products()
-    produtos = [
-        p for p in produtos
-        if not (p['id'] == product_id and p.get('doctor_id') == user.id)
-    ]
-    save_products(produtos)
-    flash('Produto removido.', 'info')
+    ok = delete_product_record(product_id, user.id)
+    flash('Produto removido.' if ok else 'Produto não encontrado ou sem permissão.', 'info' if ok else 'danger')
     return redirect(url_for('products'))
 
 # ------------------------------------------------------------------------------

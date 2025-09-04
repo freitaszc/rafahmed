@@ -17,15 +17,33 @@ from models import (
     Consult,
     QuizResult,
     Product,
+    UserPackage,
 )
 
-BASE_DIR = os.path.dirname(__file__)
-PACKAGES_FILE = os.path.join(BASE_DIR, 'json', 'packages.json')
-PRODUCTS_FILE = os.path.join(BASE_DIR, 'json', 'products.json')
+# ---------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------
 
-#
-# ── USER ───────────────────────────────────────────────────────────────────────
-#
+def _product_to_dict(p: Product) -> dict:
+    return {
+        "id": p.id,
+        "doctor_id": getattr(p, "doctor_id", None),
+        "name": p.name,
+        "code": getattr(p, "code", None),
+        "purchase_price": p.purchase_price,
+        "sale_price": p.sale_price,
+        "quantity": p.quantity,
+        "status": p.status,
+        "category": getattr(p, "category", None),
+        "application_route": getattr(p, "application_route", None),
+        "min_stock": getattr(p, "min_stock", 0),
+        "created_at": p.created_at.isoformat() if p.created_at else None,
+    }
+
+# ---------------------------------------------------------------------
+# USER
+# ---------------------------------------------------------------------
+
 def get_user_by_id(user_id: int) -> Optional[User]:
     return User.query.get(user_id)
 
@@ -54,9 +72,10 @@ def create_user(
     db.session.commit()
     return user
 
-#
-# ── COMPANY ───────────────────────────────────────────────────────────────────
-#
+# ---------------------------------------------------------------------
+# COMPANY
+# ---------------------------------------------------------------------
+
 def get_company_by_id(company_id: int) -> Optional[Company]:
     return Company.query.get(company_id)
 
@@ -69,21 +88,44 @@ def create_company(name: str, access_code: str) -> Company:
     db.session.commit()
     return c
 
-#
-# ── SUPPLIER ──────────────────────────────────────────────────────────────────
-#
-def add_supplier_record(name: str, email: Optional[str]=None, phone: Optional[str]=None) -> Supplier:
-    s = Supplier(name=name, email=email, phone=phone)
-    db.session.add(s)
-    db.session.commit()
-    return s
+# ---------------------------------------------------------------------
+# SUPPLIERS  (names used by app.py routes)
+# ---------------------------------------------------------------------
 
 def get_suppliers() -> List[Supplier]:
     return Supplier.query.order_by(Supplier.name).all()
 
-#
-# ── QUOTE & QUOTE RESPONSE ────────────────────────────────────────────────────
-#
+def get_suppliers_by_user(user_id: int) -> List[Supplier]:
+    return Supplier.query.filter_by(user_id=user_id).order_by(Supplier.name).all()
+
+def add_supplier_db(name: str, phone: str, email: str, user_id: int) -> Supplier:
+    s = Supplier(name=name, phone=phone, email=email, user_id=user_id)
+    db.session.add(s)
+    db.session.commit()
+    return s
+
+def update_supplier_db(supplier_id: int, name: str, phone: str, email: str, user_id: int) -> Optional[Supplier]:
+    s = Supplier.query.filter_by(id=supplier_id, user_id=user_id).first()
+    if not s:
+        return None
+    s.name = name
+    s.phone = phone
+    s.email = email
+    db.session.commit()
+    return s
+
+def delete_supplier_db(supplier_id: int, user_id: int) -> bool:
+    s = Supplier.query.filter_by(id=supplier_id, user_id=user_id).first()
+    if not s:
+        return False
+    db.session.delete(s)
+    db.session.commit()
+    return True
+
+# ---------------------------------------------------------------------
+# QUOTES
+# ---------------------------------------------------------------------
+
 def add_quote(title: str, items: str, suppliers: str) -> Quote:
     q = Quote(title=title, items=items, suppliers=suppliers)
     db.session.add(q)
@@ -107,9 +149,10 @@ def get_responses_by_quote(quote_id: int) -> List[QuoteResponse]:
         .all()
     )
 
-#
-# ── DOCTOR ────────────────────────────────────────────────────────────────────
-#
+# ---------------------------------------------------------------------
+# DOCTORS
+# ---------------------------------------------------------------------
+
 def add_doctor(name: str, phone: Optional[str]=None) -> Doctor:
     d = Doctor(name=name, phone=phone)
     db.session.add(d)
@@ -122,9 +165,10 @@ def get_doctors() -> List[Doctor]:
 def get_doctor_by_id(doctor_id: int) -> Optional[Doctor]:
     return Doctor.query.get(doctor_id)
 
-#
-# ── PATIENT ───────────────────────────────────────────────────────────────────
-#
+# ---------------------------------------------------------------------
+# PATIENTS
+# ---------------------------------------------------------------------
+
 def add_patient(
     name: str,
     age: Optional[int],
@@ -148,7 +192,6 @@ def add_patient(
     db.session.add(p)
     db.session.commit()
     return p
-
 
 def get_patient_by_id(patient_id: int) -> Optional[Patient]:
     return Patient.query.get(patient_id)
@@ -186,7 +229,6 @@ def update_patient(
         p.status = status
     db.session.commit()
 
-
 def delete_patient_record(patient_id: int) -> None:
     p = Patient.query.get(patient_id)
     if not p:
@@ -194,18 +236,17 @@ def delete_patient_record(patient_id: int) -> None:
     db.session.delete(p)
     db.session.commit()
 
-#
-# ── CONSULT ───────────────────────────────────────────────────────────────────
-#
+# ---------------------------------------------------------------------
+# CONSULTS
+# ---------------------------------------------------------------------
+
 def add_consult(patient_id, doctor_id, notes, date=None, time=None):
     if date is None:
         date = datetime.utcnow().date()
-        
     consult = Consult(patient_id=patient_id, doctor_id=doctor_id, notes=notes, date=date, time=time)
     db.session.add(consult)
     db.session.commit()
     return consult
-
 
 def get_consults_by_patient(patient_id: int) -> List[Consult]:
     return (
@@ -232,11 +273,12 @@ def update_prescription_in_consult(patient_id: int, new_prescription: str) -> No
     )
     db.session.commit()
 
-#
-# ── QUIZ RESULT ──────────────────────────────────────────────────────────────
-#
+# ---------------------------------------------------------------------
+# QUIZ RESULTS
+# ---------------------------------------------------------------------
+
 def add_quiz_result(**fields) -> QuizResult:
-    # Garante que fatores seja uma string (JSON), nunca lista
+    # Normaliza 'fatores' para JSON string
     fatores = fields.get('fatores', [])
     if isinstance(fatores, list):
         fields['fatores'] = json.dumps(fatores)
@@ -249,6 +291,7 @@ def add_quiz_result(**fields) -> QuizResult:
     else:
         fields['fatores'] = json.dumps([])
 
+    # Normaliza 'motivacao' para string
     motivacao = fields.get('motivacao', [])
     if isinstance(motivacao, list):
         fields['motivacao'] = '; '.join(motivacao)
@@ -286,127 +329,176 @@ def get_quiz_results_by_doctor_and_range(
         .all()
     )
 
-#
-# ── PACKAGE MANAGEMENT (JSON fallback) ─────────────────────────────────────────
-#
+# ---------------------------------------------------------------------
+# PACKAGES (DB instead of JSON)
+# ---------------------------------------------------------------------
+
+def _ensure_user_package(user_id: int) -> UserPackage:
+    pkg = UserPackage.query.filter_by(user_id=user_id).first()
+    if not pkg:
+        pkg = UserPackage(user_id=user_id, total=50, used=0)
+        db.session.add(pkg)
+        db.session.commit()
+    return pkg
+
 def get_package_info(user_id: int) -> dict:
-    if not os.path.exists(PACKAGES_FILE):
-        return {"total": 50, "used": 0}
-    with open(PACKAGES_FILE, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    user_data = next((u for u in data.get('users', []) if u['user_id'] == user_id), None)
-    return user_data or {"total": 50, "used": 0}
+    pkg = _ensure_user_package(user_id)
+    return {"total": pkg.total, "used": pkg.used}
 
 def is_package_available(user_id: int) -> bool:
     info = get_package_info(user_id)
-    return (info.get('total', 0) - info.get('used', 0)) > 0
+    return (info["total"] - info["used"]) > 0
 
 def update_package_usage(user_id: int, new_used: int) -> None:
-    data = {"users": []}
-    if os.path.exists(PACKAGES_FILE):
-        with open(PACKAGES_FILE, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-    users = data.get('users', [])
-    for u in users:
-        if u['user_id'] == user_id:
-            u['used'] = min(new_used, u.get('total', 0))
-            break
-    else:
-        users.append({"user_id": user_id, "total": 50, "used": new_used})
-    data['users'] = users
-    with open(PACKAGES_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    pkg = _ensure_user_package(user_id)
+    pkg.used = max(0, min(int(new_used or 0), int(pkg.total or 0)))
+    db.session.commit()
 
-#
-# ── PRODUCT MANAGEMENT (JSON fallback) ─────────────────────────────────────────
-#
+# ---------------------------------------------------------------------
+# PRODUCTS (DB instead of JSON)
+# ---------------------------------------------------------------------
+
 def get_products(doctor_id: Optional[int] = None) -> List[dict]:
-    if not os.path.exists(PRODUCTS_FILE):
-        return []
-    with open(PRODUCTS_FILE, 'r', encoding='utf-8') as f:
-        products = json.load(f)
+    q = Product.query
     if doctor_id is not None:
-        products = [p for p in products if p.get('doctor_id') == doctor_id]
-    return products
+        q = q.filter_by(doctor_id=doctor_id)
+    products = q.order_by(Product.created_at.desc()).all()
+    return [_product_to_dict(p) for p in products]
 
 def save_products(products: List[dict]) -> None:
-    with open(PRODUCTS_FILE, 'w', encoding='utf-8') as f:
-        json.dump(products, f, indent=4, ensure_ascii=False)
+    """
+    Back-compat helper: accept a list of dicts and upsert into DB.
+    Does not delete products that aren't in the list.
+    """
+    if not isinstance(products, list):
+        return
+
+    for item in products:
+        if not isinstance(item, dict):
+            continue
+
+        pid = item.get("id")
+        doctor_id = item.get("doctor_id")
+        name = (item.get("name") or "").strip()
+        if not name:
+            continue
+
+        try:
+            purchase_price = float(item.get("purchase_price", 0) or 0)
+            sale_price     = float(item.get("sale_price", 0) or 0)
+            quantity       = int(item.get("quantity", 0) or 0)
+        except Exception:
+            continue
+
+        status    = (item.get("status") or "Ativo").strip() or "Ativo"
+        code      = (item.get("code") or None) or None
+        category  = (item.get("category") or None) or None
+        app_route = (item.get("application_route") or None) or None
+        min_stock = int(item.get("min_stock", 0) or 0)
+
+        if pid:
+            q = Product.query.filter_by(id=pid)
+            if doctor_id is not None:
+                q = q.filter_by(doctor_id=doctor_id)
+            obj = q.first()
+            if obj:
+                obj.name = name
+                obj.purchase_price = purchase_price
+                obj.sale_price = sale_price
+                obj.quantity = quantity
+                obj.status = status
+                if doctor_id is not None:
+                    obj.doctor_id = doctor_id
+                obj.code = code
+                obj.category = category
+                obj.application_route = app_route
+                obj.min_stock = min_stock
+            else:
+                obj = Product(
+                    name=name,
+                    purchase_price=purchase_price,
+                    sale_price=sale_price,
+                    quantity=quantity,
+                    status=status,
+                    doctor_id=doctor_id,
+                    code=code,
+                    category=category,
+                    application_route=app_route,
+                    min_stock=min_stock,
+                )
+                db.session.add(obj)
+        else:
+            obj = Product(
+                name=name,
+                purchase_price=purchase_price,
+                sale_price=sale_price,
+                quantity=quantity,
+                status=status,
+                doctor_id=doctor_id,
+                code=code,
+                category=category,
+                application_route=app_route,
+                min_stock=min_stock,
+            )
+            db.session.add(obj)
+
+    db.session.commit()
 
 def update_product_status(product_id: int, doctor_id: int, new_status: str) -> None:
-    products = get_products()
-    updated = False
-    for p in products:
-        if p.get('id') == product_id and p.get('doctor_id') == doctor_id:
-            p['status'] = new_status
-            updated = True
-            break
-    if not updated:
+    p = Product.query.filter_by(id=product_id, doctor_id=doctor_id).first()
+    if not p:
         abort(404, description="Produto não encontrado ou sem permissão")
-    save_products(products)
+    p.status = (new_status or "Ativo").strip() or "Ativo"
+    db.session.commit()
 
 def add_product(name: str, code: str, purchase_price: float, sale_price: float, quantity: int, doctor_id: int) -> dict:
-    products = get_products()
-    new_id = max((p.get('id', 0) for p in products), default=0) + 1
-    prod = {
-        "id": new_id,
-        "name": name,
-        "code": code,
-        "purchase_price": purchase_price,
-        "sale_price": sale_price,
-        "quantity": quantity,
-        "status": "Ativo",
-        "doctor_id": doctor_id
-    }
-    products.append(prod)
-    save_products(products)
-    return prod
+    p = Product(
+        name=name.strip(),
+        code=code or None,
+        purchase_price=float(purchase_price or 0),
+        sale_price=float(sale_price or 0),
+        quantity=int(quantity or 0),
+        status="Ativo",
+        doctor_id=doctor_id,
+    )
+    db.session.add(p)
+    db.session.commit()
+    return _product_to_dict(p)
+
+def delete_product_record(product_id: int, doctor_id: int) -> bool:
+    p = Product.query.filter_by(id=product_id, doctor_id=doctor_id).first()
+    if not p:
+        return False
+    db.session.delete(p)
+    db.session.commit()
+    return True
 
 def get_product_by_id(product_id: int, doctor_id: Optional[int] = None) -> Optional[dict]:
-    products = get_products()
-    for p in products:
-        if p.get('id') == product_id:
-            if doctor_id is None or p.get('doctor_id') == doctor_id:
-                return p
-    abort(404, description="Produto não encontrado ou sem permissão")
+    q = Product.query.filter_by(id=product_id)
+    if doctor_id is not None:
+        q = q.filter_by(doctor_id=doctor_id)
+    p = q.first()
+    if not p:
+        abort(404, description="Produto não encontrado ou sem permissão")
+    return _product_to_dict(p)
 
 def update_product(product_id: int, doctor_id: int, name, code, purchase_price, sale_price, quantity) -> dict:
-    products = get_products()
-    for p in products:
-        if p.get('id') == product_id and p.get('doctor_id') == doctor_id:
-            p['name'] = name
-            p['code'] = code
-            p['purchase_price'] = purchase_price
-            p['sale_price'] = sale_price
-            p['quantity'] = quantity
-            save_products(products)
-            return p 
-    abort(404, description="Produto não encontrado ou sem permissão")
+    p = Product.query.filter_by(id=product_id, doctor_id=doctor_id).first()
+    if not p:
+        abort(404, description="Produto não encontrado ou sem permissão")
 
-def get_suppliers_by_user(user_id: int):
-    return Supplier.query.filter_by(user_id=user_id).order_by(Supplier.name).all()
+    # Sanitization / defaults
+    name = (name or p.name).strip()
+    code = code or None
+    purchase_price = float(purchase_price if purchase_price is not None else p.purchase_price)
+    sale_price = float(sale_price if sale_price is not None else p.sale_price)
+    quantity = int(quantity if quantity is not None else p.quantity)
 
-def add_supplier_db(name: str, phone: str, email: str, user_id: int):
-    supplier = Supplier(name=name, phone=phone, email=email, user_id=user_id)
-    db.session.add(supplier)
+    p.name = name
+    p.code = code
+    p.purchase_price = purchase_price
+    p.sale_price = sale_price
+    p.quantity = quantity
+
     db.session.commit()
-    return supplier
-
-def update_supplier_db(supplier_id: int, name: str, phone: str, email: str, user_id: int):
-    supplier = Supplier.query.filter_by(id=supplier_id, user_id=user_id).first()
-    if supplier:
-        supplier.name = name
-        supplier.phone = phone
-        supplier.email = email
-        db.session.commit()
-        return supplier
-    return None
-
-def delete_supplier_db(supplier_id: int, user_id: int):
-    supplier = Supplier.query.filter_by(id=supplier_id, user_id=user_id).first()
-    if supplier:
-        db.session.delete(supplier)
-        db.session.commit()
-        return True
-    return False
-
+    return _product_to_dict(p)

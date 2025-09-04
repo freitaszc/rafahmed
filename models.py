@@ -7,17 +7,17 @@ db = SQLAlchemy()
 
 class User(db.Model):
     __tablename__ = 'users'
-    id            = db.Column(db.Integer, primary_key=True)
-    username      = db.Column(db.String(80),  nullable=False, unique=True)
-    email         = db.Column(db.String(120), nullable=False, unique=True)
-    password_hash = db.Column(db.String(128), nullable=False)
-    name          = db.Column(db.String(120))
-    birthdate     = db.Column(db.Date)
-    profile_image = db.Column(db.String(200), default='images/user-icon.png')
-    company_id    = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=True)
-    company       = db.relationship('Company', backref='users')
-    plan          = db.Column(db.String(20), default='standard')
-    plan_status   = db.Column(db.String(20), default='inactive')
+    id              = db.Column(db.Integer, primary_key=True)
+    username        = db.Column(db.String(80),  nullable=False, unique=True, index=True)
+    email           = db.Column(db.String(120), nullable=False, unique=True, index=True)
+    password_hash   = db.Column(db.String(128), nullable=False)
+    name            = db.Column(db.String(120))
+    birthdate       = db.Column(db.Date)
+    profile_image   = db.Column(db.String(200), default='images/user-icon.png')
+    company_id      = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=True)
+    company         = db.relationship('Company', backref='users')
+    plan            = db.Column(db.String(20), default='standard')
+    plan_status     = db.Column(db.String(20), default='inactive')
     plan_expires_at = db.Column(db.DateTime, nullable=True)
     trial_until     = db.Column(db.DateTime, nullable=True)
 
@@ -110,7 +110,7 @@ class Patient(db.Model):
     id           = db.Column(db.Integer, primary_key=True)
     name         = db.Column(db.String(120), nullable=False)
     age          = db.Column(db.Integer, nullable=True)
-    cpf          = db.Column(db.String(20), nullable=True)
+    cpf          = db.Column(db.String(20), nullable=True, index=True)
     gender       = db.Column(db.String(20), nullable=True)
     phone        = db.Column(db.String(20), nullable=True)
     doctor_id    = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=True)
@@ -174,7 +174,7 @@ class QuizResult(db.Model):
     hora_extra        = db.Column(db.String(50))
     sono              = db.Column(db.String(50))
     atividade_fisica  = db.Column(db.String(50))
-    fatores           = db.Column(db.PickleType)
+    fatores           = db.Column(db.PickleType)  # mantém compatibilidade
     motivacao         = db.Column(db.String(255))
     pronto_socorro    = db.Column(db.String(10))
     relacionamentos   = db.Column(db.String(50))
@@ -191,10 +191,7 @@ class QuizResult(db.Model):
     risco_cor         = db.Column(db.String(7))
     recomendacao      = db.Column(db.String(255))
 
-    # Reference to the user
     doctor_id   = db.Column(db.Integer, db.ForeignKey('users.id'))
-
-    # Associate 1-1 with the patient
     patient_id  = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=True, unique=True)
     patient     = db.relationship('Patient', back_populates='quiz_result', uselist=False)
 
@@ -206,21 +203,30 @@ class QuizResult(db.Model):
 
 class Product(db.Model):
     __tablename__ = 'products'
-    id             = db.Column(db.Integer, primary_key=True)
-    name           = db.Column(db.String(120), nullable=False)
-    purchase_price = db.Column(db.Float, nullable=False)
-    sale_price     = db.Column(db.Float, nullable=False)
-    quantity       = db.Column(db.Integer, nullable=False, default=0)
-    status         = db.Column(db.String(20), default='Ativo', nullable=False)
-    created_at     = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    id                = db.Column(db.Integer, primary_key=True)
+    doctor_id         = db.Column(db.Integer, db.ForeignKey('users.id'), index=True, nullable=False)
+    name              = db.Column(db.String(120), nullable=False)
+    purchase_price    = db.Column(db.Float, nullable=False)
+    sale_price        = db.Column(db.Float, nullable=False)
+    quantity          = db.Column(db.Integer, nullable=False, default=0)
+    status            = db.Column(db.String(20), default='Ativo', nullable=False)
+    created_at        = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    code              = db.Column(db.String(64))
+    category          = db.Column(db.String(80))
+    application_route = db.Column(db.String(80))
+    min_stock         = db.Column(db.Integer, default=0)
 
-    def __init__(self, name: str, purchase_price: float, sale_price: float,
-                 quantity: int = 0, status: str = 'Ativo'):
-        self.name           = name
-        self.purchase_price = purchase_price
-        self.sale_price     = sale_price
-        self.quantity       = quantity
-        self.status         = status
+    owner = db.relationship('User', backref='products', foreign_keys=[doctor_id])
+
+class UserPackage(db.Model):
+    __tablename__ = 'user_packages'
+    id         = db.Column(db.Integer, primary_key=True)
+    user_id    = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True, index=True, nullable=False)
+    total      = db.Column(db.Integer, nullable=False, default=50)
+    used       = db.Column(db.Integer, nullable=False, default=0)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    user = db.relationship('User', backref='package_balance', foreign_keys=[user_id])
 
 
 class DoctorAvailability(db.Model):
@@ -263,21 +269,6 @@ class QuestionnaireResult(db.Model):
     srq_q17     = db.Column(db.String(10), nullable=True)  # "Sim"/"Não"
 
     def __init__(self, **kwargs):
-        """
-        Permite inicializar um QuestionnaireResult com qualquer campo válido.
-        Exemplo:
-            QuestionnaireResult(
-                admin_id=1,
-                name="João",
-                age="32",
-                sex="Masculino",
-                srq20_total=12,
-                srq20_classification="Alto",
-                srq20_items_yes=["q1", "q4", "q7"],
-                srq_q17="Não",
-                raw_payload={...}
-            )
-        """
         for key, value in kwargs.items():
             if hasattr(self, key):
                 setattr(self, key, value)
