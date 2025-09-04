@@ -9,7 +9,7 @@ WHATSAPP_API_URL = "https://graph.facebook.com/v18.0"
 WHATSAPP_PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_NUMBER_ID")
 WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN")
 
-# Número padrão do admin (pode sobrescrever no .env)
+# Rafahmed standard number
 ADMIN_WHATSAPP = os.getenv("ADMIN_WHATSAPP", "31985570920")
 
 
@@ -27,15 +27,14 @@ def _format_phone(msisdn: str) -> str:
         return msisdn
     digits = re.sub(r"\D", "", msisdn)
 
-    # já vem com DDI (ex.: 55XXXXXXXXXXX)
-    if digits.startswith("55") and len(digits) in (12, 13):  # 12/13 por conta do 9º dígito
+    if digits.startswith("55") and len(digits) in (12, 13):  # 12/13 because of the 9th digit added in Brazil
         return digits
 
-    # número BR sem DDI (11 dígitos; ex.: 31985570920)
+    # if it doesnt have DDI
     if len(digits) == 11 and not digits.startswith("55"):
         return f"55{digits}"
 
-    # se já vier com +, tira o + e mantém
+    # if it already has + it corrects it
     if msisdn.startswith("+"):
         return digits
 
@@ -75,14 +74,13 @@ def _post_whatsapp(payload: dict) -> Optional[str]:
 
 
 # --------------------------
-# Envio do relatório (já existente)
+# Send report to doctors
 # --------------------------
 def send_pdf_whatsapp(doctor_name, patient_name, analyzed_pdf_link, original_pdf_link):
     """
     Envia mensagem via template com os links do PDF analisado e original para o telefone do médico.
     Requer o template 'relatorio_BioO3' aprovado no WhatsApp Business.
     """
-    # Carrega médicos
     try:
         with open("json/doctors.json", "r", encoding="utf-8") as file:
             doctors = json.load(file)
@@ -125,7 +123,7 @@ def send_pdf_whatsapp(doctor_name, patient_name, analyzed_pdf_link, original_pdf
 
 
 # --------------------------
-# Envio de cotação a fornecedores (já existente)
+# Sending quotation to suppliers
 # --------------------------
 def send_quote_whatsapp(supplier_name, phone, quote_title, quote_items: List[str], response_url):
     """
@@ -168,7 +166,7 @@ def send_quote_whatsapp(supplier_name, phone, quote_title, quote_items: List[str
 
 
 # --------------------------
-# Envio de comprovante PIX ao admin (NOVO)
+# Sending PIX to Whatsapp
 # --------------------------
 def send_pix_receipt_admin(
     admin_phone: Optional[str],
@@ -193,7 +191,7 @@ def send_pix_receipt_admin(
     if not phone:
         return "Número do admin não definido."
 
-    # 1) Mensagem de texto com resumo
+    # 1) Text message
     lines = [
         "📎 *Novo comprovante PIX recebido*",
         f"👤 Usuário: {user_name} (ID: {user_id})",
@@ -204,7 +202,6 @@ def send_pix_receipt_admin(
     ]
     if payload_text:
         lines.append("\n🔑 *Payload (copia e cola)*:")
-        # evitar mensagem gigante, mas ainda útil; corte se passar muito
         payload_preview = payload_text.strip()
         if len(payload_preview) > 1500:
             payload_preview = payload_preview[:1500] + "…"
@@ -223,7 +220,7 @@ def send_pix_receipt_admin(
     if err:
         return err
 
-    # 2) Se houver link do comprovante, envia como documento
+    # 2) if there's a link, send it as a document
     if receipt_url:
         doc_payload = {
             "messaging_product": "whatsapp",
@@ -237,7 +234,6 @@ def send_pix_receipt_admin(
         }
         err2 = _post_whatsapp(doc_payload)
         if err2:
-            # não falha geral; apenas reporta log/erro de anexo
             return f"Resumo enviado, mas falhou enviar o documento: {err2}"
 
     return None

@@ -1,0 +1,2197 @@
+{
+  "Iodo Salivar": {
+    "ideal": "294-536 mcg/L",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "CQ10 (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Pool Cognitivo",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Cortisol sérico acordar": {
+    "ideal": "10-20 mg/dL",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Cortisol total": {
+    "ideal": "17,7-25,7 nmol/L",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "CQ10 (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Pool Cognitivo",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Cortisol despertar": {
+    "ideal": "13,1-18,3 nmol/L",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "CQ10 (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Pool Cognitivo",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Cortisol tarde": {
+    "ideal": "3,0-5,5 nmol/L",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "CQ10 (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Pool Cognitivo",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Cortisol noite": {
+    "ideal": "1,0-1,9 nmol/L",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "CQ10 (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Pool Cognitivo",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "25-hidroxi D3": {
+    "ideal": "40-60 ng/dL",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Moreflex",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "1,25-dihidroxi D3": {
+    "ideal": "1 a 1,5 × valor 25(OH)D3",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Moreflex",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Rel. 1,25-D3/25-D3": {
+    "ideal": "> 1,5",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Cálcio iônico": {
+    "ideal": "4,55-5,12 mg/dL ou 1,1-1,25 mmol/L",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Cálcio sérico": {
+    "ideal": "9,3-10,2 mg/dL ou 2,28-2,52 mmol/L",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Magnésio soro": {
+    "ideal": "2,06-2,30 mg/dL",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "PTH intacto": {
+    "ideal": "25-40 pg/mL",
+    "medications": {
+      "low": "",
+      "high": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        }
+      ]
+    }
+  },
+  "Creatinina no soro": {
+    "ideal": "0,8-1,2 mg/dL",
+    "medications": {
+      "high": [
+        {
+          "nome": "Trio Detox (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Coenzima Q10 (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "low": ""
+    }
+  },
+  "Cálcio urinário": {
+    "ideal": "usar relação Ca/Creatinina",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Creatinina urinária": {
+    "ideal": "usar relação Ca/Creatinina",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Rel. Cálcio/Creatinina urinária": {
+    "ideal": "< 0,1 (má absorção ou ↓ ingestão) ou > 0,2 (perda aumentada)",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Ácido fólico sérico": {
+    "ideal": "10-17 ng/mL",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Selênio sérico (soro/plasma)": {
+    "ideal": "120-180 mcg/L",
+    "medications": {
+      "low": [
+        {
+          "nome": "Biodin",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Zinco no sangue": {
+    "ideal": "> 6,5 mg/dL",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Zinco em hemácias (eritrócitos)": {
+    "ideal": "10-11 mg/dL",
+    "medications": {
+      "low": [
+        {
+          "nome": "Pool de Minerais",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Zinco sérico (soro/plasma)": {
+    "ideal": "> 96 mcg/dL (até 115)",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Cobre em hemácias": {
+    "ideal": "60-70 mcg/dL",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Cobre sérico (soro/plasma)": {
+    "ideal": {
+      "M": "80-110 mcg/dL",
+      "F": "90-125 mcg/dL"
+    },
+    "medications": {
+      "low": [
+        {
+          "nome": "Pool de Minerais",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Manganês (sangue total)": {
+    "ideal": "20-25 mcg/L",
+    "medications": {
+      "low": [
+        {
+          "nome": "Pool de Minerais",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Magnésio sérico": {
+    "ideal": [
+      "> 2,1 mg/dL",
+      "> 0,9 mmol/L"
+    ],
+    "medications": {
+      "low": [
+        {
+          "nome": "Pool de Minerais",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Cromo (sangue)": {
+    "ideal": [
+      "Sangue: 2,5-3,5 mcg/L",
+      "Urina: < 5 mcg/L"
+    ],
+    "medications": {
+      "low": [
+        {
+          "nome": "Pool de Minerais",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Cromo (urina)": {
+    "ideal": "< 5 mcg/L",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Retinol sérico": {
+    "ideal": "Terço superior: > 0,5 mg/L",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Caroteno sérico": {
+    "ideal": "Terço superior",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Vitamina C total": {
+    "ideal": "> 1 mg/dL",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Potássio sérico": {
+    "ideal": "Ponto médio (3,5-5,0 mEq/L)",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Sódio sérico": {
+    "ideal": "Ponto médio (136-145 mEq/L)",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Chumbo sangue": {
+    "ideal": "< 3 mcg/L",
+    "medications": {
+      "low": "",
+      "high": [
+        {
+          "nome": "Trio Detox",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ]
+    }
+  },
+  "Chumbo urina": {
+    "ideal": "< 7,5 mcg/L",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Rel. U/S Chumbo": {
+    "ideal": "≥ 2,5",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Mercúrio sangue": {
+    "ideal": "< 2,88 mcg/L",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Mercúrio urina": {
+    "ideal": "< 1 mcg/L",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Rel. U/S Mercúrio": {
+    "ideal": "≥ 5",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Cádmio sangue": {
+    "ideal": "< 0,13 mcg/L",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Cádmio urina": {
+    "ideal": "< 0,14 mcg/g creatinina",
+    "medications": {
+      "low": "",
+      "high": [
+        {
+          "nome": "Trio Detox",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ]
+    }
+  },
+  "Rel. U/S Cádmio": {
+    "ideal": "≥ 1,0",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Alumínio soro": {
+    "ideal": "< 2 mcg/L",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Alumínio urina": {
+    "ideal": "< 10 mcg/L",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Rel. U/S Alumínio": {
+    "ideal": "≥ 5",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Rel. CT/HDL": {
+    "ideal": "< 3,3",
+    "medications": {
+      "low": "",
+      "high": [
+        {
+          "nome": "CQ10",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Lipomic",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        }
+      ]
+    }
+  },
+  "Rel. TG/HDL": {
+    "ideal": {
+      "M": "< 1,38",
+      "F": "< 1,15"
+    },
+    "medications": {
+      "low": "",
+      "high": [
+        {
+          "nome": "CQ10",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Lipomic",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        }
+      ]
+    }
+  },
+  "Rel. LDL/HDL": {
+    "ideal": "< 2,3",
+    "medications": {
+      "low": "",
+      "high": [
+        {
+          "nome": "CQ10",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Lipomic",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        }
+      ]
+    }
+  },
+  "Triglicerídeos": {
+    "ideal": "< 100 mg/dL",
+    "medications": {
+      "low": "",
+      "high": [
+        {
+          "nome": "CQ10",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Lipomic",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        }
+      ]
+    },
+    "synonyms": [
+      "triglicerídeos",
+      "triglicerideos",
+      "tg"
+    ]
+  },
+  "ApoA1": {
+    "ideal": {
+      "M": "> 100 mg/dL",
+      "F": "> 145 mg/dL"
+    },
+    "medications": {
+      "low": [
+        {
+          "nome": "CQ10",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Lipomic",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "ApoB": {
+    "ideal": "< 100 mg/dL",
+    "medications": {
+      "low": "",
+      "high": [
+        {
+          "nome": "CQ10",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Lipomic",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        }
+      ]
+    }
+  },
+  "ApoB/ApoA1": {
+    "ideal": {
+      "M": "< 0,69",
+      "F": "< 0,59"
+    },
+    "medications": {
+      "low": "",
+      "high": [
+        {
+          "nome": "CQ10",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Lipomic",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        }
+      ]
+    }
+  },
+  "Fibrinogênio": {
+    "ideal": [
+      "< 250 mg/dL (risco baixo)",
+      "250-400 mg/dL (médio risco)",
+      "> 400 mg/dL (alto risco)"
+    ],
+    "medications": {
+      "low": "",
+      "high": [
+        {
+          "nome": "CQ10",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Lipomic",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        }
+      ]
+    }
+  },
+  "Lipoproteína(a) [Lp(a)]": {
+    "ideal": [
+      "< 15 mg/dL (baixo risco)",
+      "15-30 mg/dL (médio risco)",
+      "> 30 mg/dL (alto risco)"
+    ],
+    "medications": {
+      "low": "",
+      "high": [
+        {
+          "nome": "CQ10",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Lipomic",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        }
+      ]
+    }
+  },
+  "Lp-PLA₂": {
+    "ideal": "< 201 ng/mL",
+    "medications": {
+      "low": "",
+      "high": [
+        {
+          "nome": "CQ10",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Lipomic",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        }
+      ]
+    }
+  },
+  "LDL oxidado": {
+    "ideal": {
+      "M": "< 30 EU/mL",
+      "F": "< 45 EU/mL"
+    },
+    "medications": {
+      "low": "",
+      "high": [
+        {
+          "nome": "CQ10",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Lipomic",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        }
+      ]
+    }
+  },
+  "Adiponectina": {
+    "ideal": "> 15 mcg/mL",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "PCR ultrassensível": {
+    "ideal": [
+      "0,1-0,7 mg/dL (baixo risco)",
+      "0,8-1,1 mg/dL (leve)",
+      "1,2-1,9 mg/dL (moderado)",
+      "2,0-3,8 mg/dL (alto)",
+      "> 3,9 mg/dL (muito alto)"
+    ],
+    "medications": {
+      "low": "",
+      "high": [
+        {
+          "nome": "Trio Detox",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Chronic",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ]
+    }
+  },
+  "Mieloperoxidase": {
+    "ideal": "< 470 pmol/L",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Gama-GT": {
+    "ideal": "10-20 U/L",
+    "medications": {
+      "low": [
+        {
+          "nome": "Lipomic",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Trio Detox (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Morusil (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "TGO (AST)": {
+    "ideal": "10-20 U/L",
+    "medications": {
+      "low": [
+        {
+          "nome": "Lipomic",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Trio Detox (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Morusil (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "TGP (ALT)": {
+    "ideal": "10-20 U/L",
+    "medications": {
+      "low": [
+        {
+          "nome": "Lipomic",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Trio Detox (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Morusil (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Fosfatase Alkalina": {
+    "ideal": "> 50 U/L",
+    "medications": {
+      "low": [
+        {
+          "nome": "Lipomic",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Trio Detox (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Morusil (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Ácido Úrico": {
+    "ideal": {
+      "M": "< 4,9 mg/dL",
+      "F": "< 3,9 mg/dL"
+    },
+    "medications": {
+      "high": [
+        {
+          "nome": "Trio Detox (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Coenzima Q10 (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "low": ""
+    },
+    "synonyms": [
+      "ácido úrico",
+      "urato"
+    ]
+  },
+  "Ureia": {
+    "ideal": "35-45 mg/dL",
+    "medications": {
+      "high": [
+        {
+          "nome": "Trio Detox (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Coenzima Q10 (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "low": ""
+    },
+    "synonyms": [
+      "ureia",
+      "uréia"
+    ]
+  },
+  "Coenzima Q10": {
+    "ideal": "> 1 mg/L",
+    "medications": {
+      "low": "",
+      "high": [
+        {
+          "nome": "CQ10",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ]
+    }
+  },
+  "Bilirrubina Total": {
+    "ideal": "máximo 1,2 mg/dL",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Microalbuminúria": {
+    "ideal": "< 8 mg/g creatinina (ideal ZERO)",
+    "medications": {
+      "low": "",
+      "high": [
+        {
+          "nome": "ZMA",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Aminoácidos",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ]
+    }
+  },
+  "Albumina sérica": {
+    "ideal": "4,0 g/dL",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "TSH": {
+    "ideal": "1,0-2,5 µIU/mL",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Biocolin (B2, B3, B5, B6, ZN, SE, Si, B9, Prolina) (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    },
+    "synonyms": [
+      "tsh",
+      "tsh ultrasensível",
+      "hormônio estimulante da tireoide"
+    ]
+  },
+  "T4 total": {
+    "ideal": "1,5-2,5 mIU/L",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Biocolin (B2, B3, B5, B6, ZN, SE, Si, B9, Prolina)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Biotina",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "T4 livre": {
+    "ideal": "0,9-1,3 ng/dL",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Biocolin (B2, B3, B5, B6, ZN, SE, Si, B9, Prolina) (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "T3 total": {
+    "ideal": "120-160 ng/dL",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Biocolin (B2, B3, B5, B6, ZN, SE, Si, B9, Prolina)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Biotina",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "T3 livre": {
+    "ideal": "3,0-3,4 pg/mL",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Biocolin (B2, B3, B5, B6, ZN, SE, Si, B9, Prolina) (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "T3 reverso (sem função)": {
+    "ideal": "0,1-0,25 ng/mL",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Biocolin (B2, B3, B5, B6, ZN, SE, Si, B9, Prolina)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Biotina",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Rel. T3 total/T3 reverso": {
+    "ideal": "= 6",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Biocolin (B2, B3, B5, B6, ZN, SE, Si, B9, Prolina)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Biotina",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Rel. T3 livre/T4 livre": {
+    "ideal": "> 0,31 ou > 3,1 ou > 31 (conforme unidade)",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Biocolin (B2, B3, B5, B6, ZN, SE, Si, B9, Prolina)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Biotina",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Anticorpo Anti-TPO": {
+    "ideal": "Negativo (importante ficar abaixo do valor de corte)",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Anticorpo Anti-TG": {
+    "ideal": "Negativo (importante ficar abaixo do valor de corte)",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Tiroglobulina": {
+    "ideal": "8-13 ng/mL (ótimo: 11,5 ng/mL)",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Iodo no plasma": {
+    "ideal": "––",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Iodo na urina": {
+    "ideal": "294-536 mcg/g creatinina",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Eritrócitos": {
+    "ideal": {
+      "M": "4,5-6,0 ×10⁶/mm³",
+      "F": "4,0-5,5 ×10⁶/mm³"
+    },
+    "medications": {
+      "low": [
+        {
+          "nome": "Trio Metilador (B12",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "B9",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "B6)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Hemoglobina": {
+    "ideal": {
+      "M": "14,0-16,0 g/dL",
+      "F": "13,5-15,5 g/dL"
+    },
+    "medications": {
+      "low": [
+        {
+          "nome": "Biocolin (B2, B3, B5, B6, ZN, SE, Si, B9, Prolina)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "B12 2.500mcg",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Biotina",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Hematócrito": {
+    "ideal": {
+      "M": "42-48 %",
+      "F": "39-47 %"
+    },
+    "medications": {
+      "low": [
+        {
+          "nome": "Biocolin (B2, B3, B5, B6, ZN, SE, Si, B9, Prolina)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "B12",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "VCM": {
+    "ideal": "88-92 fL",
+    "medications": {
+      "low": [
+        {
+          "nome": "Biocolin (B2, B3, B5, B6, ZN, SE, Si, B9, Prolina)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "B12",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "HCM": {
+    "ideal": "27-33 pg/célula",
+    "medications": {
+      "low": [
+        {
+          "nome": "Biocolin (B2, B3, B5, B6, ZN, SE, Si, B9, Prolina)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "B12",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "CHCM": {
+    "ideal": "31-35 g/dL",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "RDW": {
+    "ideal": "11,5-13 %",
+    "medications": {
+      "low": [
+        {
+          "nome": "Complexo B",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Trio Metilador",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "VSG": {
+    "ideal": "< 10 mm (após 1 hora)",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Saturação de Transferrina": {
+    "ideal": "25-40 %",
+    "medications": {
+      "low": [
+        {
+          "nome": "Biocolin (B2, B3, B5, B6, ZN, SE, Si, B9, Prolina)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "B12",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Vitamina C",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Transferrina livre": {
+    "ideal": "212-360 mg/dL",
+    "medications": {
+      "low": [
+        {
+          "nome": "Biocolin (B2, B3, B5, B6, ZN, SE, Si, B9, Prolina)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "B12",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Vitamina C",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Ferritina": {
+    "ideal": "50-150 mcg/L (ideal > 70 mcg/L)",
+    "medications": {
+      "low": [
+        {
+          "nome": "Vitamina C",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Biocolin (B2, B3, B5, B6, ZN, SE, Si, B9, Prolina)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "B12 (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": [
+        {
+          "nome": "Trio Detox (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Lipomic",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ]
+    }
+  },
+  "TIBC": {
+    "ideal": "300-400 mcg/dL",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Vitamina B12": {
+    "ideal": "500-900 ng/L",
+    "medications": {
+      "low": [
+        {
+          "nome": "B12 2.500mg",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Trio Metilador",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    },
+    "synonyms": [
+      "b12",
+      "vitamina b12",
+      "cobalamina"
+    ]
+  },
+  "Ácido Fólico (hemograma)": {
+    "ideal": "10-17 ng/mL",
+    "medications": {
+      "low": [
+        {
+          "nome": "Trio Metilador (B12",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "B9",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "B6)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    },
+    "synonyms": [
+      "ácido fólico",
+      "folato"
+    ]
+  },
+  "Holotranscobalamina": {
+    "ideal": "> 60 pmol/L",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Ácido Metilmalônico": {
+    "ideal": "< 220 µmol/L",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Homocisteína": {
+    "ideal": "5-9 µmol/L",
+    "medications": {
+      "high": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Same (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "low": ""
+    }
+  },
+  "Leucócitos": {
+    "ideal": "4 000-6 500/mm³",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Immunity",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Neutrófilos": {
+    "ideal": "45-55 % dos leucócitos",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Immunity",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Linfócitos": {
+    "ideal": "25-35 % dos leucócitos",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Immunity",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Rel. Neutrófilos/Linfócitos": {
+    "ideal": "1,0-1,5",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Immunity",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Monócitos": {
+    "ideal": "3-8 % dos leucócitos",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Immunity",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Eosinófilos": {
+    "ideal": "< 1 % dos leucócitos",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Immunity",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Basófilos": {
+    "ideal": "0,0-0,5 % dos leucócitos",
+    "medications": {
+      "low": "",
+      "high": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Immunity",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ]
+    }
+  },
+  "Plaquetas": {
+    "ideal": "250 000-300 000/mm³",
+    "medications": {
+      "low": [
+        {
+          "nome": "Biocolin (B2, B3, B5, B6, ZN, SE, Si, B9, Prolina)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "B12 2500mcg",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": [
+        {
+          "nome": "K2MK7",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ]
+    }
+  },
+  "Glicose de jejum": {
+    "ideal": "75-90 mg/dL",
+    "medications": {
+      "high": [
+        {
+          "nome": "Coenzima Q10 (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Thermoativador (IM)",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "low": ""
+    },
+    "synonyms": [
+      "glicose",
+      "glicemia de jejum",
+      "glicose jejum"
+    ]
+  },
+  "HbA1c": {
+    "ideal": "< 5,4 %",
+    "medications": {
+      "high": [
+        {
+          "nome": "Coenzima Q10 (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Thermoativador (IM)",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "low": ""
+    },
+    "synonyms": [
+      "hemoglobina glicada",
+      "hba1c",
+      "a1c"
+    ]
+  },
+  "Insulina": {
+    "ideal": "< 6 µIU/mL",
+    "medications": {
+      "high": [
+        {
+          "nome": "Coenzima Q10 (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "Thermoativador (IM)",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "low": ""
+    },
+    "synonyms": [
+      "insulina",
+      "insulina basal"
+    ]
+  },
+  "Pró-insulina": {
+    "ideal": "< 10 pmol/L",
+    "medications": {
+      "low": [
+        {
+          "nome": "CQ10 + ADK",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Thermoativador (IM)",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Vitamina D3",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar dose única (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "HOMA-IR": {
+    "ideal": "< 1",
+    "medications": {
+      "high": [
+        {
+          "nome": "Coenzima Q10 (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "ADEK2 600.000 UI ou D3 (IM)",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Thermoativador (IM)",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "low": ""
+    }
+  },
+  "Homa-beta": {
+    "ideal": "≈ 100 (uso apenas em pacientes insulinorresistentes)",
+    "medications": {
+      "low": [
+        {
+          "nome": "CQ10 + Thermoativador +/ ADK",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "D3 (dose única)",
+          "preparo": "Pronto para uso.",
+          "aplicacao": "Aplicar dose única (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "TTG Glicose 1 h após 75 g": {
+    "ideal": "Até 140 mg/dL",
+    "medications": {
+      "low": [
+        {
+          "nome": "CQ10 + ADK",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Thermoativador (IM)",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "D3 (dose única)",
+          "preparo": "Pronto para uso.",
+          "aplicacao": "Aplicar dose única (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "TTG Glicose 2 h após 75 g": {
+    "ideal": "Similar ao valor de jejum",
+    "medications": {
+      "low": [
+        {
+          "nome": "CQ10 + ADK",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Thermoativador (IM)",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "D3 (dose única)",
+          "preparo": "Pronto para uso.",
+          "aplicacao": "Aplicar dose única (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "TTG Insulina 1 h após 75 g": {
+    "ideal": "0-50 µIU/mL",
+    "medications": {
+      "low": [
+        {
+          "nome": "CQ10 + ADK",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Thermoativador (IM)",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "D3 (dose única)",
+          "preparo": "Pronto para uso.",
+          "aplicacao": "Aplicar dose única (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "TTG Insulina 2 h após 75 g": {
+    "ideal": "0-25 µIU/mL",
+    "medications": {
+      "low": [
+        {
+          "nome": "CQ10 + ADK",
+          "preparo": "Diluir conforme orientação do fabricante.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Thermoativador (IM)",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "D3 (dose única)",
+          "preparo": "Pronto para uso.",
+          "aplicacao": "Aplicar dose única (IM)."
+        }
+      ],
+      "high": ""
+    }
+  },
+  "Colesterol Total (CT)": {
+    "ideal": "0-200 mg/dL",
+    "medications": {
+      "low": "",
+      "high": ""
+    },
+    "synonyms": [
+      "colesterol total",
+      "colesterol",
+      "ct"
+    ]
+  },
+  "HDL": {
+    "ideal": {
+      "M": "50-73 mg/dL",
+      "F": "60-93 mg/dL"
+    },
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "D3 (dose única)",
+          "preparo": "Pronto para uso.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "CQ10 (IM)",
+          "preparo": "Pronto para uso.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Lipomic",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    },
+    "synonyms": [
+      "hdl",
+      "hdl-c",
+      "hdl colesterol",
+      "hdl-colesterol"
+    ]
+  },
+  "Colesterol LDL": {
+    "ideal": "0-159 mg/dL",
+    "medications": {
+      "low": [
+        {
+          "nome": "ADEK2 600.000 UI",
+          "preparo": "Aplicar intramuscular lento e profundo, usar agulha 0,7x30mm, observando que essa aplicação deve ser realizada no quadrante superior externo do glúteo (não administrar no deltoide). Observação: Não deixar o óleo retornar, risco de agressão cutânea gerando vermelhidão local.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "D3 (dose única)",
+          "preparo": "Pronto para uso.",
+          "aplicacao": "Aplicar dose única (IM)."
+        },
+        {
+          "nome": "CQ10 (IM)",
+          "preparo": "Pronto para uso.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        },
+        {
+          "nome": "Lipomic",
+          "preparo": "Aspirar o líquido na seringa e não ultrapassar 5ml por aplicação. Aplicação em região sadia do glúteo.",
+          "aplicacao": "Aplicar 1x por semana por 4 semanas (IM)."
+        }
+      ],
+      "high": ""
+    },
+    "synonyms": [
+      "ldl",
+      "ldl-c",
+      "ldl colesterol",
+      "colesterol ldl"
+    ]
+  },
+  "PH urinário": {
+    "ideal": "6,6-7,5",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Densidade urinária": {
+    "ideal": "1005-1010",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Índice de Simpson": {
+    "ideal": "7-10",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Indicador de Riqueza": {
+    "ideal": "400-",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Razão firmicutes/bacteroidetes": {
+    "ideal": "0,7-1,0",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  },
+  "Índice firmicutes + bacteroidetes": {
+    "ideal": "85-95 %",
+    "medications": {
+      "low": "",
+      "high": ""
+    }
+  }
+}

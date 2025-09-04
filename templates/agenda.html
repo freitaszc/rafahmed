@@ -369,13 +369,12 @@
         class="label">Sair</span></a>
   </div>
 
-  <!-- Conteúdo -->
   <div class="content">
     <div class="btn-row">
       <button onclick="openModal()" class="btn">Agendar Consulta</button>
     </div>
 
-    <!-- Filtro por médico no topo -->
+    <!-- Filter doctor -->
     <div class="topbar">
       <label for="doctorFilter" style="color:var(--text-dim);font-size:14px;">Filtrar médico:</label>
       <select id="doctorFilter" class="input-like">
@@ -392,19 +391,24 @@
       <button class="close-x" onclick="closeModal()">×</button>
       <h3 style="margin-top:6px;margin-bottom:18px">Agendar Consulta</h3>
 
-      <!-- Médico -->
+      <!-- Doctor -->
       <select id="doctor" class="scheduling" required>
         <option value="">Selecione o médico</option>
       </select>
 
-      <!-- Observação / Nome do paciente -->
+      <!-- Obs/Patient name -->
       <input type="text" id="title" class="scheduling" placeholder="Observação / Nome do Paciente" required>
 
-      <!-- Data -->
+      <!-- Date -->
       <input type="date" id="date" class="scheduling" placeholder="dd/mm/aaaa" required>
 
-      <!-- Horário (opcional) + Slots -->
+      <!-- Time (opcional) -->
       <input type="time" id="time" class="scheduling" placeholder="Horário (opcional)">
+
+      <!-- Slots available -->
+      <select id="slot" class="scheduling">
+        <option value="">— horários disponíveis —</option>
+      </select>
 
       <button onclick="submitEvent()" class="btn" style="width:100%">Salvar</button>
     </div>
@@ -416,8 +420,8 @@
     let doctorFilter = '';
 
     document.addEventListener('DOMContentLoaded', async function () {
-      await loadDoctors('#doctor');       // médicos no modal
-      await loadDoctors('#doctorFilter'); // médicos no filtro
+      await loadDoctors('#doctor');       // doctos on modal
+      await loadDoctors('#doctorFilter'); // doctors on fiter
 
       const calendarEl = document.getElementById('calendar');
       calendar = new FullCalendar.Calendar(calendarEl, {
@@ -467,6 +471,7 @@
 
       const res = await fetch(`/api/available_slots?doctor_id=${doctorId}&date=${encodeURIComponent(br)}`);
       const slots = await res.json();
+
       slotSel.innerHTML = slots.length
         ? '<option value="">— selecione —</option>' + slots.map(h => `<option value="${h}">${h}</option>`).join('')
         : '<option value="">Sem horários para este dia</option>';
@@ -478,11 +483,18 @@
         const res = await fetch(`/api/events${qs}`);
         const data = await res.json();
         successCallback(data);
-      } catch (e) { failureCallback(e); }
+      } catch (e) {
+        failureCallback(e);
+      }
     }
 
-    function openModal() { document.getElementById("eventModal").style.display = "flex"; }
-    function closeModal() { document.getElementById("eventModal").style.display = "none"; }
+    function openModal() {
+      document.getElementById("eventModal").style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("eventModal").style.display = "none";
+    }
 
     async function submitEvent() {
       const title = document.getElementById("title").value.trim();
@@ -494,6 +506,8 @@
         alert("Preencha observação/nome, data e selecione o médico.");
         return;
       }
+
+      // format the date to dd/mm//yyyy
       const [year, month, day] = dateISO.split("-");
       const formattedDate = `${day}/${month}/${year}`;
 
@@ -505,7 +519,7 @@
 
       try {
         const r = await fetch("/submit_consultation", { method: "POST", body: form });
-        if (r.status === 409) { alert("Este horário já foi reservado."); return; }
+        if (r.status === 409) { alert("Este horário já foi reservado ou está fora da disponibilidade."); return; }
         if (!r.ok) throw new Error();
         alert("Consulta agendada com sucesso!");
         closeModal();
@@ -516,5 +530,4 @@
     }
   </script>
 </body>
-
 </html>

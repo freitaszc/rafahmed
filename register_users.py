@@ -24,7 +24,7 @@ def main():
         password = getpass("Senha          : ").strip()
         confirm  = getpass("Confirme senha : ").strip()
 
-        if not (username and email and password):
+        if not (username and password):
             print("❌ Todos os campos são obrigatórios.")
             return
 

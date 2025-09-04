@@ -71,11 +71,13 @@ class Quote(db.Model):
     items      = db.Column(db.Text, nullable=False)
     suppliers  = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id    = db.Column(db.Integer, db.ForeignKey('users.id'), index=True, nullable=True)
 
-    def __init__(self, title: str, items: str, suppliers: str):
+    def __init__(self, title: str, items: str, suppliers: str, user_id: int | None = None):
         self.title     = title
         self.items     = items
         self.suppliers = suppliers
+        self.user_id   = user_id
 
 
 class QuoteResponse(db.Model):

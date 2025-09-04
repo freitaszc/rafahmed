@@ -551,34 +551,27 @@ def upload():
         patient = None
 
         if using_manual:
-            name        = (request.form.get('name') or '').strip()
-            age_str     = (request.form.get('age') or '').strip()
-            age         = int(age_str) if age_str.isdigit() else None
-            cpf         = (request.form.get('cpf') or '').strip()
-            gender      = (request.form.get('gender') or '').strip()
-            phone       = (request.form.get('phone') or '').strip()
-            doctor_name = (request.form.get('doctor') or '').strip()
             manual_text = (request.form.get('lab_results') or '').strip()
 
             result = analyze_pdf(manual_text, manual=True)
-            if not isinstance(result, (list, tuple)) or len(result) != 2:
+            if not isinstance(result, (list, tuple)) or len(result) != 8:
                 flash('Erro ao processar análise manual.', 'danger')
                 return render_template('upload.html')
-            diagnostic, prescription = result
+
+            diagnostic, prescription, name, gender, age, cpf, phone, doctor_name = result
 
             if not cpf:
                 cpf = f"no_cpf_{int(pytime.time())}"
 
             patient = add_patient(
                 name=name,
-                age=age if isinstance(age, int) else None,
+                age=int(age) if str(age).isdigit() else None,
                 cpf=cpf,
                 gender=gender or None,
                 phone=phone or None,
                 doctor_id=user.id,
                 prescription=prescription
             )
-
         else:
             pdf_file = request.files.get('pdf_file')
             if not pdf_file or not pdf_file.filename:
@@ -728,31 +721,79 @@ def agenda():
 @app.route('/doctors')
 @login_required
 def doctors():
-    return render_template('doctors.html')
+    user = get_logged_user()
+    if not user:
+        return redirect(url_for('login'))
 
-@app.route('/api/doctors')
-def api_doctors():
     doctors = Doctor.query.order_by(Doctor.name).all()
-    return jsonify([{"id": d.id, "name": d.name} for d in doctors])
+    return render_template('doctors.html', doctors=doctors, user=user)
 
-def _br_to_date(s: str):
-    return datetime.strptime(s, '%d/%m/%Y').date()
-
-@app.route('/admin/doctor/<int:doctor_id>/delete', methods=['POST'])
+@app.route('/add_doctor', methods=['POST'])
 @login_required
-def delete_doctor_route(doctor_id):
+def add_doctor_route():
+    user = get_logged_user()
+    if not user:
+        flash("Você não está autorizado.", "danger")
+        return redirect(url_for("login"))
+
+    name      = (request.form.get('name') or '').strip()
+    phone     = (request.form.get('phone') or '').strip()
+
+    if not name:
+        flash("Nome do prescritor é obrigatório.", "warning")
+        return redirect(url_for("doctors"))
+
+    if Doctor.query.filter_by(name=name).first():
+        flash("Já existe um prescritor com esse nome.", "warning")
+        return redirect(url_for("doctors"))
+
+    doctor = Doctor(name=name, phone=phone or None)
+    db.session.add(doctor)
+    db.session.commit()
+
+    flash(f"Prescritor {doctor.name} cadastrado!", "success")
+    return redirect(url_for("doctors"))
+
+@app.route('/update_doctor/<int:doctor_id>', methods=['POST'])
+@login_required
+def update_doctor(doctor_id):
+    doctor = Doctor.query.get_or_404(doctor_id)
+    doctor.name      = (request.form.get('name') or doctor.name).strip()
+    doctor.phone     = (request.form.get('phone') or doctor.phone).strip()
+    db.session.commit()
+    flash("Prescritor atualizado!", "success")
+    return redirect(url_for("doctors"))
+
+@app.route('/delete_doctor/<int:doctor_id>', methods=['POST'])
+@login_required
+def delete_doctor(doctor_id):
+    user = get_logged_user()
+    if not user:
+        return jsonify({"ok": False, "error": "unauthorized"}), 403
+
     doc = Doctor.query.get(doctor_id)
     if not doc:
         return jsonify({"ok": False, "error": "Médico não encontrado."}), 404
 
     try:
-        DoctorDateAvailability.query.filter_by(doctor_id=doctor_id).delete(synchronize_session=False)
-        DoctorAvailability.query.filter_by(doctor_id=doctor_id).delete(synchronize_session=False)
-        Patient.query.filter_by(doctor_id=doctor_id).update({"doctor_id": None}, synchronize_session=False)
-        Consult.query.filter_by(doctor_id=doctor_id).delete(synchronize_session=False)
-        db.session.delete(doc)
-        db.session.commit()
-        return jsonify({"ok": True})
+        # if admin he can delete any patient
+        if user.username.lower() == 'admin':
+            DoctorDateAvailability.query.filter_by(doctor_id=doctor_id).delete(synchronize_session=False)
+            DoctorAvailability.query.filter_by(doctor_id=doctor_id).delete(synchronize_session=False)
+            Patient.query.filter_by(doctor_id=doctor_id).update({"doctor_id": None}, synchronize_session=False)
+            Consult.query.filter_by(doctor_id=doctor_id).delete(synchronize_session=False)
+            db.session.delete(doc)
+            db.session.commit()
+            flash("Prescritor excluído com todas as dependências removidas.", "info")
+            return redirect(url_for("doctors"))
+
+        # If not admin he can only delete his own patients
+        else:
+            db.session.delete(doc)
+            db.session.commit()
+            flash("Prescritor excluído.", "info")
+            return redirect(url_for("doctors"))
+
     except Exception as e:
         db.session.rollback()
         return jsonify({"ok": False, "error": str(e)}), 500
@@ -760,7 +801,7 @@ def delete_doctor_route(doctor_id):
 @app.route('/availability', methods=['GET', 'POST'])
 @login_required
 def availability():
-    # Apenas admin
+    # ONly admin
     user = get_logged_user()
     if not user or user.username.lower() != 'admin':
         return jsonify({"ok": False, "error": "unauthorized"}), 401
@@ -918,7 +959,7 @@ def availability_dates():
         db.session.rollback()
         return jsonify({"ok": False, "error": f"Erro ao salvar disponibilidade: {e}"}), 500
 
-    # identificar blocos removidos e apagar consultas dentro deles
+    # identify removed blocks and delete consults within it
     removed = old_set - new_set
     for day, start_s, end_s in removed:
         s_t = datetime.strptime(start_s, '%H:%M').time()
@@ -984,7 +1025,7 @@ def api_available_days():
 @app.route('/api/available_slots')
 def api_available_slots():
     doctor_id = request.args.get('doctor_id', type=int)
-    date_str  = request.args.get('date', type=str)  # dd/mm/aaaa
+    date_str  = request.args.get('date', type=str)  # dd/mm/yyyy
     if not doctor_id or not date_str:
         return jsonify([])
 
@@ -995,7 +1036,7 @@ def api_available_slots():
 
     blocks = DoctorDateAvailability.query.filter_by(doctor_id=doctor_id, day=day).all()
     if not blocks:
-        # nada cadastrado pra essa data -> nada disponível
+        # if nothing is scheduled for this date -> nothing available
         return jsonify([])
 
     taken = {
@@ -1031,7 +1072,7 @@ def admin_availability_page():
 # Companies / PDFs (admin)
 # ------------------------------------------------------------------------------
 ALLOWED_EXTENSIONS = {'pdf'}
-PDF_UPLOAD_DIR = os.path.join(app.root_path, 'uploads', 'pdfs')  # repositório admin
+PDF_UPLOAD_DIR = os.path.join(app.root_path, 'uploads', 'pdfs')  # admin repo
 os.makedirs(PDF_UPLOAD_DIR, exist_ok=True)
 
 def allowed_file(filename):
@@ -1184,7 +1225,6 @@ def download_pdf_admin(file_id):
     pdf = PdfFile.query.get_or_404(file_id)
     if not pdf.secure_file_id:
         abort(404)
-    # force attachment if you prefer:
     raw, sf = read_secure_file_bytes(pdf.secure_file_id)
     resp = make_response(raw)
     resp.headers["Content-Type"] = sf.mime_type
@@ -1254,25 +1294,6 @@ def list_users():
         return redirect(url_for('index'))
     users = User.query.order_by(User.id).all()
     return render_template('users.html', users=users)
-
-@app.route('/add_doctor', methods=['POST'])
-@login_required
-def add_doctor_route():
-    user = get_logged_user()
-    if not user:
-        return jsonify(ok=False, error="Unauthorized"), 403
-
-    data = request.get_json(silent=True) or {}
-    name = (data.get('name') or request.form.get('name') or '').strip()
-    specialty = (data.get('specialty') or request.form.get('specialty') or '').strip()
-
-    if not name:
-        return jsonify(ok=False, error="Nome do médico é obrigatório"), 400
-
-    # registra no banco
-    doctor = add_doctor(name=name, phone=None)
-    return jsonify(ok=True, doctor={"id": doctor.id, "name": doctor.name})
-
 
 @app.route('/save_consult/<int:patient_id>', methods=['POST'])
 @login_required
@@ -1743,10 +1764,10 @@ def create_quote():
         title = request.form['title']
         items_raw = request.form['items']
         supplier_ids = request.form.getlist('supplier_ids')
-
         suppliers_str = ",".join(supplier_ids)
 
-        quote = Quote(title=title, items=items_raw, suppliers=suppliers_str)
+        # ⭐ grava o criador
+        quote = Quote(title=title, items=items_raw, suppliers=suppliers_str, user_id=user.id)
         db.session.add(quote)
         db.session.commit()
 
@@ -1803,7 +1824,7 @@ def quote_index():
     if not user:
         return redirect(url_for('login'))
 
-    quotes = Quote.query.order_by(Quote.created_at.desc()).all()
+    quotes = Quote.query.filter_by(user_id=user.id).order_by(Quote.created_at.desc()).all()
     suppliers_all = {str(s.id): s.name for s in get_suppliers_by_user(user.id)}
 
     for quote in quotes:
@@ -1813,7 +1834,7 @@ def quote_index():
             quote.supplier_list = []
         quote.responses = QuoteResponse.query.filter_by(quote_id=quote.id).all()
 
-    return render_template('quote_index.html', quotes=quotes)
+    return render_template('quote_index.html', quotes=quotes, user=user)
 
 @app.route('/quote/<int:quote_id>/supplier/<int:supplier_id>', methods=['GET', 'POST'])
 def respond_quote(quote_id, supplier_id):
@@ -1857,7 +1878,16 @@ def respond_quote(quote_id, supplier_id):
 @login_required
 @feature_required('quotes_auto')
 def quote_results(quote_id):
+    user = cast(User, get_logged_user())
+    if user is None:  # extra safety; helps type checkers
+        return redirect(url_for('login'))
+
     quote = Quote.query.get_or_404(quote_id)
+
+    # block access if quote has no owner or owner != current user
+    if not quote.user_id or quote.user_id != user.id:
+        abort(403)
+
     responses = QuoteResponse.query.filter_by(quote_id=quote_id).all()
 
     supplier_ids = [int(x) for x in (quote.suppliers or '').split(',') if x]
@@ -1899,14 +1929,22 @@ def quote_results(quote_id):
         quote_items=quote_items,
         quote_suppliers=quote_suppliers,
         quote_responses=quote_responses,
-        best_per_item=best_per_item
+        best_per_item=best_per_item,
+        user=user
     )
 
 @app.route('/delete_quote/<int:quote_id>', methods=['POST'])
 @login_required
 def delete_quote(quote_id):
-    user = get_logged_user()
+    user = cast(User, get_logged_user())
+    if user is None:
+        return redirect(url_for('login'))
+
     quote = Quote.query.get_or_404(quote_id)
+
+    if not quote.user_id or quote.user_id != user.id:
+        abort(403)
+
     db.session.delete(quote)
     db.session.commit()
     flash('Cotação excluída com sucesso!', 'success')
@@ -1915,6 +1953,12 @@ def delete_quote(quote_id):
 # ------------------------------------------------------------------------------
 # API & Consult routes quick
 # ------------------------------------------------------------------------------
+@app.get('/api/doctors')
+@login_required
+def api_doctors():
+    docs = Doctor.query.order_by(Doctor.name).all()
+    return jsonify([{"id": d.id, "name": d.name} for d in docs])
+
 @app.route('/api/add_consult', methods=['POST'])
 def api_add_consult():
     user = get_logged_user()
@@ -2476,7 +2520,7 @@ def submit_srq20():
 
     admin_id = request.args.get('admin', type=int)
 
-    name = payload.get('nome') or payload.get('name')  # opcional
+    name = payload.get('nome') or payload.get('name')  # optional
     age = str(payload.get('idade') or '').strip() or None
     sex = (payload.get('sexo') or '').strip() or None
 
@@ -2511,7 +2555,7 @@ def questionnaire_results():
         QuestionnaireResult.created_at.desc()
     ).all()
 
-    # username consistente para os templates
+    # username consistent for all templates
     username = getattr(user, 'username', None) if user else None
 
     return render_template(
@@ -2527,7 +2571,7 @@ def questionnaire_patient(questionnaire_id):
     user = get_logged_user()
     r = QuestionnaireResult.query.get_or_404(questionnaire_id)
 
-    patient = r.to_dict()  # dicionário com chaves PT-BR p/ o template
+    patient = r.to_dict()  # dictionary with PT/BR keywords
     username = getattr(user, 'username', None) if user else None
     return render_template('questionnaire_patient.html', patient=patient, user=user, username=username)
 
