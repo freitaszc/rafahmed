@@ -59,17 +59,50 @@ def _post_whatsapp(payload: dict) -> Optional[str]:
     Envia o payload para o WhatsApp Cloud API.
     Retorna None em caso de sucesso, ou a string do erro em caso de falha.
     """
+    print("\n[WA DEBUG] =====================")
+    print("[WA DEBUG] _post_whatsapp called")
     if not WHATSAPP_TOKEN:
+        print("[WA DEBUG] ERRO: WHATSAPP_TOKEN não configurado")
         return "WHATSAPP_TOKEN não configurado"
     if not WHATSAPP_PHONE_NUMBER_ID:
+        print("[WA DEBUG] ERRO: WHATSAPP_PHONE_NUMBER_ID não configurado")
         return "WHATSAPP_PHONE_NUMBER_ID não configurado"
 
     try:
-        resp = requests.post(_endpoint(), headers=_headers(), json=payload, timeout=30)
-        if resp.status_code in (200, 201):
-            return None
-        return f"Erro WhatsApp ({resp.status_code}): {resp.text}"
+        endpoint = _endpoint()
+        print("[WA DEBUG] Endpoint:", endpoint)
+        print("[WA DEBUG] Payload:", json.dumps(payload, ensure_ascii=False))
+
+        resp = requests.post(endpoint, headers=_headers(), json=payload, timeout=30)
+        print("[WA DEBUG] HTTP status:", resp.status_code)
+        print("[WA DEBUG] Response body:", resp.text)
+
+        if resp.status_code not in (200, 201):
+            try:
+                data = resp.json()
+            except Exception:
+                data = {"raw": resp.text}
+            print("[WA DEBUG] WhatsApp returned error:", data)
+            return f"Erro WhatsApp ({resp.status_code}): {data}"
+
+        # Extra: logar wa_id e message_id
+        try:
+            data = resp.json()
+            wa_id = (data.get("contacts") or [{}])[0].get("wa_id")
+            msg = (data.get("messages") or [{}])[0]
+            msg_id = msg.get("id")
+            msg_status = msg.get("message_status")
+            if wa_id:
+                print(f"[WA DEBUG] Contact mapping: input_to={payload.get('to')} -> wa_id={wa_id}")
+            if msg_id or msg_status:
+                print(f"[WA DEBUG] Message accepted: id={msg_id} status={msg_status}")
+        except Exception as e_parse:
+            print("[WA DEBUG] Could not parse wa_id/message_id:", e_parse)
+
+        print("[WA DEBUG] =====================\n")
+        return None
     except Exception as e:
+        print("[WA DEBUG] Exception during request:", e)
         return f"Erro de requisição WhatsApp: {e}"
 
 
