@@ -362,13 +362,12 @@
                 <tbody id="tbody"></tbody>
             </table>
         </div>
-
         <!-- Modal Cadastrar Médico -->
         <div id="doctorModal" class="modal" aria-hidden="true">
             <div class="modal-card">
                 <button class="close-x" onclick="closeDoctorModal()">×</button>
                 <h2 style="text-align:center;margin:8px 0 14px">Cadastrar Médico</h2>
-                <form id="doctorForm" onsubmit="return submitDoctor(event)">
+                <form id="doctorForm" onsubmit="submitDoctor(event)">
                     <input type="text" id="docName" placeholder="Nome completo" required
                         style="width:100%;margin-bottom:10px">
                     <button type="submit" class="menu-button" style="width:100%">Salvar</button>
@@ -491,12 +490,14 @@
             async function submitDoctor(ev) {
                 ev.preventDefault();
                 const name = el('docName').value.trim();
-                if (!name) return false;
+                if (!name) return;
+
                 const r = await fetch(`{{ url_for('add_doctor_route') }}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name })
                 });
+
                 const data = await r.json();
                 if (data && data.ok && data.doctor) {
                     appendDoctorToUI(data.doctor);
@@ -507,7 +508,6 @@
                 } else {
                     alert(data?.error || 'Erro ao cadastrar médico.');
                 }
-                return false;
             }
 
             // Deletar médico
@@ -515,7 +515,7 @@
                 if (!confirm(`Excluir o médico "${doctorName}"? Esta ação removerá também as disponibilidades e consultas dele.`)) {
                     return;
                 }
-                const url = `{{ url_for('delete_doctor_route', doctor_id=0) }}`.replace('0', doctorId);
+                const url = `{{ url_for('delete_doctor', doctor_id=0) }}`.replace('0', doctorId);
                 const r = await fetch(url, { method: 'POST' });
                 const resp = await r.json();
                 if (!(resp && resp.ok)) { alert(resp?.error || 'Não foi possível excluir.'); return; }

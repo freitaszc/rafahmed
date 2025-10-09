@@ -400,7 +400,8 @@
       <input type="text" id="title" class="scheduling" placeholder="Observação / Nome do Paciente" required>
 
       <!-- Date -->
-      <input type="date" id="date" class="scheduling" placeholder="dd/mm/aaaa" required>
+      <input type="text" id="date" class="scheduling" placeholder="Data (dd/mm/aaaa)" oninput="formatDateInput(this)"
+        required>
 
       <!-- Time (opcional) -->
       <input type="time" id="time" class="scheduling" placeholder="Horário (opcional)">
@@ -414,62 +415,57 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
   <script>
-    let calendar;
-    let doctorFilter = '';
+    // Função para formatar a data em tempo real (ex: 10102025 → 10/10/2025)
+    function formatDateInput(input) {
+      let v = input.value.replace(/\D/g, '');
+      if (v.length >= 2 && v.length <= 4) {
+        v = v.replace(/^(\d{2})(\d+)/, '$1/$2');
+      } else if (v.length > 4) {
+        v = v.replace(/^(\d{2})(\d{2})(\d+)/, '$1/$2/$3');
+      }
+      input.value = v;
+    }
 
-    document.addEventListener('DOMContentLoaded', async function () {
-      await loadDoctors('#doctor');       // doctos on modal
-      await loadDoctors('#doctorFilter'); // doctors on fiter
+    async function updateAvailableDates() {
+      const doctorId = document.getElementById('doctor').value;
+      const dateInput = document.getElementById('date');
+      const slotSel = document.getElementById('slot');
+      slotSel.innerHTML = '<option value="">— horários disponíveis —</option>';
+      if (!doctorId) { dateInput.disabled = true; return; }
 
-      const calendarEl = document.getElementById('calendar');
-      calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'pt-br',
-        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek' },
-        events: fetchEvents,
-        eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
-        dayHeaderFormat: { weekday: 'short' },
-        titleFormat: { year: 'numeric', month: '2-digit', day: '2-digit' }
+      const res = await fetch(`/api/available_days?doctor_id=${doctorId}`);
+      const days = await res.json();
+
+      if (!Array.isArray(days) || days.length === 0) {
+        dateInput.disabled = true;
+        alert('Este médico não possui disponibilidade cadastrada.');
+        return;
+      }
+
+      dateInput.disabled = false;
+      dateInput.value = '';
+
+      // Verifica se o usuário digitou uma data fora das disponíveis
+      dateInput.addEventListener('input', e => {
+        const val = e.target.value.trim();
+        if (val.length === 10 && !days.includes(val)) {
+          alert('Data não disponível para este médico.');
+          e.target.value = '';
+          slotSel.innerHTML = '<option value="">— horários disponíveis —</option>';
+        }
       });
-      calendar.render();
-
-      document.getElementById('doctor').addEventListener('change', updateSlots);
-      document.getElementById('date').addEventListener('change', updateSlots);
-      document.getElementById('slot').addEventListener('change', () => {
-        const v = document.getElementById('slot').value;
-        if (v) document.getElementById('time').value = v;
-      });
-
-      const df = document.getElementById('doctorFilter');
-      df.addEventListener('change', e => {
-        doctorFilter = e.target.value || '';
-        calendar.refetchEvents();
-      });
-    });
-
-    async function loadDoctors(selector) {
-      const res = await fetch('/api/doctors');
-      const docs = await res.json();
-      const sel = document.querySelector(selector);
-      if (!sel) return;
-      const first = sel.id === 'doctor' ? '<option value="">Selecione o médico</option>' : '<option value="">Todos</option>';
-      sel.innerHTML = first + docs.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
     }
 
     async function updateSlots() {
       const doctorId = document.getElementById('doctor').value;
-      const dateISO = document.getElementById('date').value;
+      const brDate = document.getElementById('date').value;
       const slotSel = document.getElementById('slot');
 
       slotSel.innerHTML = '<option value="">— horários disponíveis —</option>';
-      if (!doctorId || !dateISO) return;
+      if (!doctorId || !brDate) return;
 
-      const [y, m, d] = dateISO.split('-');
-      const br = `${d}/${m}/${y}`;
-
-      const res = await fetch(`/api/available_slots?doctor_id=${doctorId}&date=${encodeURIComponent(br)}`);
+      const res = await fetch(`/api/available_slots?doctor_id=${doctorId}&date=${encodeURIComponent(brDate)}`);
       const slots = await res.json();
 
       slotSel.innerHTML = slots.length
@@ -477,39 +473,22 @@
         : '<option value="">Sem horários para este dia</option>';
     }
 
-    async function fetchEvents(fetchInfo, successCallback, failureCallback) {
-      try {
-        const qs = doctorFilter ? `?doctor_id=${doctorFilter}` : '';
-        const res = await fetch(`/api/events${qs}`);
-        const data = await res.json();
-        successCallback(data);
-      } catch (e) {
-        failureCallback(e);
-      }
-    }
-
-    function openModal() {
-      document.getElementById("eventModal").style.display = "flex";
-    }
-
-    function closeModal() {
-      document.getElementById("eventModal").style.display = "none";
-    }
-
     async function submitEvent() {
       const title = document.getElementById("title").value.trim();
-      const dateISO = document.getElementById("date").value;
+      const dateBR = document.getElementById("date").value;
       const time = document.getElementById("time").value || "";
       const doctorId = document.getElementById("doctor").value;
 
-      if (!title || !dateISO || !doctorId) {
+      if (!title || !dateBR || !doctorId) {
         alert("Preencha observação/nome, data e selecione o médico.");
         return;
       }
 
-      // format the date to dd/mm//yyyy
-      const [year, month, day] = dateISO.split("-");
-      const formattedDate = `${day}/${month}/${year}`;
+      // Verifica e converte para ISO (aaaa-mm-dd)
+      const parts = dateBR.split('/');
+      if (parts.length !== 3) { alert("Data inválida."); return; }
+      const [day, month, year] = parts;
+      const formattedDate = `${day}/${month}/${year}`; // permanece dd/mm/aaaa
 
       const form = new FormData();
       form.append("title", title);
@@ -530,4 +509,5 @@
     }
   </script>
 </body>
+
 </html>

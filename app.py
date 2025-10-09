@@ -731,26 +731,23 @@ def doctors():
 def add_doctor_route():
     user = get_logged_user()
     if not user:
-        flash("Você não está autorizado.", "danger")
-        return redirect(url_for("login"))
+        return jsonify({"ok": False, "error": "unauthorized"}), 403
 
-    name      = (request.form.get('name') or '').strip()
-    phone     = (request.form.get('phone') or '').strip()
+    data = request.get_json(silent=True) or {}
+    name  = (data.get('name') or request.form.get('name') or '').strip()
+    phone = (data.get('phone') or request.form.get('phone') or '').strip()
 
     if not name:
-        flash("Nome do prescritor é obrigatório.", "warning")
-        return redirect(url_for("doctors"))
+        return jsonify({"ok": False, "error": "Nome obrigatório"}), 400
 
     if Doctor.query.filter_by(name=name).first():
-        flash("Já existe um prescritor com esse nome.", "warning")
-        return redirect(url_for("doctors"))
+        return jsonify({"ok": False, "error": "Já existe um prescritor com esse nome"}), 400
 
     doctor = Doctor(name=name, phone=phone or None)
     db.session.add(doctor)
     db.session.commit()
 
-    flash(f"Prescritor {doctor.name} cadastrado!", "success")
-    return redirect(url_for("doctors"))
+    return jsonify({"ok": True, "doctor": {"id": doctor.id, "name": doctor.name}})
 
 @app.route('/update_doctor/<int:doctor_id>', methods=['POST'])
 @login_required
@@ -2076,6 +2073,16 @@ def submit_patient_consultation():
 
     return redirect(url_for('hero'))
 
+@app.route('/delete_consult/<int:consult_id>', methods=['POST'])
+def delete_consult(consult_id):
+    consult = Consult.query.get(consult_id)
+    if not consult:
+        return jsonify({"ok": False, "error": "Consulta não encontrada"}), 404
+
+    db.session.delete(consult)
+    db.session.commit()
+    return jsonify({"ok": True})
+
 @app.route('/authorize_calendar')
 def authorize_calendar():
     flow = Flow.from_client_secrets_file(
@@ -2156,11 +2163,16 @@ def api_events():
 
     events = []
     for c in q.all():
+        event = {
+            "id": c.id,
+            "title": c.notes or "Consulta",
+        }
         if c.time:
-            start = datetime.combine(c.date, c.time).isoformat()
-            events.append({"title": c.notes or "Consulta", "start": start})
+            event["start"] = datetime.combine(c.date, c.time).isoformat()
         else:
-            events.append({"title": c.notes or "Consulta", "start": c.date.isoformat(), "allDay": True})
+            event["start"] = c.date.isoformat()
+            event["allDay"] = True
+        events.append(event)
     return jsonify(events)
 
 def create_admin_event(summary: str, start_datetime: str, end_datetime: str, description: str) -> None:
