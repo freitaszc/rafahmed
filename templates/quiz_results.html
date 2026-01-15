@@ -350,7 +350,7 @@
     <h2>Resultados das Autoavaliações</h2>
     <div class="actions">
       <input id="quiz-search" type="search" placeholder="Buscar por nome, idade ou data..." class="search-input">
-      <a href="{{ url_for('quiz') }}?admin={{ user.id }}" target="_blank" class="btn">Gerar link da Autoavaliação</a>
+      <a href="{{ url_for('quiz') }}?admin={{ user.username | urlencode }}" target="_blank" class="btn">Gerar link da Autoavaliação</a>
     </div>
 
     {% if results %}

@@ -2286,14 +2286,38 @@ def submit_quiz():
     except ValueError:
         age = 0
 
-    doctor_id = request.args.get('admin', type=int) or session.get('user_id')
+    admin_raw = (request.args.get('admin') or "").strip()
+    doctor_user = None
+    if admin_raw:
+        if admin_raw.isdigit():
+            doctor_user = User.query.get(int(admin_raw))
+        if not doctor_user:
+            admin_norm = admin_raw.lower()
+            doctor_user = User.query.filter_by(email=admin_norm).first()
+        if not doctor_user:
+            doctor_user = User.query.filter_by(username=admin_raw).first()
+    elif session.get('user_id'):
+        doctor_user = User.query.get(session.get('user_id'))
+
+    doctor_id = doctor_user.id if doctor_user else None
     if doctor_id is None:
         return jsonify(status='error', error='doctor_id ausente'), 400
 
-    patient = add_patient(
-        name=name, age=age, cpf=None, gender=None, phone=None,
-        doctor_id=doctor_id, prescription=f"Autoavaliação: {data.get('risco')}"
-    )
+    patient_id = None
+    patient_doctor_id = None
+    if doctor_id is not None:
+        doctor = Doctor.query.get(doctor_id)
+        patient_doctor_id = doctor.id if doctor else None
+
+    try:
+        patient = add_patient(
+            name=name, age=age, cpf=None, gender=None, phone=None,
+            doctor_id=patient_doctor_id, prescription=f"Autoavaliação: {data.get('risco')}"
+        )
+        patient_id = patient.id
+    except Exception:
+        db.session.rollback()
+        patient_id = None
 
     fatores = data.get('fatores', [])
     if isinstance(fatores, list):
@@ -2341,7 +2365,7 @@ def submit_quiz():
         risco_cor=data.get('risco_cor'),
         recomendacao=data.get('recomendacao'),
         doctor_id=doctor_id,
-        patient_id=patient.id
+        patient_id=patient_id
     )
 
     db.session.commit()

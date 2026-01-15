@@ -457,7 +457,8 @@
             answers.recomendacao = recomendacao;
 
             const adminId = getAdminIdFromURL();
-            fetch(`/submit_quiz?admin=${adminId}`, {
+            const adminQuery = adminId ? `?admin=${encodeURIComponent(adminId)}` : "";
+            fetch(`/submit_quiz${adminQuery}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(answers)
