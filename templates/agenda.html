@@ -159,6 +159,30 @@
       transition: margin-left 180ms ease
     }
 
+    .page-head {
+      max-width: 1100px;
+      margin: 0 auto 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      text-align: center;
+    }
+
+    .page-title h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 800;
+      color: #e2e8f0;
+    }
+
+    .page-subtitle {
+      margin: 6px 0 0;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
     .scheduling {
       font-family: 'Montserrat', sans-serif;
       font-size: 16px;
@@ -192,6 +216,15 @@
       flex-wrap: wrap
     }
 
+    .helper-pill {
+      font-size: 12px;
+      color: var(--text-dim);
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(255, 255, 255, .03);
+      padding: 6px 12px;
+      border-radius: 999px;
+    }
+
     #calendar {
       margin: 12px auto 24px;
       max-width: 1100px;
@@ -208,7 +241,14 @@
       display: flex;
       gap: 8px;
       align-items: center;
-      justify-content: flex-end;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
@@ -256,6 +296,26 @@
 
     .fc-button:hover {
       background: var(--red-dark) !important
+    }
+
+    .fc .fc-event {
+      background: linear-gradient(135deg, #dd1b35, #ff3854);
+      border: none;
+      border-radius: 8px;
+      padding: 2px 6px;
+      box-shadow: 0 6px 18px rgba(221, 27, 53, .25);
+    }
+
+    .fc .fc-event-title {
+      font-weight: 600;
+    }
+
+    .fc .fc-highlight {
+      background: rgba(221, 27, 53, .18);
+    }
+
+    .fc .fc-daygrid-day.fc-day-today {
+      background: rgba(221, 27, 53, .08);
     }
 
     /* Modal */
@@ -340,28 +400,28 @@
 
     <a href="{{ url_for('index') }}" class="menu-item" title="Início"><i class="fa fa-home"></i> <span
         class="label">Início</span></a>
-    <a href="{{ url_for('upload') }}" class="menu-item" title="Ponza Lab"><i class="fa fa-upload"></i> <span
+    <a href="{{ url_for('upload') }}" class="menu-item" title="Ponza Lab"><i class="fa fa-flask"></i> <span
         class="label">Ponza Lab</span></a>
     <a href="{{ url_for('questionnaire_results') }}" class="menu-item" title="Questionários SRQ-20"><i
-        class="fa fa-list-alt"></i><span class="label">SRQ-20</span></a>
-    <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-list-alt"></i>
+        class="fa fa-clipboard"></i><span class="label">SRQ-20</span></a>
+    <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-check-square-o"></i>
       <span class="label">Autoavaliações</span></a>
-    <a href="{{ url_for('quote_index') }}" class="menu-item" title="Cotações"><i class="fa fa-file-text-o"></i>
+    <a href="{{ url_for('quote_index') }}" class="menu-item" title="Cotações"><i class="fa fa-calculator"></i>
       <span class="label">Cotações</span></a>
-    <a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-users"></i> <span
+    <a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-user"></i> <span
         class="label">Pacientes</span></a>
-    <a href="{{ url_for('products') }}" class="menu-item" title="Estoque"><i class="fa fa-archive"></i> <span
+    <a href="{{ url_for('products') }}" class="menu-item" title="Estoque"><i class="fa fa-cubes"></i> <span
         class="label">Estoque</span></a>
-    <a href="{{ url_for('agenda') }}" class="menu-item" title="Agenda"><i class="fa fa-calendar"></i> <span
+    <a href="{{ url_for('agenda') }}" class="menu-item" title="Agenda"><i class="fa fa-calendar-check-o"></i> <span
         class="label">Agenda</span></a>
-    <a href="{{ url_for('purchase') }}" class="menu-item" title="Pagamentos"><i class="fa fa-credit-card"></i> <span
+    <a href="{{ url_for('purchase') }}" class="menu-item" title="Pagamentos"><i class="fa fa-money"></i> <span
         class="label">Pagamentos</span></a>
-    <a href="{{ url_for('training') }}" class="menu-item" title="Treinamento"><i class="fa fa-play-circle"></i>
+    <a href="{{ url_for('training') }}" class="menu-item" title="Treinamento"><i class="fa fa-graduation-cap"></i>
       <span class="label">Treinamento</span></a>
 
     {% if username and username|lower == 'admin' %}
     <div style="margin:18px 0 8px 0; border-top:1px solid #1f2937;"></div>
-    <a href="{{ url_for('admin_companies') }}" class="menu-item admin" title="Admin"><i class="fa fa-cog"></i> <span
+    <a href="{{ url_for('admin_companies') }}" class="menu-item admin" title="Admin"><i class="fa fa-shield"></i> <span
         class="label">Admin</span></a>
     {% endif %}
 
@@ -370,16 +430,24 @@
   </div>
 
   <div class="content">
-    <div class="btn-row">
-      <button onclick="openModal()" class="btn">Agendar Consulta</button>
+    <div class="page-head">
+      <div class="page-title">
+        <h1>Agenda</h1>
+        <p class="page-subtitle">Arraste no calendário para selecionar horários e criar uma consulta.</p>
+      </div>
+      <div class="page-actions">
+        <button onclick="openModal()" class="btn">Agendar Consulta</button>
+      </div>
     </div>
 
     <!-- Filter doctor -->
     <div class="topbar">
-      <label for="doctorFilter" style="color:var(--text-dim);font-size:14px;">Filtrar médico:</label>
-      <select id="doctorFilter" class="input-like">
-        <option value="">Todos</option>
-      </select>
+      <div class="filter-group">
+        <label for="doctorFilter" style="color:var(--text-dim);font-size:14px;">Filtrar médico:</label>
+        <select id="doctorFilter" class="input-like">
+          <option value="">Todos</option>
+        </select>
+      </div>
     </div>
 
     <div id="calendar"></div>
@@ -415,7 +483,58 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/locales-all.global.min.js"></script>
+
   <script>
+    const el = id => document.getElementById(id);
+    let calendar = null;
+    let availableDays = [];
+
+    function formatDateBR(date) {
+      const d = String(date.getDate()).padStart(2, '0');
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const y = date.getFullYear();
+      return `${d}/${m}/${y}`;
+    }
+
+    function formatTime24(date) {
+      const h = String(date.getHours()).padStart(2, '0');
+      const m = String(date.getMinutes()).padStart(2, '0');
+      return `${h}:${m}`;
+    }
+
+    function openModal(prefill = {}) {
+      const modal = el('eventModal');
+      const doctorSel = el('doctor');
+      const dateInput = el('date');
+      const timeInput = el('time');
+      const slotSel = el('slot');
+      const titleInput = el('title');
+
+      const filterDoctor = el('doctorFilter').value;
+      doctorSel.value = prefill.doctorId || filterDoctor || '';
+      titleInput.value = prefill.title || '';
+      dateInput.value = prefill.date || '';
+      timeInput.value = prefill.time || '';
+      slotSel.innerHTML = '<option value="">— horários disponíveis —</option>';
+
+      modal.style.display = 'flex';
+      modal.setAttribute('aria-hidden', 'false');
+
+      updateAvailableDates().then(() => {
+        if (dateInput.value) {
+          updateSlots();
+        }
+      });
+    }
+
+    function closeModal() {
+      const modal = el('eventModal');
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
     // Função para formatar a data em tempo real (ex: 10102025 → 10/10/2025)
     function formatDateInput(input) {
       let v = input.value.replace(/\D/g, '');
@@ -428,44 +547,43 @@
     }
 
     async function updateAvailableDates() {
-      const doctorId = document.getElementById('doctor').value;
-      const dateInput = document.getElementById('date');
-      const slotSel = document.getElementById('slot');
+      const doctorId = el('doctor').value;
+      const dateInput = el('date');
+      const slotSel = el('slot');
       slotSel.innerHTML = '<option value="">— horários disponíveis —</option>';
-      if (!doctorId) { dateInput.disabled = true; return; }
+      availableDays = [];
+      if (!doctorId) {
+        dateInput.disabled = true;
+        dateInput.value = '';
+        return;
+      }
 
-      const res = await fetch(`/api/available_days?doctor_id=${doctorId}`);
+      const res = await fetch(`/api/available_days?doctor_id=${doctorId}`, { cache: 'no-store' });
       const days = await res.json();
 
       if (!Array.isArray(days) || days.length === 0) {
         dateInput.disabled = true;
+        dateInput.value = '';
         alert('Este médico não possui disponibilidade cadastrada.');
         return;
       }
 
       dateInput.disabled = false;
-      dateInput.value = '';
-
-      // Verifica se o usuário digitou uma data fora das disponíveis
-      dateInput.addEventListener('input', e => {
-        const val = e.target.value.trim();
-        if (val.length === 10 && !days.includes(val)) {
-          alert('Data não disponível para este médico.');
-          e.target.value = '';
-          slotSel.innerHTML = '<option value="">— horários disponíveis —</option>';
-        }
-      });
+      availableDays = days;
+      if (dateInput.value && !availableDays.includes(dateInput.value)) {
+        dateInput.value = '';
+      }
     }
 
     async function updateSlots() {
-      const doctorId = document.getElementById('doctor').value;
-      const brDate = document.getElementById('date').value;
-      const slotSel = document.getElementById('slot');
+      const doctorId = el('doctor').value;
+      const brDate = el('date').value;
+      const slotSel = el('slot');
 
       slotSel.innerHTML = '<option value="">— horários disponíveis —</option>';
       if (!doctorId || !brDate) return;
 
-      const res = await fetch(`/api/available_slots?doctor_id=${doctorId}&date=${encodeURIComponent(brDate)}`);
+      const res = await fetch(`/api/available_slots?doctor_id=${doctorId}&date=${encodeURIComponent(brDate)}`, { cache: 'no-store' });
       const slots = await res.json();
 
       slotSel.innerHTML = slots.length
@@ -474,21 +592,21 @@
     }
 
     async function submitEvent() {
-      const title = document.getElementById("title").value.trim();
-      const dateBR = document.getElementById("date").value;
-      const time = document.getElementById("time").value || "";
-      const doctorId = document.getElementById("doctor").value;
+      const title = el('title').value.trim();
+      const dateBR = el('date').value;
+      const slotVal = el('slot').value;
+      const time = el('time').value || slotVal || '';
+      const doctorId = el('doctor').value;
 
       if (!title || !dateBR || !doctorId) {
         alert("Preencha observação/nome, data e selecione o médico.");
         return;
       }
 
-      // Verifica e converte para ISO (aaaa-mm-dd)
       const parts = dateBR.split('/');
       if (parts.length !== 3) { alert("Data inválida."); return; }
       const [day, month, year] = parts;
-      const formattedDate = `${day}/${month}/${year}`; // permanece dd/mm/aaaa
+      const formattedDate = `${day}/${month}/${year}`;
 
       const form = new FormData();
       form.append("title", title);
@@ -502,11 +620,112 @@
         if (!r.ok) throw new Error();
         alert("Consulta agendada com sucesso!");
         closeModal();
-        calendar.refetchEvents();
+        calendar?.refetchEvents();
       } catch {
         alert("Erro ao salvar consulta.");
       }
     }
+
+    function initCalendar() {
+      const calendarEl = document.getElementById('calendar');
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        locale: 'pt-br',
+        initialView: 'timeGridWeek',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'timeGridWeek,dayGridMonth'
+        },
+        buttonText: {
+          today: 'Hoje',
+          month: 'Mês',
+          week: 'Semana',
+          day: 'Dia'
+        },
+        selectable: true,
+        selectMirror: true,
+        nowIndicator: true,
+        allDaySlot: false,
+        slotMinTime: '07:00:00',
+        slotMaxTime: '20:00:00',
+        eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+        dayMaxEvents: true,
+        events: (info, success, failure) => {
+          const doctorId = el('doctorFilter').value;
+          const url = doctorId ? `/api/events?doctor_id=${doctorId}` : '/api/events';
+          fetch(url, { cache: 'no-store' })
+            .then(r => r.json())
+            .then(success)
+            .catch(failure);
+        },
+        select: (info) => {
+          const dateStr = formatDateBR(info.start);
+          const timeStr = info.allDay ? '' : formatTime24(info.start);
+          openModal({ date: dateStr, time: timeStr, doctorId: el('doctorFilter').value });
+          calendar.unselect();
+        }
+      });
+      calendar.render();
+    }
+
+    async function loadDoctors() {
+      const filter = el('doctorFilter');
+      const doctorSel = el('doctor');
+      try {
+        const res = await fetch('{{ url_for("api_doctors") }}', { cache: 'no-store' });
+        const list = await res.json();
+        filter.innerHTML = '<option value="">Todos</option>';
+        doctorSel.innerHTML = '<option value="">Selecione o médico</option>';
+        list.forEach(d => {
+          const opt1 = document.createElement('option');
+          opt1.value = d.id;
+          opt1.textContent = d.name;
+          filter.appendChild(opt1);
+
+          const opt2 = document.createElement('option');
+          opt2.value = d.id;
+          opt2.textContent = d.name;
+          doctorSel.appendChild(opt2);
+        });
+      } catch {
+        filter.innerHTML = '<option value="">Todos</option>';
+        doctorSel.innerHTML = '<option value="">Selecione o médico</option>';
+      }
+    }
+
+    function validateDateAgainstAvailability() {
+      const val = el('date').value.trim();
+      if (val.length === 10 && availableDays.length > 0 && !availableDays.includes(val)) {
+        alert('Data não disponível para este médico.');
+        el('date').value = '';
+        el('slot').innerHTML = '<option value="">— horários disponíveis —</option>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadDoctors();
+      initCalendar();
+
+      el('doctorFilter').addEventListener('change', () => {
+        calendar?.refetchEvents();
+        const selected = el('doctorFilter').value;
+        if (selected) {
+          el('doctor').value = selected;
+          updateAvailableDates();
+        }
+      });
+
+      el('doctor').addEventListener('change', updateAvailableDates);
+      el('date').addEventListener('change', () => {
+        validateDateAgainstAvailability();
+        updateSlots();
+      });
+      el('slot').addEventListener('change', () => {
+        if (el('slot').value) {
+          el('time').value = el('slot').value;
+        }
+      });
+    });
   </script>
 </body>
 

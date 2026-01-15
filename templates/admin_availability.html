@@ -280,23 +280,23 @@
         <img src="{{ url_for('static', filename='images/logocompleta.svg') }}" class="sidebar-logo" alt="RafahMed" />
         <a href="{{ url_for('index') }}" class="menu-item"><i class="fa fa-home"></i><span
                 class="label">Início</span></a>
-        <a href="{{ url_for('upload') }}" class="menu-item"><i class="fa fa-upload"></i><span class="label">Ponza
+        <a href="{{ url_for('upload') }}" class="menu-item"><i class="fa fa-flask"></i><span class="label">Ponza
                 Lab</span></a>
-        <a href="{{ url_for('questionnaire_results') }}" class="menu-item"><i class="fa fa-list-alt"></i><span
+        <a href="{{ url_for('questionnaire_results') }}" class="menu-item"><i class="fa fa-clipboard"></i><span
                 class="label">SRQ-20</span></a>
-        <a href="{{ url_for('quiz_results') }}" class="menu-item"><i class="fa fa-list-alt"></i><span
+        <a href="{{ url_for('quiz_results') }}" class="menu-item"><i class="fa fa-check-square-o"></i><span
                 class="label">Autoavaliações</span></a>
-        <a href="{{ url_for('quote_index') }}" class="menu-item"><i class="fa fa-file-text-o"></i><span
+        <a href="{{ url_for('quote_index') }}" class="menu-item"><i class="fa fa-calculator"></i><span
                 class="label">Cotações</span></a>
-        <a href="{{ url_for('catalog') }}" class="menu-item"><i class="fa fa-users"></i><span
+        <a href="{{ url_for('catalog') }}" class="menu-item"><i class="fa fa-user"></i><span
                 class="label">Pacientes</span></a>
-        <a href="{{ url_for('products') }}" class="menu-item"><i class="fa fa-archive"></i><span
+        <a href="{{ url_for('products') }}" class="menu-item"><i class="fa fa-cubes"></i><span
                 class="label">Estoque</span></a>
-        <a href="{{ url_for('agenda') }}" class="menu-item"><i class="fa fa-calendar"></i><span
+        <a href="{{ url_for('agenda') }}" class="menu-item"><i class="fa fa-calendar-check-o"></i><span
                 class="label">Agenda</span></a>
-        <a href="{{ url_for('purchase') }}" class="menu-item"><i class="fa fa-credit-card"></i><span
+        <a href="{{ url_for('purchase') }}" class="menu-item"><i class="fa fa-money"></i><span
                 class="label">Pagamentos</span></a>
-        <a href="{{ url_for('training') }}" class="menu-item"><i class="fa fa-play-circle"></i><span
+        <a href="{{ url_for('training') }}" class="menu-item"><i class="fa fa-graduation-cap"></i><span
                 class="label">Treinamento</span></a>
         {% if username and username|lower == 'admin' %}
         <div style="margin:18px 0 8px; border-top:1px solid #1f2937;"></div>
@@ -515,10 +515,13 @@
                 if (!confirm(`Excluir o médico "${doctorName}"? Esta ação removerá também as disponibilidades e consultas dele.`)) {
                     return;
                 }
-                const url = `{{ url_for('delete_doctor', doctor_id=0) }}`.replace('0', doctorId);
-                const r = await fetch(url, { method: 'POST' });
-                const resp = await r.json();
-                if (!(resp && resp.ok)) { alert(resp?.error || 'Não foi possível excluir.'); return; }
+                const id = Number(doctorId);
+                if (!Number.isInteger(id) || id <= 0) { alert('ID inválido.'); return; }
+                const url = `{{ url_for('delete_doctor', doctor_id=0) }}`.replace(/0$/, String(id));
+                const r = await fetch(url, { method: 'POST', headers: { 'Accept': 'application/json' } });
+                const ctype = r.headers.get('content-type') || '';
+                const resp = ctype.includes('application/json') ? await r.json() : null;
+                if (!r.ok || (resp && !resp.ok)) { alert(resp?.error || 'Não foi possível excluir.'); return; }
 
                 // remove da tabela
                 const row = document.getElementById(`docrow-${doctorId}`);

@@ -202,9 +202,9 @@
             <div class="relative">
               <select id="account_type" name="account_type" required onchange="toggleEmpresaField()"
                 class="select pr-10">
-                <option value="">Selecione...</option>
-                <option value="pessoal">Cadastro Pessoal</option>
-                <option value="empresa">Cadastro Empresarial</option>
+                <option value="" {% if not form.get('account_type') %}selected{% endif %}>Selecione...</option>
+                <option value="pessoal" {% if form.get('account_type') == 'pessoal' %}selected{% endif %}>Cadastro Pessoal</option>
+                <option value="empresa" {% if form.get('account_type') == 'empresa' %}selected{% endif %}>Cadastro Empresarial</option>
               </select>
               <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -214,8 +214,8 @@
             </div>
           </div>
 
-          <input type="text" name="username" placeholder="Nome de usuário" required class="input">
-          <input type="email" name="email" placeholder="E-mail" required class="input">
+          <input type="text" name="username" placeholder="Nome de usuário" value="{{ form.get('username', '') }}" required class="input">
+          <input type="email" name="email" placeholder="E-mail" value="{{ form.get('email', '') }}" required class="input">
           <input type="password" name="password" placeholder="Senha" required class="input">
           <p class="text-sm text-[var(--text-dim)] -mt-2">
             Sua senha deve ter pelo menos 8 caracteres, incluindo uma letra, um número e um símbolo.
@@ -223,7 +223,7 @@
           <input type="password" name="confirm_password" placeholder="Confirmar Senha" required class="input">
 
           <div id="empresa_field" class="hidden">
-            <input type="text" id="company_code" name="company_code" placeholder="Código da empresa" class="input">
+            <input type="text" id="company_code" name="company_code" placeholder="Código da empresa" value="{{ form.get('company_code', '') }}" class="input">
           </div>
 
           <button type="submit" class="btn-primary">Cadastrar</button>
@@ -247,6 +247,7 @@
       if (tipo === 'empresa') { campo.classList.remove('hidden'); input.setAttribute('required', 'required'); }
       else { campo.classList.add('hidden'); input.removeAttribute('required'); }
     }
+    document.addEventListener('DOMContentLoaded', toggleEmpresaField);
     function validarEmpresa() {
       const tipo = document.getElementById('account_type').value;
       const input = document.getElementById('company_code');

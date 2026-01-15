@@ -94,6 +94,32 @@
       background: var(--rafahmed-red);
       color: #fff;
     }
+
+    .badge {
+      padding: .45rem .7rem;
+      border-radius: .6rem;
+      font-size: .85rem;
+      border: 1px solid;
+      display: inline-block;
+    }
+
+    .success {
+      background: rgba(34, 197, 94, .08);
+      color: #bbf7d0;
+      border-color: rgba(34, 197, 94, .35);
+    }
+
+    .warning {
+      background: rgba(234, 179, 8, .08);
+      color: #fde68a;
+      border-color: rgba(234, 179, 8, .35);
+    }
+
+    .danger {
+      background: rgba(239, 68, 68, .08);
+      color: #fecaca;
+      border-color: rgba(239, 68, 68, .35);
+    }
   </style>
 </head>
 
@@ -157,6 +183,19 @@
       <div class="card rounded-2xl p-8 w-full max-w-md">
         <h2 class="text-3xl font-bold mb-2 text-white text-center">Entrar</h2>
         <p class="text-[var(--text-dim)] text-sm text-center mb-6">Acesse sua conta para continuar</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="mb-5 space-y-2 text-left">
+          {% for category, message in messages %}
+          <div
+            class="badge {% if category == 'success' %}success{% endif %}{% if category == 'warning' %} warning{% endif %}{% if category == 'danger' %} danger{% endif %}">
+            {{ message }}
+          </div><br />
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
 
         <form method="post" novalidate class="space-y-4">
           <input type="text" name="login" placeholder="E-mail" required class="input">

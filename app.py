@@ -257,6 +257,51 @@ def ensure_subscription_columns():
 
 ensure_subscription_columns()
 
+def ensure_user_columns():
+    with app.app_context():
+        try:
+            insp = inspect(db.engine)
+        except SQLAlchemyError as e:
+            app.logger.error("[migrate] Could not inspect database: %s", e)
+            return
+
+        if not insp.has_table("users"):
+            return
+
+        cols = {c["name"]: c for c in insp.get_columns("users")}
+        dialect = db.engine.dialect.name
+        stmts = []
+
+        if "name" not in cols:
+            stmts.append("ALTER TABLE users ADD COLUMN name VARCHAR(120)")
+        if "birthdate" not in cols:
+            stmts.append("ALTER TABLE users ADD COLUMN birthdate DATE")
+        if "profile_image" not in cols:
+            stmts.append("ALTER TABLE users ADD COLUMN profile_image VARCHAR(200)")
+        if "company_id" not in cols:
+            stmts.append("ALTER TABLE users ADD COLUMN company_id INTEGER")
+
+        pw_col = cols.get("password_hash")
+        pw_len = getattr(pw_col["type"], "length", None) if pw_col else None
+        if pw_len and pw_len < 255:
+            if dialect == "postgresql":
+                stmts.append("ALTER TABLE users ALTER COLUMN password_hash TYPE VARCHAR(255)")
+            elif dialect in {"mysql", "mariadb"}:
+                stmts.append("ALTER TABLE users MODIFY COLUMN password_hash VARCHAR(255) NOT NULL")
+
+        if not stmts:
+            return
+
+        try:
+            with db.engine.begin() as conn:
+                for s in stmts:
+                    app.logger.warning("[migrate] %s", s)
+                    conn.execute(text(s))
+        except SQLAlchemyError as e:
+            app.logger.error("[migrate] Failed to update users table: %s", e)
+
+ensure_user_columns()
+
 # ------------------------------------------------------------------------------
 # Auth helpers
 # ------------------------------------------------------------------------------
@@ -342,7 +387,10 @@ def terms():
 def register():
     if request.method == 'GET':
         coming_from_register_post = session.pop('register_flash', None)
-        return render_template('register.html')
+        if not coming_from_register_post:
+            session.pop('register_form', None)
+        form = session.get('register_form', {})
+        return render_template('register.html', form=form)
 
     username     = (request.form.get('username', '')).strip()
     email        = (request.form.get('email', '')).strip().lower()
@@ -351,29 +399,58 @@ def register():
     company_code = (request.form.get('company_code', '')).strip().upper()
     account_type = (request.form.get('account_type', '')).strip().lower()
 
+    def stash_form():
+        session['register_form'] = {
+            "username": username,
+            "email": email,
+            "company_code": company_code,
+            "account_type": account_type,
+        }
+
     if account_type not in {"pessoal", "empresa"}:
+        stash_form()
         session['register_flash'] = True
         flash('Selecione o tipo de cadastro.', 'warning')
         return redirect(url_for('register'))
 
+    if not username:
+        stash_form()
+        session['register_flash'] = True
+        flash('Nome de usuário é obrigatório.', 'warning')
+        return redirect(url_for('register'))
+    if len(username) > 80:
+        stash_form()
+        session['register_flash'] = True
+        flash('Nome de usuário muito longo.', 'warning')
+        return redirect(url_for('register'))
+
     email_regex = r'^[\w\.-]+@[\w\.-]+\.\w+$'
     if not re.match(email_regex, email):
+        stash_form()
         session['register_flash'] = True
         flash('E-mail inválido.', 'warning')
+        return redirect(url_for('register'))
+    if len(email) > 120:
+        stash_form()
+        session['register_flash'] = True
+        flash('E-mail muito longo.', 'warning')
         return redirect(url_for('register'))
 
     exists_email = User.query.filter_by(email=email).first()
     exists_user  = User.query.filter_by(username=username).first()
     if exists_email or exists_user:
+        stash_form()
         session['register_flash'] = True
         flash('E-mail ou usuário já cadastrado.', 'warning')
         return redirect(url_for('register'))
 
     if len(password) < 8 or not re.search(r'[A-Za-z]', password) or not re.search(r'\d', password) or not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+        stash_form()
         session['register_flash'] = True
         flash('A senha deve ter 8+ caracteres, letras, números e um símbolo.', 'warning')
         return redirect(url_for('register'))
     if password != confirm:
+        stash_form()
         session['register_flash'] = True
         flash('As senhas não coincidem.', 'warning')
         return redirect(url_for('register'))
@@ -381,11 +458,18 @@ def register():
     company = None
     if account_type == "empresa":
         if not company_code:
+            stash_form()
             session['register_flash'] = True
             flash('Código da empresa é obrigatório.', 'warning')
             return redirect(url_for('register'))
+        if len(company_code) > 50:
+            stash_form()
+            session['register_flash'] = True
+            flash('Código da empresa muito longo.', 'warning')
+            return redirect(url_for('register'))
         company = Company.query.filter_by(access_code=company_code).first()
         if not company:
+            stash_form()
             session['register_flash'] = True
             flash('Código da empresa inválido.', 'danger')
             return redirect(url_for('register'))
@@ -401,16 +485,19 @@ def register():
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
+        stash_form()
         session['register_flash'] = True
         flash('E-mail ou usuário já cadastrado.', 'warning')
         return redirect(url_for('register'))
     except SQLAlchemyError as e:
         db.session.rollback()
         app.logger.error("Erro ao criar usuário: %s", e)
+        stash_form()
         session['register_flash'] = True
         flash('Erro interno ao criar cadastro. Tente novamente.', 'danger')
         return redirect(url_for('register'))
 
+    session.pop('register_form', None)
     flash('Cadastro realizado com sucesso! Faça login para continuar.', 'success')
     return redirect(url_for('login'))
 
@@ -807,12 +894,18 @@ def update_doctor(doctor_id):
 @login_required
 def delete_doctor(doctor_id):
     user = get_logged_user()
+    wants_json = request.accept_mimetypes.best == "application/json"
     if not user:
-        return jsonify({"ok": False, "error": "unauthorized"}), 403
+        if wants_json:
+            return jsonify({"ok": False, "error": "unauthorized"}), 403
+        return redirect(url_for('login'))
 
     doc = Doctor.query.get(doctor_id)
     if not doc:
-        return jsonify({"ok": False, "error": "Médico não encontrado."}), 404
+        if wants_json:
+            return jsonify({"ok": False, "error": "Médico não encontrado."}), 404
+        flash("Médico não encontrado.", "warning")
+        return redirect(url_for("doctors"))
 
     try:
         # if admin he can delete any patient
@@ -823,6 +916,8 @@ def delete_doctor(doctor_id):
             Consult.query.filter_by(doctor_id=doctor_id).delete(synchronize_session=False)
             db.session.delete(doc)
             db.session.commit()
+            if wants_json:
+                return jsonify({"ok": True})
             flash("Prescritor excluído com todas as dependências removidas.", "info")
             return redirect(url_for("doctors"))
 
@@ -830,12 +925,17 @@ def delete_doctor(doctor_id):
         else:
             db.session.delete(doc)
             db.session.commit()
+            if wants_json:
+                return jsonify({"ok": True})
             flash("Prescritor excluído.", "info")
             return redirect(url_for("doctors"))
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"ok": False, "error": str(e)}), 500
+        if wants_json:
+            return jsonify({"ok": False, "error": str(e)}), 500
+        flash("Erro ao excluir médico.", "danger")
+        return redirect(url_for("doctors"))
 
 @app.route('/availability', methods=['GET', 'POST'])
 @login_required
@@ -2051,6 +2151,10 @@ def submit_patient_consultation():
     except ValueError:
         return "Horário inválido. Use HH:MM.", 400
 
+    doctor = Doctor.query.get(doctor_id)
+    if not doctor:
+        return "Médico não encontrado.", 404
+
     # 1) Buscar blocos explícitos para a DATA escolhida
     blocks = DoctorDateAvailability.query.filter_by(doctor_id=doctor_id, day=day).all()
     if not blocks:
@@ -2105,8 +2209,7 @@ def submit_patient_consultation():
     start_iso = datetime.combine(day, t).strftime("%Y-%m-%dT%H:%M:%S")
     end_iso   = (datetime.combine(day, t) + timedelta(minutes=slot_minutes)).strftime("%Y-%m-%dT%H:%M:%S")
 
-    doctor = Doctor.query.get(doctor_id)
-    summary = f"Consulta — {name} (Dr(a). {doctor.name})" if doctor else f"Consulta — {name}"
+    summary = f"Consulta — {name} (Dr(a). {doctor.name})"
     description = f"CPF: {cpf}\nTelefone: {phone}\nData: {date_br}\nHorário: {time_hm}"
 
     try:
@@ -2205,11 +2308,25 @@ def api_events():
     if doctor_id:
         q = q.filter_by(doctor_id=doctor_id)
 
+    rows = q.all()
+    doctor_ids = {c.doctor_id for c in rows if c.doctor_id}
+    doctors = {
+        d.id: d.name
+        for d in Doctor.query.filter(Doctor.id.in_(doctor_ids)).all()
+    } if doctor_ids else {}
+
     events = []
-    for c in q.all():
+    for c in rows:
+        doctor_name = doctors.get(c.doctor_id)
+        base_title = c.notes or "Consulta"
+        title = base_title if doctor_id else f"{doctor_name} — {base_title}" if doctor_name else base_title
         event = {
             "id": c.id,
-            "title": c.notes or "Consulta",
+            "title": title,
+            "extendedProps": {
+                "doctorId": c.doctor_id,
+                "doctorName": doctor_name,
+            },
         }
         if c.time:
             event["start"] = datetime.combine(c.date, c.time).isoformat()
