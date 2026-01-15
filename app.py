@@ -27,6 +27,7 @@ from werkzeug.utils import secure_filename
 
 from flask_migrate import Migrate
 from sqlalchemy import text, inspect, desc, and_
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -88,7 +89,29 @@ migrate = Migrate(app, db)
 def ensure_tables():
     with app.app_context():
         insp = inspect(db.engine)
-        if not insp.has_table('pdf_files'):
+        existing = set(insp.get_table_names())
+        required = {
+            "users",
+            "companies",
+            "suppliers",
+            "quotes",
+            "quote_responses",
+            "doctors",
+            "patients",
+            "consults",
+            "quiz_results",
+            "products",
+            "user_packages",
+            "doctor_availability",
+            "questionnaire_results",
+            "doctor_date_availability",
+            "secure_files",
+            "pdf_files",
+        }
+        if required - existing:
+            app.logger.warning(
+                "Missing tables detected. Creating any that are missing."
+            )
             db.create_all()
 
 ensure_tables()
@@ -328,6 +351,11 @@ def register():
     company_code = (request.form.get('company_code', '')).strip().upper()
     account_type = (request.form.get('account_type', '')).strip().lower()
 
+    if account_type not in {"pessoal", "empresa"}:
+        session['register_flash'] = True
+        flash('Selecione o tipo de cadastro.', 'warning')
+        return redirect(url_for('register'))
+
     email_regex = r'^[\w\.-]+@[\w\.-]+\.\w+$'
     if not re.match(email_regex, email):
         session['register_flash'] = True
@@ -351,7 +379,11 @@ def register():
         return redirect(url_for('register'))
 
     company = None
-    if company_code:
+    if account_type == "empresa":
+        if not company_code:
+            session['register_flash'] = True
+            flash('Código da empresa é obrigatório.', 'warning')
+            return redirect(url_for('register'))
         company = Company.query.filter_by(access_code=company_code).first()
         if not company:
             session['register_flash'] = True
@@ -364,8 +396,20 @@ def register():
         password_hash=generate_password_hash(password),
         company_id=company.id if company else None
     )
-    db.session.add(user)
-    db.session.commit()
+    try:
+        db.session.add(user)
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        session['register_flash'] = True
+        flash('E-mail ou usuário já cadastrado.', 'warning')
+        return redirect(url_for('register'))
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        app.logger.error("Erro ao criar usuário: %s", e)
+        session['register_flash'] = True
+        flash('Erro interno ao criar cadastro. Tente novamente.', 'danger')
+        return redirect(url_for('register'))
 
     flash('Cadastro realizado com sucesso! Faça login para continuar.', 'success')
     return redirect(url_for('login'))
