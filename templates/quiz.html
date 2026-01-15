@@ -244,7 +244,7 @@
             },
             { type: "text", key: "setor", question: "Em qual setor você trabalha?" },
             { type: "radio", key: "nervosismo", question: "Nas últimas 2 semanas, com que frequência você se sentiu nervoso(a), ansioso(a) ou muito tenso(a)?", options: ["Quase todos os dias", "Alguns dias", "Poucos dias", "Quase nunca"] },
-            { type: "radio", key: "preocupacao", question: "Nas últimas 2 semanas, você não foi capaz de controlar a preocupação?", options: ["Quase todos os dias", "Alguns dias", "Poucos dias", "Quase nunca"] },
+            { type: "radio", key: "preocupacao", question: "Nas últimas 2 semanas, com que frequência você teve dificuldade para controlar suas preocupações?", options: ["Quase todos os dias", "Alguns dias", "Poucos dias", "Quase nunca"] },
             { type: "radio", key: "interesse", question: "Nas últimas 2 semanas, você teve pouco interesse ou prazer em fazer as coisas?", options: ["Quase todos os dias", "Alguns dias", "Poucos dias", "Quase nunca"] },
             { type: "radio", key: "depressao_raw", question: "Nas últimas 2 semanas, você se sentiu desanimado(a), deprimido(a) ou sem esperança?", options: ["Quase todos os dias", "Alguns dias", "Poucos dias", "Quase nunca"] },
             { type: "radio", key: "estresse", question: "Considerando as últimas 2 semanas, o quanto você sentiu que estava estressado(a)?", options: ["Quase todos os dias", "Alguns dias", "Poucos dias", "Quase nunca"] },
@@ -409,10 +409,18 @@
 
         function getClassificacao(score, max) {
             const pct = (score / max) * 100;
-            if (pct <= 25) return { nivel: 'BAIXO', cor: '#2ecc71' };
+            if (pct <= 35) return { nivel: 'BAIXO', cor: '#2ecc71' };
             if (pct <= 50) return { nivel: 'NORMAL/LEVE', cor: '#f1c40f' };
-            if (pct <= 75) return { nivel: 'MODERADO', cor: '#e67e22' };
+            if (pct <= 70) return { nivel: 'MODERADO', cor: '#e67e22' };
             return { nivel: 'ALTO', cor: '#e74c3c' };
+        }
+
+        function getQualidadeClassificacao(score, max) {
+            const pct = (score / max) * 100;
+            if (pct >= 70) return { nivel: 'BOA', cor: '#10b981' };
+            if (pct >= 50) return { nivel: 'REGULAR', cor: '#f59e0b' };
+            if (pct >= 35) return { nivel: 'RUIM', cor: '#f97316' };
+            return { nivel: 'MUITO RUIM', cor: '#ef4444' };
         }
 
         function showResult() {
@@ -429,7 +437,7 @@
             const ansiedadeClass = getClassificacao(ansiedadeScore, 8);
             const depressaoClass = getClassificacao(depressaoScore, 8);
             const estresseClass = getClassificacao(estresseScore, 8);
-            const qualidadeClass = getClassificacao(qualidadeVidaScore, 10);
+            const qualidadeClass = getQualidadeClassificacao(qualidadeVidaScore, 10);
 
             const scoreTotal = ansiedadeScore + depressaoScore + estresseScore + qualidadeVidaScore;
             const riscoPrincipal = getClassificacao(scoreTotal, 34);
@@ -493,13 +501,7 @@
               </div>
               <div class="p-4 rounded-lg" style="background:rgba(255,255,255,.03); border:1px solid var(--stroke);">
                 <p class="font-semibold">Qualidade de Vida:</p>
-                <span style="font-weight:bold; color:${qualidadeClass.nivel === "BAIXO" ? "#22c55e" :
-                    qualidadeClass.nivel === "NORMAL/LEVE" ? "#eab308" :
-                        qualidadeClass.nivel === "MODERADO" ? "#f97316" : "#ef4444"
-                }">${qualidadeClass.nivel === "BAIXO" ? "BOA" :
-                    qualidadeClass.nivel === "NORMAL/LEVE" ? "REGULAR" :
-                        qualidadeClass.nivel === "MODERADO" ? "RUIM" : "MUITO RUIM"
-                }</span>
+                <span style="font-weight:bold; color:${qualidadeClass.cor};">${qualidadeClass.nivel}</span>
               </div>
             </div>
           </div>

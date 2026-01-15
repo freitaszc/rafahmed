@@ -2479,7 +2479,7 @@ def quiz_patient(quiz_id):
         "nome":             "Qual seu nome?",
         "idade":            "Qual sua idade?",
         "nervosismo":       "Nas últimas 2 semanas, com que frequência você se sentiu nervoso(a), ansioso(a) ou muito tenso(a)?",
-        "preocupacao":      "Nas últimas 2 semanas, você não foi capaz de controlar a preocupação?",
+        "preocupacao":      "Nas últimas 2 semanas, com que frequência você teve dificuldade para controlar suas preocupações?",
         "interesse":        "Nas últimas 2 semanas, você teve pouco interesse ou prazer em fazer as coisas?",
         "depressao_raw":    "Nas últimas 2 semanas, você se sentiu desanimado(a), deprimido(a) ou sem esperança?",
         "estresse_raw":     "Considerando as últimas 2 semanas, o quanto você sentiu que estava estressado(a)?",

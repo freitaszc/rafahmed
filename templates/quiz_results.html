@@ -195,6 +195,37 @@
       flex-wrap: wrap
     }
 
+    .search-input {
+      min-width: 260px;
+      max-width: 420px;
+      width: min(420px, 90vw);
+      padding: 11px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(255, 255, 255, .03);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s, background .2s
+    }
+
+    .search-input::placeholder {
+      color: var(--muted)
+    }
+
+    .search-input:focus {
+      border-color: rgba(221, 27, 53, .6);
+      box-shadow: 0 0 0 3px rgba(221, 27, 53, .15);
+      background: rgba(255, 255, 255, .06)
+    }
+
+    .no-results {
+      text-align: center;
+      color: var(--muted);
+      margin-top: 14px
+    }
+
     .btn {
       display: inline-flex;
       align-items: center;
@@ -318,6 +349,7 @@
   <div class="content">
     <h2>Resultados das Autoavaliações</h2>
     <div class="actions">
+      <input id="quiz-search" type="search" placeholder="Buscar por nome, idade ou data..." class="search-input">
       <a href="{{ url_for('quiz') }}?admin={{ user.id }}" target="_blank" class="btn">Gerar link da Autoavaliação</a>
     </div>
 
@@ -335,10 +367,11 @@
           <th>Ações</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="quiz-results-body">
         {% for result in results %}
-        <tr>
-          <td onclick="window.open('{{ url_for('quiz_patient', quiz_id=result.id) }}', '_blank')">
+        <tr data-name="{{ result.nome|lower }}" data-age="{{ result.idade }}" data-date="{{ result.data|lower }}"
+          onclick="window.open('{{ url_for('quiz_patient', quiz_id=result.id) }}', '_blank')">
+          <td>
             {{ result.nome }} <span class="label">Idade: {{ result.idade }}</span>
           </td>
           <td style="color: {{ result.ansiedade_cor }}"><span class="label">Ansiedade</span><span class="value">{{
@@ -354,9 +387,11 @@
           <td>{{ result.data }}</td>
           <td>
             <form method="post" action="{{ url_for('delete_quiz_result') }}"
-              onsubmit="return confirm('Deseja realmente remover este resultado?')" style="margin:0;">
+              onsubmit="return confirm('Deseja realmente remover este resultado?')" style="margin:0;"
+              onclick="event.stopPropagation();">
               <input type="hidden" name="quiz_id" value="{{ result.id }}">
-              <button type="submit" class="delete-button" title="Deletar Resultado">×</button>
+              <button type="submit" class="delete-button" title="Deletar Resultado"
+                onclick="event.stopPropagation();">×</button>
             </form>
           </td>
         </tr>
@@ -366,7 +401,28 @@
     {% else %}
     <p style="text-align:center;color:var(--muted)">Nenhum resultado encontrado.</p>
     {% endif %}
+    <p id="quiz-no-results" class="no-results" style="display:none;">Nenhum resultado encontrado.</p>
   </div>
+  <script>
+    const searchInput = document.getElementById('quiz-search');
+    const resultsBody = document.getElementById('quiz-results-body');
+    const noResults = document.getElementById('quiz-no-results');
+    if (searchInput && resultsBody) {
+      searchInput.addEventListener('input', () => {
+        const term = searchInput.value.trim().toLowerCase();
+        let visibleCount = 0;
+        [...resultsBody.querySelectorAll('tr')].forEach((row) => {
+          const name = row.getAttribute('data-name') || '';
+          const age = row.getAttribute('data-age') || '';
+          const date = row.getAttribute('data-date') || '';
+          const matches = !term || name.includes(term) || age.includes(term) || date.includes(term);
+          row.style.display = matches ? '' : 'none';
+          if (matches) visibleCount += 1;
+        });
+        if (noResults) noResults.style.display = visibleCount ? 'none' : 'block';
+      });
+    }
+  </script>
 </body>
 
 </html>
