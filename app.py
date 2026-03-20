@@ -12,7 +12,6 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 from typing import Any, Optional, cast
 
-import weasyprint
 from dotenv import load_dotenv
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from cryptography.fernet import Fernet
@@ -26,7 +25,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
 from flask_migrate import Migrate
-from sqlalchemy import text, inspect, desc, and_
+from sqlalchemy import text, inspect, desc, and_, or_
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from google.oauth2.credentials import Credentials
@@ -34,10 +33,9 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import Flow
 
 from prescription import analyze_pdf
-from whatsapp import send_pdf_whatsapp, send_quote_whatsapp
+from whatsapp import send_pdf_whatsapp, send_quote_whatsapp, send_pix_receipt_admin
 from mercado_pago import generate_payment_link
 from email_utils import send_email_quote
-import qrcode
 
 from records import (
     get_suppliers_by_user, add_supplier_db, update_supplier_db, delete_supplier_db,
@@ -139,7 +137,8 @@ def file_download_auth(file_id):
     if not user:
         abort(403)
     raw, sf = read_secure_file_bytes(file_id)
-    # Optional: add per-file ACL checks here (e.g., owner_user_id == user.id) depending on kind
+    if not is_admin(user) and sf.owner_user_id != user.id:
+        abort(403)
     resp = make_response(raw)
     resp.headers["Content-Type"] = sf.mime_type
     resp.headers["Content-Disposition"] = f'inline; filename="{sf.filename}"'
@@ -216,6 +215,7 @@ def build_pix_payload(key: str, name: str, city: str, amount: float, txid: str, 
 
 def make_qr_base64(payload: str) -> str | None:
     try:
+        import qrcode  # type: ignore
         from PIL import Image  # noqa: F401
         img = qrcode.make(payload)
         buf = io.BytesIO()
@@ -302,6 +302,91 @@ def ensure_user_columns():
 
 ensure_user_columns()
 
+def ensure_medical_ownership_columns():
+    with app.app_context():
+        try:
+            insp = inspect(db.engine)
+        except SQLAlchemyError as e:
+            app.logger.error("[migrate] Could not inspect database (medical ownership): %s", e)
+            return
+
+        stmts = []
+
+        if insp.has_table("doctors"):
+            doctor_cols = {c["name"] for c in insp.get_columns("doctors")}
+            doctor_idxs = {ix.get("name") for ix in insp.get_indexes("doctors")}
+            if "user_id" not in doctor_cols:
+                stmts.append("ALTER TABLE doctors ADD COLUMN user_id INTEGER")
+            if "ix_doctors_user_id" not in doctor_idxs:
+                stmts.append("CREATE INDEX ix_doctors_user_id ON doctors (user_id)")
+
+        if insp.has_table("patients"):
+            patient_cols = {c["name"] for c in insp.get_columns("patients")}
+            patient_idxs = {ix.get("name") for ix in insp.get_indexes("patients")}
+            if "owner_user_id" not in patient_cols:
+                stmts.append("ALTER TABLE patients ADD COLUMN owner_user_id INTEGER")
+            if "ix_patients_owner_user_id" not in patient_idxs:
+                stmts.append("CREATE INDEX ix_patients_owner_user_id ON patients (owner_user_id)")
+
+        if insp.has_table("consults"):
+            consult_cols = {c["name"] for c in insp.get_columns("consults")}
+            consult_idxs = {ix.get("name") for ix in insp.get_indexes("consults")}
+            if "owner_user_id" not in consult_cols:
+                stmts.append("ALTER TABLE consults ADD COLUMN owner_user_id INTEGER")
+            if "ix_consults_owner_user_id" not in consult_idxs:
+                stmts.append("CREATE INDEX ix_consults_owner_user_id ON consults (owner_user_id)")
+
+        try:
+            with db.engine.begin() as conn:
+                for s in stmts:
+                    app.logger.warning("[migrate] %s", s)
+                    conn.execute(text(s))
+
+                # Backfill doctor profile owner from legacy ID matching.
+                conn.execute(text(
+                    "UPDATE doctors "
+                    "SET user_id = id "
+                    "WHERE user_id IS NULL "
+                    "  AND EXISTS (SELECT 1 FROM users u WHERE u.id = doctors.id)"
+                ))
+
+                # Backfill patient owner from doctor profile owner.
+                conn.execute(text(
+                    "UPDATE patients "
+                    "SET owner_user_id = (SELECT d.user_id FROM doctors d WHERE d.id = patients.doctor_id) "
+                    "WHERE owner_user_id IS NULL "
+                    "  AND doctor_id IS NOT NULL "
+                    "  AND EXISTS (SELECT 1 FROM doctors d2 WHERE d2.id = patients.doctor_id AND d2.user_id IS NOT NULL)"
+                ))
+                # Legacy fallback where patient.doctor_id was actually users.id.
+                conn.execute(text(
+                    "UPDATE patients "
+                    "SET owner_user_id = doctor_id "
+                    "WHERE owner_user_id IS NULL "
+                    "  AND doctor_id IS NOT NULL "
+                    "  AND EXISTS (SELECT 1 FROM users u WHERE u.id = patients.doctor_id)"
+                ))
+
+                # Backfill consult owner from linked patient.
+                conn.execute(text(
+                    "UPDATE consults "
+                    "SET owner_user_id = (SELECT p.owner_user_id FROM patients p WHERE p.id = consults.patient_id) "
+                    "WHERE owner_user_id IS NULL "
+                    "  AND EXISTS (SELECT 1 FROM patients p2 WHERE p2.id = consults.patient_id AND p2.owner_user_id IS NOT NULL)"
+                ))
+                # Legacy fallback where consult.doctor_id was actually users.id.
+                conn.execute(text(
+                    "UPDATE consults "
+                    "SET owner_user_id = doctor_id "
+                    "WHERE owner_user_id IS NULL "
+                    "  AND doctor_id IS NOT NULL "
+                    "  AND EXISTS (SELECT 1 FROM users u WHERE u.id = consults.doctor_id)"
+                ))
+        except SQLAlchemyError as e:
+            app.logger.error("[migrate] Failed to ensure medical ownership columns: %s", e)
+
+ensure_medical_ownership_columns()
+
 # ------------------------------------------------------------------------------
 # Auth helpers
 # ------------------------------------------------------------------------------
@@ -309,7 +394,7 @@ def get_logged_user():
     uid = session.get('user_id')
     if not uid:
         return None
-    return User.query.get(uid)
+    return db.session.get(User, uid)
 
 def login_required(f):
     @wraps(f)
@@ -335,6 +420,55 @@ def feature_required(feature):
         return wrapper
     return inner
 
+def is_admin(user: Optional[User]) -> bool:
+    return bool(user and (user.username or "").lower() == "admin")
+
+@app.context_processor
+def inject_sidebar_auth_context():
+    """
+    Garante contexto de autenticação para o sidebar em qualquer template,
+    mesmo quando a rota não passa `username` explicitamente.
+    """
+    user = get_logged_user()
+    username = (user.username if user else None)
+    return {
+        "username": username,
+        "is_admin_sidebar": is_admin(user),
+    }
+
+def can_manage_patient(user: Optional[User], patient: Optional[Patient]) -> bool:
+    if not user or not patient:
+        return False
+    if is_admin(user):
+        return True
+    if patient.owner_user_id is not None:
+        return patient.owner_user_id == user.id
+    if patient.doctor and patient.doctor.user_id is not None:
+        return patient.doctor.user_id == user.id
+    # Legacy fallback (old rows used patient.doctor_id as users.id)
+    return patient.doctor_id == user.id
+
+def can_manage_doctor_profile(user: Optional[User], doctor: Optional[Doctor]) -> bool:
+    if not user or not doctor:
+        return False
+    return is_admin(user) or (doctor.user_id == user.id)
+
+def get_user_public_doctor_profile(
+    *,
+    user: User,
+    create_if_missing: bool = False,
+    fallback_name: Optional[str] = None
+) -> Optional[Doctor]:
+    profile = Doctor.query.filter_by(user_id=user.id).order_by(Doctor.id.asc()).first()
+    if profile or not create_if_missing:
+        return profile
+
+    base_name = (fallback_name or user.name or user.username or f"Profissional {user.id}").strip()
+    profile = Doctor(name=base_name[:120], phone=None, user_id=user.id)
+    db.session.add(profile)
+    db.session.commit()
+    return profile
+
 # Expor helpers no Jinja (mantendo compatibilidade nos templates)
 app.jinja_env.globals.update(
     has_feature=has_feature,
@@ -355,12 +489,23 @@ def parse_int(value: Any) -> Optional[int]:
     except (TypeError, ValueError):
         return None
 
+def render_html_pdf_bytes(html: str, base_url: str) -> bytes:
+    """
+    Importa o WeasyPrint sob demanda para não quebrar o startup do app
+    quando dependências nativas não estiverem instaladas no host.
+    """
+    try:
+        import weasyprint  # type: ignore
+    except Exception as e:
+        raise RuntimeError("WeasyPrint não disponível no ambiente.") from e
+    return weasyprint.HTML(string=html, base_url=base_url).write_pdf()
+
 # ------------------------------------------------------------------------------
 # Public pages & auth
 # ------------------------------------------------------------------------------
 @app.route('/schedule_consultation')
 def schedule_consultation():
-    doctors = Doctor.query.order_by(Doctor.name).all()
+    doctors = Doctor.query.filter(Doctor.user_id.isnot(None)).order_by(Doctor.name).all()
     return render_template('schedule_consultation.html', doctors=doctors)
 
 @app.route('/')
@@ -670,6 +815,8 @@ def upload():
     user = get_logged_user()
     if not user:
         return redirect(url_for('login'))
+    owner_profile = get_user_public_doctor_profile(user=user, create_if_missing=True)
+    owner_profile_id = owner_profile.id if owner_profile else None
 
     if not is_package_available(user.id):
         flash('Seu pacote de análises acabou. Por favor, adquira mais para continuar.', 'warning')
@@ -698,7 +845,8 @@ def upload():
                 cpf=cpf,
                 gender=gender or None,
                 phone=phone or None,
-                doctor_id=user.id,
+                doctor_id=owner_profile_id,
+                owner_user_id=user.id,
                 prescription=prescription
             )
         else:
@@ -735,7 +883,8 @@ def upload():
                 cpf=cpf or None,
                 gender=gender or None,
                 phone=phone or None,
-                doctor_id=user.id,
+                doctor_id=owner_profile_id,
+                owner_user_id=user.id,
                 prescription=prescription
             )
 
@@ -773,7 +922,17 @@ def upload():
             logo_path=url_for('static', filename='images/logo.png', _external=False)
         )
         static_base = os.path.join(app.root_path, 'static')
-        pdf_bytes = weasyprint.HTML(string=html, base_url=static_base).write_pdf()
+        try:
+            pdf_bytes = render_html_pdf_bytes(html, static_base)
+        except RuntimeError as e:
+            app.logger.error("Falha ao gerar PDF com WeasyPrint: %s", e)
+            flash("PDF indisponível neste servidor no momento.", "warning")
+            return render_template(
+                'result.html',
+                patient=patient,
+                diagnostic_text=diagnostic,
+                prescription_text=prescription
+            )
 
         # Save analyzed report securely
         cpf_clean = (cpf or "").replace(".", "").replace("-", "").strip()
@@ -839,13 +998,19 @@ def purchase():
 
     return render_template('purchase.html')
 
+@app.route('/pagamento_falha')
+def pagamento_falha():
+    flash('Não foi possível gerar o link de pagamento. Tente novamente.', 'danger')
+    return redirect(url_for('purchase'))
+
 # ------------------------------------------------------------------------------
 # Agenda / disponibilidade
 # ------------------------------------------------------------------------------
 @app.route('/agenda')
 @login_required
 def agenda():
-    return render_template('agenda.html')
+    user = get_logged_user()
+    return render_template('agenda.html', user=user, username=(user.username if user else None))
 
 @app.route('/doctors')
 @login_required
@@ -854,7 +1019,10 @@ def doctors():
     if not user:
         return redirect(url_for('login'))
 
-    doctors = Doctor.query.order_by(Doctor.name).all()
+    q = Doctor.query
+    if not is_admin(user):
+        q = q.filter_by(user_id=user.id)
+    doctors = q.order_by(Doctor.name).all()
     return render_template('doctors.html', doctors=doctors, user=user)
 
 @app.route('/add_doctor', methods=['POST'])
@@ -871,10 +1039,10 @@ def add_doctor_route():
     if not name:
         return jsonify({"ok": False, "error": "Nome obrigatório"}), 400
 
-    if Doctor.query.filter_by(name=name).first():
+    if Doctor.query.filter_by(name=name, user_id=user.id).first():
         return jsonify({"ok": False, "error": "Já existe um prescritor com esse nome"}), 400
 
-    doctor = Doctor(name=name, phone=phone or None)
+    doctor = Doctor(name=name, phone=phone or None, user_id=user.id)
     db.session.add(doctor)
     db.session.commit()
 
@@ -883,9 +1051,13 @@ def add_doctor_route():
 @app.route('/update_doctor/<int:doctor_id>', methods=['POST'])
 @login_required
 def update_doctor(doctor_id):
+    user = get_logged_user()
     doctor = Doctor.query.get_or_404(doctor_id)
+    if not can_manage_doctor_profile(user, doctor):
+        flash("Acesso negado.", "danger")
+        return redirect(url_for("doctors"))
     doctor.name      = (request.form.get('name') or doctor.name).strip()
-    doctor.phone     = (request.form.get('phone') or doctor.phone).strip()
+    doctor.phone     = (request.form.get('phone') or doctor.phone or '').strip() or None
     db.session.commit()
     flash("Prescritor atualizado!", "success")
     return redirect(url_for("doctors"))
@@ -900,35 +1072,54 @@ def delete_doctor(doctor_id):
             return jsonify({"ok": False, "error": "unauthorized"}), 403
         return redirect(url_for('login'))
 
-    doc = Doctor.query.get(doctor_id)
+    doc = db.session.get(Doctor, doctor_id)
     if not doc:
         if wants_json:
             return jsonify({"ok": False, "error": "Médico não encontrado."}), 404
         flash("Médico não encontrado.", "warning")
         return redirect(url_for("doctors"))
 
+    if not can_manage_doctor_profile(user, doc):
+        if wants_json:
+            return jsonify({"ok": False, "error": "Acesso negado."}), 403
+        flash("Acesso negado.", "danger")
+        return redirect(url_for("doctors"))
+
     try:
-        # if admin he can delete any patient
-        if user.username.lower() == 'admin':
-            DoctorDateAvailability.query.filter_by(doctor_id=doctor_id).delete(synchronize_session=False)
-            DoctorAvailability.query.filter_by(doctor_id=doctor_id).delete(synchronize_session=False)
+        DoctorDateAvailability.query.filter_by(doctor_id=doctor_id).delete(synchronize_session=False)
+        DoctorAvailability.query.filter_by(doctor_id=doctor_id).delete(synchronize_session=False)
+
+        replacement_id = None
+        if doc.user_id:
+            replacement = (
+                Doctor.query
+                .filter(Doctor.user_id == doc.user_id, Doctor.id != doctor_id)
+                .order_by(Doctor.id.asc())
+                .first()
+            )
+            if not replacement:
+                replacement = Doctor(
+                    name=f"Perfil público {doc.user_id}",
+                    phone=None,
+                    user_id=doc.user_id
+                )
+                db.session.add(replacement)
+                db.session.flush()
+            replacement_id = replacement.id
+
+        if replacement_id:
+            Patient.query.filter_by(doctor_id=doctor_id).update({"doctor_id": replacement_id}, synchronize_session=False)
+            Consult.query.filter_by(doctor_id=doctor_id).update({"doctor_id": replacement_id}, synchronize_session=False)
+        else:
             Patient.query.filter_by(doctor_id=doctor_id).update({"doctor_id": None}, synchronize_session=False)
             Consult.query.filter_by(doctor_id=doctor_id).delete(synchronize_session=False)
-            db.session.delete(doc)
-            db.session.commit()
-            if wants_json:
-                return jsonify({"ok": True})
-            flash("Prescritor excluído com todas as dependências removidas.", "info")
-            return redirect(url_for("doctors"))
 
-        # If not admin he can only delete his own patients
-        else:
-            db.session.delete(doc)
-            db.session.commit()
-            if wants_json:
-                return jsonify({"ok": True})
-            flash("Prescritor excluído.", "info")
-            return redirect(url_for("doctors"))
+        db.session.delete(doc)
+        db.session.commit()
+        if wants_json:
+            return jsonify({"ok": True})
+        flash("Prescritor excluído com todas as dependências removidas.", "info")
+        return redirect(url_for("doctors"))
 
     except Exception as e:
         db.session.rollback()
@@ -1279,7 +1470,7 @@ def delete_company(company_id):
         flash('Acesso negado.', 'danger')
         return redirect(url_for('login'))
 
-    comp = Company.query.get(company_id)
+    comp = db.session.get(Company, company_id)
     if not comp:
         flash('Empresa não encontrada.', 'warning')
         return redirect(url_for('admin_companies'))
@@ -1404,7 +1595,7 @@ def delete_pdf(pdf_id):
         flash('Modelo PdfFile não encontrado.', 'danger')
         return redirect(url_for('admin_pdfs'))
 
-    pdf = PdfFile.query.get(pdf_id)
+    pdf = db.session.get(PdfFile, pdf_id)
     if not pdf:
         flash('Arquivo não encontrado.', 'warning')
         return redirect(url_for('admin_pdfs'))
@@ -1441,21 +1632,33 @@ def save_consult(patient_id):
     if not user:
         return redirect(url_for('login'))
     patient = get_patient_by_id(patient_id)
-    if not patient or patient.doctor_id != user.id:
+    if not can_manage_patient(user, patient):
         abort(403)
     notes = request.form.get('notes', '').strip()
     if not notes:
         flash('Notas obrigatórias.', 'warning')
         return redirect(url_for('patient_result', patient_id=patient_id))
-    add_consult(patient_id=patient_id, doctor_id=user.id, notes=notes)
+    profile = get_user_public_doctor_profile(user=user, create_if_missing=True)
+    consult_doctor_id = patient.doctor_id or (profile.id if profile else None)
+    if not consult_doctor_id:
+        flash('Não foi possível identificar um perfil público para a consulta.', 'danger')
+        return redirect(url_for('patient_result', patient_id=patient_id))
+    add_consult(
+        patient_id=patient_id,
+        doctor_id=consult_doctor_id,
+        notes=notes,
+        owner_user_id=patient.owner_user_id or user.id
+    )
     flash('Consulta salva.', 'success')
     return redirect(url_for('patient_result', patient_id=patient_id))
 
 @app.route('/product/<int:product_id>')
+@login_required
 def product_result(product_id):
-    product = get_product_by_id(product_id)
-    if not product:
-        return "Produto não encontrado", 404
+    user = get_logged_user()
+    if not user:
+        return redirect(url_for('login'))
+    product = get_product_by_id(product_id, user.id)
     return render_template('product_result.html', product=product)
 
 @app.route('/download_pdf/<int:patient_id>')
@@ -1465,7 +1668,7 @@ def download_pdf(patient_id):
         return redirect(url_for('login'))
 
     patient = get_patient_by_id(patient_id)
-    if not patient or patient.doctor_id != user.id:
+    if not can_manage_patient(user, patient):
         abort(403)
 
     consults = get_consults_by_patient(patient_id)
@@ -1495,7 +1698,11 @@ def download_pdf(patient_id):
         logo_path=os.path.join(app.root_path, 'static', 'images', 'logo.png')
     )
     static_base = os.path.join(app.root_path, 'static')
-    pdf_bytes: bytes = weasyprint.HTML(string=html, base_url=static_base).write_pdf()  # type: ignore
+    try:
+        pdf_bytes: bytes = render_html_pdf_bytes(html, static_base)
+    except RuntimeError as e:
+        app.logger.error("Falha ao gerar PDF com WeasyPrint: %s", e)
+        abort(503, description="Serviço de PDF indisponível.")
 
     cpf_or_id = (patient.cpf or f"id_{patient.id}").replace('.', '').replace('-', '')
     safe_name = re.sub(r'[^A-Za-z0-9_-]+', '_', f"{patient.name}_{cpf_or_id}")[:80] or f"paciente_{patient.id}"
@@ -1527,6 +1734,7 @@ def catalog():
     return render_template('catalog.html', patients=patients)
 
 @app.route('/edit_patient/<int:patient_id>', methods=['GET', 'POST'])
+@login_required
 def edit_patient(patient_id):
     user = get_logged_user()
     if not user:
@@ -1535,6 +1743,8 @@ def edit_patient(patient_id):
     patient = get_patient_by_id(patient_id)
     if not patient:
         abort(404)
+    if not can_manage_patient(user, patient):
+        abort(403)
 
     if request.method == 'POST':
         name         = request.form['name'].strip()
@@ -1548,7 +1758,8 @@ def edit_patient(patient_id):
         update_patient(
             patient_id=patient_id,
             name=name, age=age, cpf=cpf, gender=gender, phone=phone,
-            doctor_id=patient.doctor_id, prescription=prescription, status=status
+            doctor_id=patient.doctor_id, owner_user_id=patient.owner_user_id,
+            prescription=prescription, status=status
         )
         return redirect(url_for('catalog'))
 
@@ -1561,7 +1772,7 @@ def patient_result(patient_id):
         return redirect(url_for('login'))
 
     patient = get_patient_by_id(patient_id)
-    if not patient or patient.doctor_id != user.id:
+    if not can_manage_patient(user, patient):
         abort(403)
 
     consults = get_consults_by_patient(patient_id)
@@ -1589,7 +1800,7 @@ def patient_info(patient_id):
     if not user:
         return redirect(url_for('login'))
     patient = get_patient_by_id(patient_id)
-    if not patient or patient.doctor_id != user.id:
+    if not can_manage_patient(user, patient):
         abort(403)
 
     return render_template('patient_info.html', patient=patient)
@@ -1602,7 +1813,7 @@ def edit_patient_api(patient_id):
         return jsonify(success=False, error="Não autenticado"), 403
 
     patient = get_patient_by_id(patient_id)
-    if not patient or patient.doctor_id != user.id:
+    if not can_manage_patient(user, patient):
         return jsonify(success=False, error="Paciente não encontrado"), 404
 
     data = request.get_json() or {}
@@ -1613,7 +1824,8 @@ def edit_patient_api(patient_id):
         cpf          = data.get('cpf', patient.cpf),
         gender       = data.get('gender', patient.gender),
         phone        = data.get('phone', patient.phone),
-        doctor_id    = user.id,
+        doctor_id    = patient.doctor_id,
+        owner_user_id = patient.owner_user_id if is_admin(user) else user.id,
         prescription = data.get('prescription', patient.prescription),
         status       = patient.status
     )
@@ -1626,13 +1838,14 @@ def delete_patient(patient_id):
         return redirect(url_for('login'))
 
     patient = get_patient_by_id(patient_id)
-    if not patient or patient.doctor_id != user.id:
+    if not can_manage_patient(user, patient):
         abort(403)
 
     delete_patient_record(patient_id)
     return redirect(url_for('catalog'))
 
 @app.route('/toggle_patient_status/<int:patient_id>/<new_status>', methods=['POST'])
+@login_required
 def toggle_patient_status(patient_id, new_status):
     user = get_logged_user()
     if not user:
@@ -1641,11 +1854,14 @@ def toggle_patient_status(patient_id, new_status):
     patient = get_patient_by_id(patient_id)
     if not patient:
         abort(404)
+    if not can_manage_patient(user, patient):
+        abort(403)
 
     update_patient(
         patient_id=patient_id,
         name=patient.name, age=patient.age, cpf=patient.cpf, gender=patient.gender,
         phone=patient.phone, doctor_id=patient.doctor_id,
+        owner_user_id=patient.owner_user_id,
         prescription=patient.prescription, status=new_status
     )
     return redirect(url_for('catalog'))
@@ -1672,9 +1888,16 @@ def api_add_patient():
     except ValueError:
         return jsonify(success=False, error='Idade inválida'), 400
 
+    owner_profile = get_user_public_doctor_profile(user=user, create_if_missing=True)
+    if not owner_profile:
+        return jsonify(success=False, error='Perfil público não pôde ser criado'), 500
+
     patient = add_patient(
         name=name, age=age, cpf=cpf or None, gender=gender or None,
-        phone=phone or None, doctor_id=user.id, prescription=prescription
+        phone=phone or None,
+        doctor_id=owner_profile.id,
+        owner_user_id=user.id,
+        prescription=prescription
     )
 
     return jsonify(success=True, patient_id=patient.id), 201
@@ -1757,6 +1980,41 @@ def add_product_route():
 
     flash("Produto adicionado com sucesso.", "success")
     return redirect(url_for('products'))
+
+@app.route('/api/edit_product/<int:product_id>', methods=['POST'])
+@login_required
+def edit_product_api(product_id):
+    user = get_logged_user()
+    if not user:
+        return jsonify(success=False, error="Não autenticado"), 403
+
+    p = Product.query.filter_by(id=product_id, doctor_id=user.id).first()
+    if not p:
+        return jsonify(success=False, error="Produto não encontrado"), 404
+
+    data = request.get_json(silent=True) or {}
+
+    try:
+        name = (data.get('name') or p.name).strip()
+        code = (data.get('code') or p.code or '').strip() or None
+        quantity = int(data.get('quantity', p.quantity))
+        purchase_price = float(data.get('purchase_price', p.purchase_price))
+        sale_price = float(data.get('sale_price', p.sale_price))
+    except (TypeError, ValueError):
+        return jsonify(success=False, error="Dados inválidos"), 400
+
+    status = (data.get('status') or p.status or "Ativo").strip() or "Ativo"
+    if status not in {"Ativo", "Inativo"}:
+        return jsonify(success=False, error="Status inválido"), 400
+
+    p.name = name
+    p.code = code
+    p.quantity = quantity
+    p.purchase_price = purchase_price
+    p.sale_price = sale_price
+    p.status = status
+    db.session.commit()
+    return jsonify(success=True)
 
 @app.route('/toggle_product_status/<int:product_id>/<new_status>', methods=['POST'])
 def toggle_product_status(product_id, new_status):
@@ -2098,7 +2356,13 @@ def delete_quote(quote_id):
 @app.get('/api/doctors')
 @login_required
 def api_doctors():
-    docs = Doctor.query.order_by(Doctor.name).all()
+    user = get_logged_user()
+    if not user:
+        return jsonify([]), 403
+    q = Doctor.query
+    if not is_admin(user):
+        q = q.filter_by(user_id=user.id)
+    docs = q.order_by(Doctor.name).all()
     return jsonify([{"id": d.id, "name": d.name} for d in docs])
 
 @app.route('/api/add_consult', methods=['POST'])
@@ -2108,9 +2372,40 @@ def api_add_consult():
         return jsonify(success=False, error='UNAUTHORIZED'), 403
 
     data = request.get_json() or {}
-    pid = data.get('patient_id')
+    pid = parse_int(data.get('patient_id'))
+    if pid is None:
+        return jsonify(success=False, error='patient_id inválido'), 400
+
+    patient = get_patient_by_id(pid)
+    if not patient:
+        return jsonify(success=False, error='Paciente não encontrado'), 404
+    if not can_manage_patient(user, patient):
+        return jsonify(success=False, error='Acesso negado'), 403
+
     notes = data.get('notes', '').strip() or None
-    consult = add_consult(patient_id=pid, doctor_id=user.id, notes=notes)
+    req_doctor_id = parse_int(data.get('doctor_id'))
+    consult_doctor_id = req_doctor_id or patient.doctor_id
+
+    if req_doctor_id is not None:
+        doctor_obj = db.session.get(Doctor, req_doctor_id)
+        if not doctor_obj:
+            return jsonify(success=False, error='Médico não encontrado'), 404
+        if not can_manage_doctor_profile(user, doctor_obj):
+            return jsonify(success=False, error='Acesso negado ao médico'), 403
+
+    if consult_doctor_id is None:
+        prof = get_user_public_doctor_profile(user=user, create_if_missing=True)
+        consult_doctor_id = prof.id if prof else None
+
+    if consult_doctor_id is None:
+        return jsonify(success=False, error='Perfil público de médico não encontrado'), 400
+
+    consult = add_consult(
+        patient_id=pid,
+        doctor_id=consult_doctor_id,
+        notes=notes,
+        owner_user_id=patient.owner_user_id or user.id
+    )
 
     try:
         create_user_event(
@@ -2151,9 +2446,12 @@ def submit_patient_consultation():
     except ValueError:
         return "Horário inválido. Use HH:MM.", 400
 
-    doctor = Doctor.query.get(doctor_id)
+    doctor = db.session.get(Doctor, doctor_id)
     if not doctor:
         return "Médico não encontrado.", 404
+    owner_user_id = doctor.user_id
+    if owner_user_id is None:
+        return "Perfil de médico indisponível para agendamento.", 409
 
     # 1) Buscar blocos explícitos para a DATA escolhida
     blocks = DoctorDateAvailability.query.filter_by(doctor_id=doctor_id, day=day).all()
@@ -2186,12 +2484,13 @@ def submit_patient_consultation():
     # 4) Criar paciente e consulta
     patient = add_patient(
         name=name, age=None, cpf=cpf or None, gender=None, phone=phone or None,
-        doctor_id=doctor_id, prescription=None
+        doctor_id=doctor_id, owner_user_id=owner_user_id, prescription=None
     )
 
     c = Consult(
         patient_id=patient.id,
         doctor_id=doctor_id,
+        owner_user_id=owner_user_id,
         date=day,
         time=t,
         notes=f"Consulta — {name}"
@@ -2221,10 +2520,21 @@ def submit_patient_consultation():
     return redirect(url_for('hero'))
 
 @app.route('/delete_consult/<int:consult_id>', methods=['POST'])
+@login_required
 def delete_consult(consult_id):
-    consult = Consult.query.get(consult_id)
+    user = get_logged_user()
+    if not user:
+        return jsonify({"ok": False, "error": "Não autenticado"}), 403
+
+    consult = db.session.get(Consult, consult_id)
     if not consult:
         return jsonify({"ok": False, "error": "Consulta não encontrada"}), 404
+    is_owner = (
+        consult.owner_user_id == user.id or
+        (consult.owner_user_id is None and consult.doctor_id == user.id)  # legado
+    )
+    if not is_admin(user) and not is_owner:
+        return jsonify({"ok": False, "error": "Acesso negado"}), 403
 
     db.session.delete(consult)
     db.session.commit()
@@ -2302,11 +2612,33 @@ def create_user_event(summary: str, start_datetime: str, end_datetime: str, desc
     service.events().insert(calendarId='primary', body=event).execute()
 
 @app.route('/api/events')
+@login_required
 def api_events():
-    doctor_id = request.args.get('doctor_id', type=int)
+    user = get_logged_user()
+    if not user:
+        return jsonify([]), 403
+
+    requested_doctor_id = request.args.get('doctor_id', type=int)
+
     q = Consult.query
-    if doctor_id:
-        q = q.filter_by(doctor_id=doctor_id)
+    show_global_title = True
+    if is_admin(user):
+        if requested_doctor_id:
+            q = q.filter_by(doctor_id=requested_doctor_id)
+            show_global_title = False
+    else:
+        q = q.filter(
+            or_(
+                Consult.owner_user_id == user.id,
+                and_(Consult.owner_user_id.is_(None), Consult.doctor_id == user.id),  # legado
+            )
+        )
+        if requested_doctor_id:
+            doctor_obj = db.session.get(Doctor, requested_doctor_id)
+            if not doctor_obj or doctor_obj.user_id != user.id:
+                return jsonify([])
+            q = q.filter_by(doctor_id=requested_doctor_id)
+        show_global_title = False
 
     rows = q.all()
     doctor_ids = {c.doctor_id for c in rows if c.doctor_id}
@@ -2319,7 +2651,7 @@ def api_events():
     for c in rows:
         doctor_name = doctors.get(c.doctor_id)
         base_title = c.notes or "Consulta"
-        title = base_title if doctor_id else f"{doctor_name} — {base_title}" if doctor_name else base_title
+        title = base_title if not show_global_title else (f"{doctor_name} — {base_title}" if doctor_name else base_title)
         event = {
             "id": c.id,
             "title": title,
@@ -2360,11 +2692,16 @@ def create_admin_event(summary: str, start_datetime: str, end_datetime: str, des
     service.events().insert(calendarId='primary', body=event).execute()
 
 @app.route('/submit_consultation', methods=['POST'])
+@login_required
 def submit_consultation():
     """
     Agendamento interno (ex.: agenda/admin) — valida contra DoctorDateAvailability
     e grava a consulta. Cria o paciente se não foi informado.
     """
+    user = get_logged_user()
+    if not user:
+        return "Unauthorized", 403
+
     patient_id = request.form.get('patient_id', type=int)
     doctor_id  = request.form.get('doctor_id', type=int)
     date_str   = (request.form.get('date') or '').strip()   # dd/mm/aaaa
@@ -2373,6 +2710,12 @@ def submit_consultation():
 
     if not doctor_id or not date_str or not notes:
         return "Missing fields", 400
+
+    doctor = db.session.get(Doctor, doctor_id)
+    if not doctor:
+        return "Doctor not found", 404
+    if not is_admin(user) and doctor.user_id != user.id:
+        return "Forbidden doctor", 403
 
     # Data BR
     try:
@@ -2416,14 +2759,37 @@ def submit_consultation():
         if time_str in taken:
             return "Slot already taken", 409
 
+    owner_user_id = user.id
+
     # Criar paciente se não veio ID
     if not patient_id:
-        p = Patient(name=notes or "Paciente", status='Ativo', doctor_id=doctor_id)
+        p = Patient(
+            name=notes or "Paciente",
+            status='Ativo',
+            doctor_id=doctor_id,
+            owner_user_id=user.id
+        )
         db.session.add(p)
         db.session.flush()
         patient_id = p.id
+    else:
+        p = db.session.get(Patient, patient_id)
+        if not p:
+            return "Patient not found", 404
+        if not can_manage_patient(user, p):
+            return "Forbidden patient", 403
+        owner_user_id = p.owner_user_id or user.id
+        if p.doctor_id != doctor_id:
+            p.doctor_id = doctor_id
 
-    c = Consult(patient_id=patient_id, doctor_id=doctor_id, date=day, time=t, notes=notes)
+    c = Consult(
+        patient_id=patient_id,
+        doctor_id=doctor_id,
+        owner_user_id=owner_user_id,
+        date=day,
+        time=t,
+        notes=notes
+    )
     db.session.add(c)
     db.session.commit()
     return "ok", 200
@@ -2451,14 +2817,14 @@ def submit_quiz():
     doctor_user = None
     if admin_raw:
         if admin_raw.isdigit():
-            doctor_user = User.query.get(int(admin_raw))
+            doctor_user = db.session.get(User, int(admin_raw))
         if not doctor_user:
             admin_norm = admin_raw.lower()
             doctor_user = User.query.filter_by(email=admin_norm).first()
         if not doctor_user:
             doctor_user = User.query.filter_by(username=admin_raw).first()
     elif session.get('user_id'):
-        doctor_user = User.query.get(session.get('user_id'))
+        doctor_user = db.session.get(User, session.get('user_id'))
 
     doctor_id = doctor_user.id if doctor_user else None
     if doctor_id is None:
@@ -2466,14 +2832,15 @@ def submit_quiz():
 
     patient_id = None
     patient_doctor_id = None
-    if doctor_id is not None:
-        doctor = Doctor.query.get(doctor_id)
-        patient_doctor_id = doctor.id if doctor else None
+    if doctor_user is not None:
+        profile = get_user_public_doctor_profile(user=doctor_user, create_if_missing=False)
+        patient_doctor_id = profile.id if profile else None
 
     try:
         patient = add_patient(
             name=name, age=age, cpf=None, gender=None, phone=None,
-            doctor_id=patient_doctor_id, prescription=f"Autoavaliação: {data.get('risco')}"
+            doctor_id=patient_doctor_id, owner_user_id=doctor_id,
+            prescription=f"Autoavaliação: {data.get('risco')}"
         )
         patient_id = patient.id
     except Exception:
@@ -2746,12 +3113,16 @@ def submit_srq20():
 
 # ---- Lista (privado) ----
 @app.route('/questionnaire_results')
+@login_required
 def questionnaire_results():
     user = get_logged_user()
+    if not user:
+        return redirect(url_for('login'))
 
-    results = QuestionnaireResult.query.order_by(
-        QuestionnaireResult.created_at.desc()
-    ).all()
+    q = QuestionnaireResult.query
+    if not is_admin(user):
+        q = q.filter_by(admin_id=user.id)
+    results = q.order_by(QuestionnaireResult.created_at.desc()).all()
 
     # username consistent for all templates
     username = getattr(user, 'username', None) if user else None
@@ -2765,9 +3136,15 @@ def questionnaire_results():
 
 # ---- Detalhe (privado) ----
 @app.route('/questionnaire_patient/<int:questionnaire_id>')
+@login_required
 def questionnaire_patient(questionnaire_id):
     user = get_logged_user()
+    if not user:
+        return redirect(url_for('login'))
+
     r = QuestionnaireResult.query.get_or_404(questionnaire_id)
+    if not is_admin(user) and r.admin_id != user.id:
+        abort(403)
 
     patient = r.to_dict()  # dictionary with PT/BR keywords
     username = getattr(user, 'username', None) if user else None
@@ -2775,11 +3152,18 @@ def questionnaire_patient(questionnaire_id):
 
 # ---- Deleção (privado, POST) ----
 @app.route('/delete_questionnaire_result', methods=['POST'])
+@login_required
 def delete_questionnaire_result():
+    user = get_logged_user()
+    if not user:
+        return redirect(url_for('login'))
+
     qid = request.form.get('questionnaire_id', type=int)
     if not qid:
         abort(400)
     r = QuestionnaireResult.query.get_or_404(qid)
+    if not is_admin(user) and r.admin_id != user.id:
+        abort(403)
     db.session.delete(r)
     db.session.commit()
     return redirect(url_for('questionnaire_results'))
@@ -2798,6 +3182,12 @@ def training():
 @feature_required('training')
 def videos():
     return render_template("videos.html")
+
+@app.route('/watch_video/<playback_id>')
+@login_required
+@feature_required('training')
+def watch_video(playback_id):
+    return render_template("videos.html", playback_id=playback_id)
 
 # ------------------------------------------------------------------------------
 # Plans
@@ -2819,8 +3209,59 @@ def subscribe():
     link = generate_payment_link(selected, pricing[selected])
     return redirect(link or url_for('plans'))
 
+@app.route('/confirm_pix', methods=['POST'])
+@login_required
+def confirm_pix():
+    user = get_logged_user()
+    if not user:
+        return redirect(url_for('login'))
+
+    plan = (request.form.get('plan') or '').strip().lower()
+    txid = (request.form.get('txid') or '').strip()
+    payload = (request.form.get('payload') or '').strip()
+    receipt = request.files.get('receipt')
+
+    if not receipt or not receipt.filename:
+        flash('Envie um comprovante para continuar.', 'warning')
+        return redirect(url_for('plans'))
+
+    filename = secure_filename(receipt.filename or "receipt.bin")
+    mime = receipt.mimetype or "application/octet-stream"
+    raw = receipt.read()
+    if not raw:
+        flash('Comprovante inválido.', 'warning')
+        return redirect(url_for('plans'))
+
+    sf = save_secure_file(
+        owner_user_id=user.id,
+        kind="pix_receipt",
+        filename=filename,
+        mime_type=mime,
+        raw_bytes=raw
+    )
+    receipt_url = url_for('file_download_signed', token=generate_file_token(sf.id), _external=True)
+
+    amount = PLAN_PRICES.get(plan, 0.0)
+    try:
+        send_pix_receipt_admin(
+            admin_phone=ADMIN_WHATSAPP,
+            user_name=user.name or user.username,
+            user_id=user.id,
+            user_email=user.email,
+            plan=plan,
+            amount=float(amount),
+            txid=txid,
+            receipt_url=receipt_url,
+            payload_text=payload or None,
+        )
+    except Exception as e:
+        app.logger.error("Erro ao encaminhar comprovante PIX ao admin: %s", e)
+
+    flash('Comprovante enviado. Nossa equipe vai validar o pagamento.', 'success')
+    return redirect(url_for('plans'))
+
 # ------------------------------------------------------------------------------
 # Entry point
 # ------------------------------------------------------------------------------
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=os.getenv("FLASK_DEBUG", "0") == "1")

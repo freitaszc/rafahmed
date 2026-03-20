@@ -4,6 +4,7 @@ import os
 import json
 from datetime import datetime, date
 from typing import List, Optional, Tuple
+from sqlalchemy import or_
 from flask import abort
 from models import (
     db,
@@ -45,7 +46,7 @@ def _product_to_dict(p: Product) -> dict:
 # ---------------------------------------------------------------------
 
 def get_user_by_id(user_id: int) -> Optional[User]:
-    return User.query.get(user_id)
+    return db.session.get(User, user_id)
 
 def get_user_by_username(username: str) -> Optional[User]:
     return User.query.filter_by(username=username).first()
@@ -77,7 +78,7 @@ def create_user(
 # ---------------------------------------------------------------------
 
 def get_company_by_id(company_id: int) -> Optional[Company]:
-    return Company.query.get(company_id)
+    return db.session.get(Company, company_id)
 
 def get_company_by_access_code(access_code: str) -> Optional[Company]:
     return Company.query.filter_by(access_code=access_code).first()
@@ -153,17 +154,20 @@ def get_responses_by_quote(quote_id: int) -> List[QuoteResponse]:
 # DOCTORS
 # ---------------------------------------------------------------------
 
-def add_doctor(name: str, phone: Optional[str]=None) -> Doctor:
-    d = Doctor(name=name, phone=phone)
+def add_doctor(name: str, phone: Optional[str] = None, user_id: Optional[int] = None) -> Doctor:
+    d = Doctor(name=name, phone=phone, user_id=user_id)
     db.session.add(d)
     db.session.commit()
     return d
 
-def get_doctors() -> List[Doctor]:
-    return Doctor.query.order_by(Doctor.name).all()
+def get_doctors(user_id: Optional[int] = None) -> List[Doctor]:
+    q = Doctor.query
+    if user_id is not None:
+        q = q.filter_by(user_id=user_id)
+    return q.order_by(Doctor.name).all()
 
 def get_doctor_by_id(doctor_id: int) -> Optional[Doctor]:
-    return Doctor.query.get(doctor_id)
+    return db.session.get(Doctor, doctor_id)
 
 # ---------------------------------------------------------------------
 # PATIENTS
@@ -176,6 +180,7 @@ def add_patient(
     gender: Optional[str],
     phone: Optional[str],
     doctor_id: Optional[int],
+    owner_user_id: Optional[int] = None,
     prescription: Optional[str]=None,
     status: str='Ativo'
 ) -> Patient:
@@ -186,6 +191,7 @@ def add_patient(
         gender=gender,
         phone=phone,
         doctor_id=doctor_id,
+        owner_user_id=owner_user_id,
         prescription=prescription,
         status=status
     )
@@ -194,12 +200,17 @@ def add_patient(
     return p
 
 def get_patient_by_id(patient_id: int) -> Optional[Patient]:
-    return Patient.query.get(patient_id)
+    return db.session.get(Patient, patient_id)
 
 def get_patients_by_doctor(doctor_id: int) -> List[Patient]:
     return (
         Patient.query
-        .filter_by(doctor_id=doctor_id)
+        .filter(
+            or_(
+                Patient.owner_user_id == doctor_id,
+                (Patient.owner_user_id.is_(None) & (Patient.doctor_id == doctor_id)),
+            )
+        )
         .order_by(Patient.name)
         .all()
     )
@@ -211,11 +222,12 @@ def update_patient(
     cpf: Optional[str],
     gender: Optional[str],
     phone: Optional[str],
-    doctor_id: Optional[int], 
+    doctor_id: Optional[int],
+    owner_user_id: Optional[int] = None,
     prescription: Optional[str]=None,
     status: Optional[str]=None
 ) -> None:
-    p = Patient.query.get(patient_id)
+    p = db.session.get(Patient, patient_id)
     if not p:
         return
     p.name         = name
@@ -224,13 +236,15 @@ def update_patient(
     p.gender       = gender
     p.phone        = phone
     p.doctor_id    = doctor_id
+    if owner_user_id is not None:
+        p.owner_user_id = owner_user_id
     p.prescription = prescription
     if status is not None:
         p.status = status
     db.session.commit()
 
 def delete_patient_record(patient_id: int) -> None:
-    p = Patient.query.get(patient_id)
+    p = db.session.get(Patient, patient_id)
     if not p:
         return
     db.session.delete(p)
@@ -240,10 +254,17 @@ def delete_patient_record(patient_id: int) -> None:
 # CONSULTS
 # ---------------------------------------------------------------------
 
-def add_consult(patient_id, doctor_id, notes, date=None, time=None):
+def add_consult(patient_id, doctor_id, notes, date=None, time=None, owner_user_id=None):
     if date is None:
         date = datetime.utcnow().date()
-    consult = Consult(patient_id=patient_id, doctor_id=doctor_id, notes=notes, date=date, time=time)
+    consult = Consult(
+        patient_id=patient_id,
+        doctor_id=doctor_id,
+        notes=notes,
+        date=date,
+        time=time,
+        owner_user_id=owner_user_id
+    )
     db.session.add(consult)
     db.session.commit()
     return consult
