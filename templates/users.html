@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usuários</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #f4f4f4; }
+    .top { margin-bottom: 12px; }
+    a { color: #0a58ca; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <a href="{{ url_for('index') }}">Voltar</a>
+  </div>
+  <h1>Usuários</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Usuário</th>
+        <th>E-mail</th>
+        <th>Plano</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>{{ u.id }}</td>
+        <td>{{ u.username }}</td>
+        <td>{{ u.email }}</td>
+        <td>{{ u.plan or '-' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Produto</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; max-width: 760px; }
+    .grid { display: grid; grid-template-columns: 180px 1fr; gap: 8px 16px; }
+    .label { font-weight: 700; }
+    .actions { margin-top: 20px; }
+    a { color: #0a58ca; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <h1>Detalhes do Produto</h1>
+  <div class="grid">
+    <div class="label">Nome</div><div>{{ product.name }}</div>
+    <div class="label">Código</div><div>{{ product.code or '-' }}</div>
+    <div class="label">Quantidade</div><div>{{ product.quantity }}</div>
+    <div class="label">Preço de compra</div><div>R$ {{ '%.2f'|format(product.purchase_price) }}</div>
+    <div class="label">Preço de venda</div><div>R$ {{ '%.2f'|format(product.sale_price) }}</div>
+    <div class="label">Status</div><div>{{ product.status }}</div>
+  </div>
+  <div class="actions">
+    <a href="{{ url_for('products') }}">Voltar</a>
+  </div>
+</body>
+</html>

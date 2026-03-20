@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autoavaliações</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    table { border-collapse: collapse; width: 100%; max-width: 680px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #f5f5f5; }
+    .actions { margin-top: 14px; }
+    a { color: #0a58ca; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <h1>Resumo de Autoavaliações</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Dia</th>
+        <th>Quantidade</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for i in range(labels|length) %}
+      <tr>
+        <td>{{ labels[i] }}</td>
+        <td>{{ values[i] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="actions">
+    <a href="{{ url_for('quiz_results') }}">Ver resultados detalhados</a>
+  </div>
+</body>
+</html>

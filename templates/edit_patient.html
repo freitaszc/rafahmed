@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editar Paciente</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; max-width: 720px; }
+    label { display: block; margin-top: 10px; font-weight: 600; }
+    input, select, textarea { width: 100%; padding: 8px; margin-top: 4px; }
+    button { margin-top: 16px; padding: 10px 14px; }
+    .actions { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Editar Paciente</h1>
+  <form method="post">
+    <label for="name">Nome</label>
+    <input id="name" name="name" value="{{ patient.name or '' }}" required>
+
+    <label for="age">Idade</label>
+    <input id="age" name="age" type="number" min="0" value="{{ patient.age or '' }}" required>
+
+    <label for="cpf">CPF</label>
+    <input id="cpf" name="cpf" value="{{ patient.cpf or '' }}">
+
+    <label for="gender">Sexo</label>
+    <input id="gender" name="gender" value="{{ patient.gender or '' }}">
+
+    <label for="phone">Telefone</label>
+    <input id="phone" name="phone" value="{{ patient.phone or '' }}">
+
+    <label for="status">Status</label>
+    <select id="status" name="status">
+      <option value="Ativo" {% if patient.status == 'Ativo' %}selected{% endif %}>Ativo</option>
+      <option value="Inativo" {% if patient.status == 'Inativo' %}selected{% endif %}>Inativo</option>
+    </select>
+
+    <label for="prescription">Prescrição</label>
+    <textarea id="prescription" name="prescription" rows="5">{{ patient.prescription or '' }}</textarea>
+
+    <button type="submit">Salvar alterações</button>
+  </form>
+  <div class="actions">
+    <a href="{{ url_for('catalog') }}">Voltar</a>
+  </div>
+</body>
+</html>
