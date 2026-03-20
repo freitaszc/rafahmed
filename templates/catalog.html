@@ -267,6 +267,8 @@
     function toggleSidebar() { const s = document.querySelector('.sidebar'); s.classList.toggle('is-collapsed'); localStorage.setItem('sidebarCollapsed', s.classList.contains('is-collapsed') ? '1' : '0'); }
     document.addEventListener('DOMContentLoaded', () => { if (localStorage.getItem('sidebarCollapsed') === '1') { document.querySelector('.sidebar')?.classList.add('is-collapsed'); } });
   </script>
+  <script src="{{ url_for('static', filename='js/date-mask.js') }}" defer></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar-overrides.css') }}">
 </head>
 
 <!-- Sidebar -->
@@ -285,9 +287,7 @@
       class="fa fa-clipboard"></i><span class="label">SRQ-20</span></a>
   <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-check-square-o"></i>
     <span class="label">Autoavaliações</span></a>
-  <a href="{{ url_for('quote_index') }}" class="menu-item" title="Cotações"><i class="fa fa-calculator"></i>
-    <span class="label">Cotações</span></a>
-  <a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-user"></i> <span
+<a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-user"></i> <span
       class="label">Pacientes</span></a>
   <a href="{{ url_for('products') }}" class="menu-item" title="Estoque"><i class="fa fa-cubes"></i> <span
       class="label">Estoque</span></a>
@@ -402,6 +402,7 @@
       {% for patient in patients %}<option value="{{ patient.id }}">{{ patient.name }}</option>{% endfor %}
     </select>
     <input class="field" type="text" id="consultation_date" placeholder="Data (dd/mm/aaaa)" maxlength="10" required
+      data-date-mask="true"
       style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)">
     <textarea id="consultation_notes" class="field" placeholder="Observações" rows="4"
       style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)"></textarea>
@@ -432,7 +433,6 @@
   }
   function val(id) { return document.getElementById(id).value }
   function formatDateToISO(s) { const [d, m, y] = s.split('/'); return `${y}-${m}-${d}T00:00:00`; }
-  document.getElementById("consultation_date")?.addEventListener("input", function (e) { let v = e.target.value.replace(/\D/g, ''); if (v.length >= 3) v = v.slice(0, 2) + '/' + v.slice(2); if (v.length >= 6) v = v.slice(0, 5) + '/' + v.slice(5, 9); e.target.value = v.slice(0, 10); });
 </script>
 </body>
 

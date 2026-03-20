@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <script src="{{ url_for('static', filename='js/date-mask.js') }}" defer></script>
 
   <script>
     // === Minimizador da barra lateral (com persistência) ===
@@ -368,6 +369,7 @@
       color: #f87171;
     }
   </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar-overrides.css') }}">
 </head>
 
 <body>
@@ -387,9 +389,7 @@
         class="fa fa-clipboard"></i><span class="label">SRQ-20</span></a>
     <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-check-square-o"></i>
       <span class="label">Autoavaliações</span></a>
-    <a href="{{ url_for('quote_index') }}" class="menu-item" title="Cotações"><i class="fa fa-calculator"></i>
-      <span class="label">Cotações</span></a>
-    <a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-user"></i> <span
+<a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-user"></i> <span
         class="label">Pacientes</span></a>
     <a href="{{ url_for('products') }}" class="menu-item" title="Estoque"><i class="fa fa-cubes"></i> <span
         class="label">Estoque</span></a>
@@ -423,7 +423,7 @@
         <h3 class="section-title">Informações Pessoais</h3>
 
         <div class="profile-picture-section">
-          <img src="{{ url_for('static', filename=(user.profile_image or 'images/user-icon.png')) }}"
+          <img src="{{ profile_image_url(user) }}"
             alt="Foto de Perfil" class="profile-picture">
           <div>
             <label for="profile_image" class="file-input-label">Alterar Foto de Perfil</label>
@@ -448,7 +448,10 @@
         <div class="form-row">
           <div class="form-col">
             <label for="birthdate" class="form-label">DATA DE NASCIMENTO</label>
-            <input type="date" id="birthdate" name="birthdate" value="{{ user.birthdate or '' }}" class="form-input">
+            <input type="text" id="birthdate" name="birthdate"
+              value="{{ user.birthdate.strftime('%d/%m/%Y') if user.birthdate else '' }}"
+              placeholder="DD/MM/AAAA" inputmode="numeric" pattern="\\d{2}/\\d{2}/\\d{4}" class="form-input"
+              data-date-mask="true">
           </div>
           <div class="form-col">
             <label for="email" class="form-label">EMAIL</label>

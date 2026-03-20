@@ -680,6 +680,7 @@
       }
     });
   </script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar-overrides.css') }}">
 </head>
 
 <body>
@@ -694,8 +695,7 @@
     <a href="{{ url_for('upload') }}" class="menu-item" title="Ponza Lab"><i class="fa fa-flask"></i> <span class="label">Ponza Lab</span></a>
     <a href="{{ url_for('questionnaire_results') }}" class="menu-item" title="Questionários SRQ-20"><i class="fa fa-clipboard"></i><span class="label">SRQ-20</span></a>
     <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-check-square-o"></i><span class="label">Autoavaliações</span></a>
-    <a href="{{ url_for('quote_index') }}" class="menu-item" title="Cotações"><i class="fa fa-calculator"></i><span class="label">Cotações</span></a>
-    <a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-user"></i> <span class="label">Pacientes</span></a>
+<a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-user"></i> <span class="label">Pacientes</span></a>
     <a href="{{ url_for('products') }}" class="menu-item" title="Estoque"><i class="fa fa-cubes"></i> <span class="label">Estoque</span></a>
     <a href="{{ url_for('agenda') }}" class="menu-item" title="Agenda"><i class="fa fa-calendar-check-o"></i> <span class="label">Agenda</span></a>
     <a href="{{ url_for('purchase') }}" class="menu-item" title="Pagamentos"><i class="fa fa-money"></i> <span class="label">Pagamentos</span></a>
