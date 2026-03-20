@@ -6,7 +6,6 @@
   <title>Agendar Consulta - RafahMed</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
   <style>
@@ -84,50 +83,6 @@
       font-size: .82rem;
       color: var(--muted)
     }
-
-    .calendar-shell {
-      border: 1px solid var(--stroke);
-      border-radius: .6rem;
-      background: var(--bg-elev-2);
-      padding: .45rem;
-    }
-
-    .mini-calendar {
-      width: 100%;
-      min-height: 250px;
-    }
-
-    .mini-calendar .flatpickr-calendar {
-      width: 100%;
-      box-shadow: none;
-      border: 0;
-      background: transparent;
-      color: var(--text);
-    }
-
-    .mini-calendar .flatpickr-months .flatpickr-month,
-    .mini-calendar .flatpickr-weekdays,
-    .mini-calendar .flatpickr-days {
-      background: transparent;
-    }
-
-    .mini-calendar .flatpickr-day {
-      color: var(--text);
-      border-radius: .5rem;
-    }
-
-    .mini-calendar .flatpickr-day.flatpickr-disabled,
-    .mini-calendar .flatpickr-day.notAllowed {
-      color: #64748b;
-    }
-
-    .mini-calendar .flatpickr-day.selected,
-    .mini-calendar .flatpickr-day.startRange,
-    .mini-calendar .flatpickr-day.endRange {
-      background: linear-gradient(135deg, var(--red), var(--red-dark));
-      border-color: transparent;
-      color: #fff;
-    }
   </style>
 </head>
 
@@ -164,12 +119,11 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium">Data disponível</label>
-          <div class="calendar-shell">
-            <div id="miniCalendar" class="mini-calendar" aria-label="Calendário de datas disponíveis"></div>
-          </div>
-          <input type="hidden" name="date" id="date" required>
-          <div id="dateHint" class="helper mt-1">Selecione um médico para ver as datas disponíveis.</div>
+          <label for="date" class="block text-sm font-medium">Data disponível</label>
+          <select name="date" id="date" required class="select" onchange="refreshTimes()">
+            <option value="">Selecione um médico primeiro</option>
+          </select>
+          <div id="dateHint" class="helper mt-1">Selecione um médico para carregar as datas disponíveis.</div>
         </div>
 
         <div>
@@ -188,11 +142,7 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
   <script>
-    let datePicker = null;
-    let selectedDate = '';
     let availableDays = [];
 
     function validateCPFForm() {
@@ -208,65 +158,28 @@
       let d2 = (sum * 10) % 11; if (d2 === 10 || d2 === 11) d2 = 0; if (d2 !== parseInt(cpf[10])) return false; return true;
     }
 
-    function brToIsoDate(br) {
-      const m = String(br || '').trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-      if (!m) return '';
-      return `${m[3]}-${m[2]}-${m[1]}`;
-    }
-
-    function isoToBrDate(iso) {
-      const m = String(iso || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      if (!m) return '';
-      return `${m[3]}/${m[2]}/${m[1]}`;
-    }
-
     function updateDateHint() {
       const hint = document.getElementById('dateHint');
       const doctor = document.getElementById('doctor').value;
+      const selectedDate = document.getElementById('date').value;
       if (!doctor) {
-        hint.textContent = 'Selecione um médico para ver as datas disponíveis.';
+        hint.textContent = 'Selecione um médico para carregar as datas disponíveis.';
         return;
       }
       hint.textContent = selectedDate
         ? `Data selecionada: ${selectedDate}`
-        : 'Selecione uma data no mini calendário.';
-    }
-
-    function setSelectedDate(brDate) {
-      selectedDate = brDate || '';
-      document.getElementById('date').value = selectedDate;
-      updateDateHint();
-    }
-
-    function initMiniCalendar() {
-      if (typeof flatpickr === 'undefined') return;
-      if (flatpickr?.l10ns?.pt) flatpickr.localize(flatpickr.l10ns.pt);
-      datePicker = flatpickr(document.getElementById('miniCalendar'), {
-        inline: true,
-        disableMobile: true,
-        dateFormat: 'Y-m-d',
-        clickOpens: false,
-        allowInput: false,
-        enable: [],
-        onChange: (_, dateStr) => {
-          setSelectedDate(isoToBrDate(dateStr));
-          refreshTimes();
-        }
-      });
-      updateDateHint();
+        : 'Selecione uma data na lista.';
     }
 
     async function loadDates() {
       const doctor = document.getElementById('doctor').value;
+      const dateSel = document.getElementById('date');
       const timeSel = document.getElementById('time');
-      timeSel.innerHTML = ''; timeSel.disabled = true;
+      dateSel.innerHTML = '<option value="">Selecione um médico primeiro</option>';
+      timeSel.innerHTML = '';
+      timeSel.disabled = true;
       availableDays = [];
-      setSelectedDate('');
       if (!doctor) {
-        if (datePicker) {
-          datePicker.set('enable', []);
-          datePicker.clear();
-        }
         timeSel.innerHTML = '<option value="">Selecione a data</option>';
         updateDateHint();
         return;
@@ -277,30 +190,19 @@
         const days = await r.json();
         if (Array.isArray(days) && days.length) {
           availableDays = days;
-          const isoDays = days.map((d) => brToIsoDate(d)).filter(Boolean);
-          if (datePicker) {
-            datePicker.set('enable', isoDays);
-            datePicker.set('minDate', isoDays[0]);
-            datePicker.set('maxDate', isoDays[isoDays.length - 1]);
-            datePicker.setDate(isoDays[0], true);
-          } else {
-            setSelectedDate(days[0]);
-            refreshTimes();
-          }
+          dateSel.innerHTML = '<option value="">Selecione uma data</option>';
+          days.forEach((d) => dateSel.appendChild(new Option(d, d)));
+          dateSel.value = days[0];
+          updateDateHint();
+          refreshTimes();
         } else {
-          if (datePicker) {
-            datePicker.set('enable', []);
-            datePicker.clear();
-          }
+          dateSel.innerHTML = '<option value="">Sem datas disponíveis</option>';
           updateDateHint();
           timeSel.innerHTML = '<option value="">Sem datas disponíveis</option>';
         }
       } catch (e) {
         console.error(e);
-        if (datePicker) {
-          datePicker.set('enable', []);
-          datePicker.clear();
-        }
+        dateSel.innerHTML = '<option value="">Erro ao carregar datas</option>';
         updateDateHint();
         timeSel.innerHTML = '<option value="">Erro ao carregar datas</option>';
       }
@@ -308,8 +210,9 @@
 
     async function refreshTimes() {
       const doctor = document.getElementById('doctor').value;
-      const datePt = selectedDate;
+      const datePt = document.getElementById('date').value;
       const timeSel = document.getElementById('time');
+      updateDateHint();
       timeSel.innerHTML = ''; timeSel.disabled = true;
       if (!doctor || !datePt) { timeSel.innerHTML = '<option value="">Selecione a data</option>'; return; }
 
@@ -340,7 +243,7 @@
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-      initMiniCalendar();
+      updateDateHint();
       loadDates();
     });
   </script>
