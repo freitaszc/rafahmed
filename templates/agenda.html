@@ -3,90 +3,98 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Agenda - RafahMed</title>
   <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 
   <style>
     :root {
-      --bg-deep: #080c14;
-      --bg-dark: #0d1624;
-      --bg-elev: #1a2435;
-      --bg-elev-2: #0f172a;
-      --text: #e5e7eb;
-      --text-dim: #cbd5e1;
-      --muted: #94a3b8;
-      --line: #1f2937;
-      --red: #dd1b35;
-      --red-dark: #b81429;
-      --input-bg: #0f1a2a;
-      --input-bd: #283447;
+      --bg-0: #070a11;
+      --bg-1: #0b1322;
+      --bg-2: #101b2f;
+      --card: rgba(17, 27, 45, 0.74);
+      --card-solid: #111b2f;
+      --line: rgba(159, 182, 219, 0.18);
+      --text: #e7edf7;
+      --text-dim: #afbdd4;
+      --muted: #7f8da7;
+      --danger: #e73a58;
+      --danger-2: #be1d3b;
+      --success: #22c55e;
+      --warn: #f59e0b;
+      --ring: rgba(231, 58, 88, 0.25);
     }
 
     * {
-      box-sizing: border-box
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
     }
 
     body {
       margin: 0;
       display: flex;
-      min-height: 100vh;
-      font-family: 'Montserrat', sans-serif;
+      font-family: 'Outfit', sans-serif;
       color: var(--text);
-      background: radial-gradient(1000px 600px at 10% 0%, #0b1428 0%, transparent 50%),
-        radial-gradient(900px 600px at 90% 10%, #0a0f1f 0%, transparent 50%),
-        linear-gradient(135deg, var(--bg-deep), var(--bg-dark));
+      background:
+        radial-gradient(900px 520px at 8% -5%, #182b48 0%, transparent 58%),
+        radial-gradient(880px 480px at 95% 5%, #2a1430 0%, transparent 58%),
+        linear-gradient(140deg, var(--bg-0), var(--bg-1) 45%, var(--bg-2));
+      overflow-x: hidden;
     }
 
-    /* Sidebar */
     .sidebar {
       position: fixed;
       left: 0;
       top: 0;
       height: 100%;
       width: 250px;
-      background: linear-gradient(180deg, #0b111c 0%, #0a0f1a 100%);
-      padding: 30px 20px;
-      border-right: 1px solid var(--line);
-      box-shadow: 2px 0 14px rgba(0, 0, 0, .35);
+      background: linear-gradient(180deg, rgba(7, 12, 24, 0.96) 0%, rgba(8, 14, 27, 0.96) 100%);
+      border-right: 1px solid rgba(144, 168, 210, .14);
+      padding: 26px 20px;
       display: flex;
       flex-direction: column;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, .42);
       transition: width 180ms ease;
       z-index: 1000;
+      backdrop-filter: blur(8px);
     }
 
     .sidebar-toggle {
       align-self: flex-end;
       background: rgba(255, 255, 255, .03);
-      border: 1px solid rgba(255, 255, 255, .08);
+      border: 1px solid rgba(255, 255, 255, .10);
       color: #e5e7eb;
-      padding: 6px 10px;
+      padding: 7px 10px;
       border-radius: 10px;
       cursor: pointer;
       margin-bottom: 14px;
       font-size: 14px;
       font-weight: 700;
-      transition: background .2s, border-color .2s
+      transition: background .2s, border-color .2s;
     }
 
     .sidebar-toggle:hover {
-      background: rgba(221, 27, 53, .10);
-      border-color: rgba(221, 27, 53, .35)
+      background: rgba(231, 58, 88, .12);
+      border-color: rgba(231, 58, 88, .35);
     }
 
     .sidebar-toggle i {
-      transition: transform 180ms ease
+      transition: transform 180ms ease;
     }
 
     .sidebar-logo {
-      width: 200px;
+      width: 198px;
       display: block;
-      margin: 0 auto 20px;
+      margin: 2px auto 20px;
+      transition: width 180ms ease, margin 180ms ease;
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .35));
-      transition: width 180ms ease, margin 180ms ease
     }
 
     .menu-item {
@@ -94,283 +102,568 @@
       align-items: center;
       gap: 9px;
       font-size: 14px;
-      padding: 12px 18px;
+      padding: 11px 14px;
       border-radius: 10px;
       color: var(--text-dim);
       text-decoration: none;
       margin-bottom: 8px;
       font-weight: 500;
-      transition: background .2s, color .2s, transform .12s
+      transition: background .2s, color .2s, transform .12s;
     }
 
     .menu-item i {
       width: 21px;
       text-align: center;
-      flex: 0 0 21px
+      flex: 0 0 21px;
     }
 
     .menu-item:hover {
-      background: rgba(221, 27, 53, .12);
-      color: var(--red);
-      transform: translateX(4px)
+      background: rgba(231, 58, 88, .12);
+      color: #ffd2dc;
+      transform: translateX(3px);
     }
 
     .menu-item.logout {
-      color: #94a3b8;
-      margin-top: auto
+      color: #9ca8bc;
+      margin-top: auto;
     }
 
     .menu-item.admin {
-      color: #f87171
+      color: #fb8d9f;
     }
 
     .sidebar.is-collapsed {
-      width: 76px
+      width: 76px;
     }
 
     .sidebar.is-collapsed+.content {
-      margin-left: 76px
+      margin-left: 76px;
     }
 
     .sidebar.is-collapsed .sidebar-logo {
       width: 44px;
-      margin: 0 auto 24px
+      margin: 0 auto 24px;
     }
 
     .sidebar.is-collapsed .menu-item {
       justify-content: center;
       gap: 0;
-      padding: 12px 0
+      padding: 11px 0;
     }
 
     .sidebar.is-collapsed .menu-item .label {
-      display: none
+      display: none;
     }
 
     .sidebar.is-collapsed .sidebar-toggle i {
-      transform: rotate(180deg)
+      transform: rotate(180deg);
     }
 
-    /* Conteúdo */
     .content {
       margin-left: 250px;
-      flex: 1;
-      padding: 28px 28px 40px;
-      transition: margin-left 180ms ease
+      width: 100%;
+      padding: 26px 24px 40px;
+      transition: margin-left 180ms ease;
     }
 
-    .page-head {
-      max-width: 1100px;
-      margin: 0 auto 10px;
+    .shell {
+      max-width: 1220px;
+      margin: 0 auto;
+      animation: riseIn .45s ease;
+    }
+
+    .hero {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 24px 22px;
+      background:
+        linear-gradient(150deg, rgba(231, 58, 88, .14), rgba(231, 58, 88, 0) 42%),
+        linear-gradient(145deg, rgba(29, 44, 70, .9), rgba(17, 27, 45, .86));
+      box-shadow: 0 24px 55px rgba(0, 0, 0, .36);
+      margin-bottom: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      right: -120px;
+      top: -160px;
+      background: radial-gradient(circle at center, rgba(255, 255, 255, .13), rgba(255, 255, 255, 0));
+      pointer-events: none;
+    }
+
+    .hero-title-row {
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      text-align: center;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      flex-wrap: wrap;
     }
 
-    .page-title h1 {
+    .hero h1 {
       margin: 0;
-      font-size: 28px;
+      font-size: clamp(24px, 3vw, 34px);
+      letter-spacing: .2px;
       font-weight: 800;
-      color: #e2e8f0;
     }
 
-    .page-subtitle {
+    .hero p {
       margin: 6px 0 0;
+      color: var(--text-dim);
+      font-size: 14px;
+    }
+
+    .now-chip {
+      border: 1px solid rgba(255, 255, 255, .18);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #f4f7fd;
+      background: rgba(4, 8, 15, .34);
+      white-space: nowrap;
+      font-weight: 500;
+      backdrop-filter: blur(4px);
+    }
+
+    .controls {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 12px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      padding: 12px;
+      background: var(--card);
+      backdrop-filter: blur(7px);
+    }
+
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .filter-label {
       font-size: 13px;
       color: var(--text-dim);
+      font-weight: 500;
     }
 
-    .scheduling {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 16px;
+    .input-like {
+      min-width: 230px;
+      padding: 11px 12px;
+      border-radius: 11px;
+      border: 1px solid rgba(156, 178, 214, .3);
+      background: rgba(5, 9, 18, .38);
+      color: var(--text);
+      outline: none;
+      font-family: inherit;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .input-like:focus {
+      border-color: #f07b90;
+      box-shadow: 0 0 0 4px var(--ring);
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 12px 20px;
-      border-radius: 8px;
+      gap: 8px;
       border: none;
-      background: var(--red);
-      color: #fff;
+      border-radius: 11px;
+      padding: 11px 15px;
+      font-family: inherit;
       font-weight: 700;
       font-size: 14px;
       cursor: pointer;
-      transition: .25s;
-      font-family: 'Montserrat', sans-serif
+      color: #fff;
+      background: linear-gradient(135deg, var(--danger), var(--danger-2));
+      box-shadow: 0 10px 24px rgba(204, 31, 64, .35);
+      transition: transform .2s, filter .2s;
+      text-decoration: none;
     }
 
     .btn:hover {
-      background: var(--red-dark);
-      transform: translateY(-1px)
+      transform: translateY(-1px);
+      filter: brightness(1.06);
     }
 
-    .btn-row {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap
-    }
-
-    .helper-pill {
-      font-size: 12px;
+    .btn.secondary {
+      background: rgba(255, 255, 255, .08);
+      box-shadow: none;
+      border: 1px solid rgba(255, 255, 255, .12);
       color: var(--text-dim);
-      border: 1px solid rgba(255, 255, 255, .08);
-      background: rgba(255, 255, 255, .03);
-      padding: 6px 12px;
-      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    .btn.secondary:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, .13);
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(120px, 1fr));
+      gap: 10px;
+    }
+
+    .kpi {
+      border: 1px solid rgba(161, 185, 220, .15);
+      background: rgba(8, 14, 25, .45);
+      border-radius: 12px;
+      padding: 9px 10px;
+      min-height: 66px;
+    }
+
+    .kpi .label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .7px;
+    }
+
+    .kpi .value {
+      margin-top: 4px;
+      font-size: 24px;
+      line-height: 1;
+      font-weight: 800;
+      color: #f6f8ff;
+    }
+
+    .board {
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+      background: linear-gradient(145deg, rgba(17, 27, 45, .93), rgba(10, 18, 32, .9));
+      box-shadow: 0 24px 55px rgba(0, 0, 0, .42);
     }
 
     #calendar {
-      margin: 12px auto 24px;
-      max-width: 1100px;
-      padding: 20px;
-      border-radius: 16px;
-      background: linear-gradient(145deg, var(--bg-elev), #223049);
-      box-shadow: 0 20px 60px rgba(0, 0, 0, .45), 0 0 0 1px rgba(255, 255, 255, .03) inset
+      width: 100%;
+      min-height: 680px;
+      border-radius: 14px;
+      padding: 10px;
+      background: linear-gradient(160deg, rgba(22, 34, 56, .9), rgba(10, 18, 32, .9));
     }
 
-    /* Filtro topo */
-    .topbar {
-      max-width: 1100px;
-      margin: 0 auto 12px;
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
+    .fc {
+      --fc-border-color: rgba(142, 164, 198, .2);
+      --fc-page-bg-color: transparent;
+      --fc-neutral-bg-color: rgba(255, 255, 255, .02);
+      --fc-list-event-hover-bg-color: rgba(255, 255, 255, .06);
+      --fc-now-indicator-color: #f97316;
     }
 
-    .filter-group {
-      display: flex;
-      align-items: center;
+    .fc .fc-toolbar {
+      margin-bottom: 12px;
       gap: 8px;
       flex-wrap: wrap;
     }
 
-    .input-like {
-      width: auto;
-      min-width: 220px;
-      padding: 8px 12px;
-      border-radius: 10px;
-      border: 2px solid var(--input-bd);
-      background: var(--input-bg);
-      color: var(--text);
-      outline: none;
-      transition: .2s
-    }
-
-    .input-like:focus {
-      border-color: var(--red);
-      box-shadow: 0 0 0 3px rgba(221, 27, 53, .12)
-    }
-
-    /* FullCalendar */
     .fc .fc-toolbar-title {
-      color: #cfe0ff;
-      font-weight: 800
-    }
-
-    .fc-theme-standard .fc-scrollgrid,
-    .fc-theme-standard td,
-    .fc-theme-standard th {
-      border-color: var(--line)
+      font-size: 20px;
+      letter-spacing: .2px;
+      color: #dce8fc;
+      font-weight: 800;
     }
 
     .fc .fc-col-header-cell-cushion,
-    .fc .fc-daygrid-day-number {
-      color: var(--text-dim)
+    .fc .fc-daygrid-day-number,
+    .fc .fc-timegrid-axis-cushion,
+    .fc .fc-timegrid-slot-label-cushion {
+      color: #b8c7df;
+      font-weight: 500;
     }
 
-    .fc-button {
-      background: var(--red) !important;
-      color: #fff !important;
-      border: none !important;
-      border-radius: 8px !important;
-      font-weight: 700 !important
+    .fc .fc-button {
+      border: 1px solid rgba(255, 255, 255, .16) !important;
+      background: rgba(19, 31, 50, .95) !important;
+      color: #e7edf8 !important;
+      border-radius: 10px !important;
+      padding: 7px 11px !important;
+      font-weight: 700 !important;
+      text-transform: capitalize !important;
     }
 
-    .fc-button:hover {
-      background: var(--red-dark) !important
+    .fc .fc-button-primary:not(:disabled):active,
+    .fc .fc-button-primary:not(:disabled).fc-button-active,
+    .fc .fc-button:hover {
+      background: linear-gradient(135deg, var(--danger), var(--danger-2)) !important;
+      border-color: transparent !important;
+    }
+
+    .fc .fc-timegrid-slot {
+      height: 2.25em;
+    }
+
+    .fc .fc-highlight {
+      background: rgba(231, 58, 88, .16);
+    }
+
+    .fc .fc-daygrid-day.fc-day-today,
+    .fc .fc-timegrid-col.fc-day-today {
+      background: rgba(231, 58, 88, .07);
     }
 
     .fc .fc-event {
-      background: linear-gradient(135deg, #dd1b35, #ff3854);
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #ff4b6f, #cb1f44);
+      box-shadow: 0 8px 20px rgba(203, 31, 68, .35);
       padding: 2px 6px;
-      box-shadow: 0 6px 18px rgba(221, 27, 53, .25);
+      cursor: pointer;
     }
 
     .fc .fc-event-title {
       font-weight: 600;
     }
 
-    .fc .fc-highlight {
-      background: rgba(221, 27, 53, .18);
-    }
-
-    .fc .fc-daygrid-day.fc-day-today {
-      background: rgba(221, 27, 53, .08);
-    }
-
-    /* Modal */
     #eventModal {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, .55);
+      background: rgba(2, 5, 10, .72);
       justify-content: center;
       align-items: center;
-      z-index: 1000
+      z-index: 1200;
+      padding: 20px;
+      backdrop-filter: blur(3px);
     }
 
     .modal-card {
-      background: linear-gradient(145deg, #0f172a, #0b1222);
-      color: var(--text);
-      padding: 28px;
-      border-radius: 16px;
-      width: 90%;
-      max-width: 520px;
+      width: min(720px, 100%);
+      border-radius: 18px;
+      border: 1px solid rgba(166, 187, 219, .22);
+      background:
+        linear-gradient(165deg, rgba(34, 18, 39, .42), rgba(34, 18, 39, 0) 40%),
+        linear-gradient(150deg, rgba(19, 31, 52, .96), rgba(11, 18, 32, .96));
+      box-shadow: 0 28px 65px rgba(0, 0, 0, .5);
+      padding: 18px 18px 14px;
       position: relative;
-      border: 1px solid rgba(255, 255, 255, .06);
-      box-shadow: 0 24px 60px rgba(0, 0, 0, .5);
-      text-align: center
-    }
-
-    .modal-card input,
-    .modal-card select {
-      width: 95%;
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 2px solid var(--input-bd);
-      background: var(--input-bg);
-      color: var(--text);
-      margin-bottom: 12px;
-      outline: none;
-      transition: .2s
-    }
-
-    .modal-card input:focus,
-    .modal-card select:focus {
-      border-color: var(--red);
-      box-shadow: 0 0 0 3px rgba(221, 27, 53, .12)
+      animation: riseIn .24s ease;
     }
 
     .close-x {
       position: absolute;
-      top: 10px;
       right: 10px;
-      background: none;
-      border: none;
+      top: 9px;
+      border: 0;
+      border-radius: 9px;
+      width: 34px;
+      height: 34px;
       font-size: 22px;
-      font-weight: bold;
-      color: #93a4bd;
-      cursor: pointer
+      color: #bbcade;
+      cursor: pointer;
+      background: rgba(255, 255, 255, .06);
+      transition: background .18s, color .18s;
+    }
+
+    .close-x:hover {
+      background: rgba(255, 255, 255, .14);
+      color: #fff;
+    }
+
+    .modal-title {
+      margin: 4px 0 2px;
+      font-size: 22px;
+      font-weight: 800;
+      color: #f6f8ff;
+      text-align: center;
+    }
+
+    .modal-subtitle {
+      margin: 0 0 14px;
+      font-size: 13px;
+      color: var(--text-dim);
+      text-align: center;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    .field label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #c2d0e6;
+      letter-spacing: .2px;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      border-radius: 11px;
+      border: 1px solid rgba(156, 178, 214, .32);
+      background: rgba(6, 11, 20, .5);
+      color: #edf2fb;
+      padding: 11px 12px;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: #f07b90;
+      box-shadow: 0 0 0 4px var(--ring);
+    }
+
+    .modal-actions {
+      margin-top: 13px;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      min-width: 250px;
+      max-width: 360px;
+      padding: 11px 12px;
+      border-radius: 12px;
+      background: rgba(15, 24, 39, .95);
+      border: 1px solid rgba(168, 189, 222, .28);
+      color: #f5f8ff;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, .38);
+      font-size: 13px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(10px);
+      transition: opacity .22s, transform .22s;
+      z-index: 1300;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast.success {
+      border-color: rgba(34, 197, 94, .5);
+    }
+
+    .toast.warn {
+      border-color: rgba(245, 158, 11, .55);
+    }
+
+    .toast.error {
+      border-color: rgba(231, 58, 88, .6);
+    }
+
+    @keyframes riseIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 1080px) {
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      #calendar {
+        min-height: 620px;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .sidebar {
+        width: 76px;
+      }
+
+      .sidebar .sidebar-logo {
+        width: 44px;
+        margin: 0 auto 24px;
+      }
+
+      .sidebar .menu-item {
+        justify-content: center;
+        gap: 0;
+        padding: 11px 0;
+      }
+
+      .sidebar .menu-item .label {
+        display: none;
+      }
+
+      .sidebar .sidebar-toggle {
+        display: none;
+      }
+
+      .content {
+        margin-left: 76px;
+        padding: 14px 12px 24px;
+      }
+
+      .hero {
+        padding: 18px 14px;
+        border-radius: 16px;
+      }
+
+      .kpi-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-actions .btn {
+        width: 100%;
+      }
+
+      .input-like {
+        min-width: 100%;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .hero h1 {
+        font-size: 24px;
+      }
+
+      .kpi .value {
+        font-size: 20px;
+      }
+
+      #calendar {
+        min-height: 560px;
+        padding: 6px;
+      }
     }
   </style>
 
@@ -380,8 +673,9 @@
       s.classList.toggle('is-collapsed');
       localStorage.setItem('sidebarCollapsed', s.classList.contains('is-collapsed') ? '1' : '0');
     }
+
     document.addEventListener('DOMContentLoaded', () => {
-      if (localStorage.getItem('sidebarCollapsed') === '1') {
+      if (window.innerWidth > 860 && localStorage.getItem('sidebarCollapsed') === '1') {
         document.querySelector('.sidebar')?.classList.add('is-collapsed');
       }
     });
@@ -389,8 +683,6 @@
 </head>
 
 <body>
-
-  <!-- Sidebar -->
   <div class="sidebar">
     <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Minimizar/Maximizar menu">
       <i class="fa fa-angle-double-left"></i>
@@ -398,98 +690,136 @@
 
     <img src="{{ url_for('static', filename='images/logocompleta.svg') }}" class="sidebar-logo" alt="Logo RafahMed">
 
-    <a href="{{ url_for('index') }}" class="menu-item" title="Início"><i class="fa fa-home"></i> <span
-        class="label">Início</span></a>
-    <a href="{{ url_for('upload') }}" class="menu-item" title="Ponza Lab"><i class="fa fa-flask"></i> <span
-        class="label">Ponza Lab</span></a>
-    <a href="{{ url_for('questionnaire_results') }}" class="menu-item" title="Questionários SRQ-20"><i
-        class="fa fa-clipboard"></i><span class="label">SRQ-20</span></a>
-    <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-check-square-o"></i>
-      <span class="label">Autoavaliações</span></a>
-    <a href="{{ url_for('quote_index') }}" class="menu-item" title="Cotações"><i class="fa fa-calculator"></i>
-      <span class="label">Cotações</span></a>
-    <a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-user"></i> <span
-        class="label">Pacientes</span></a>
-    <a href="{{ url_for('products') }}" class="menu-item" title="Estoque"><i class="fa fa-cubes"></i> <span
-        class="label">Estoque</span></a>
-    <a href="{{ url_for('agenda') }}" class="menu-item" title="Agenda"><i class="fa fa-calendar-check-o"></i> <span
-        class="label">Agenda</span></a>
-    <a href="{{ url_for('purchase') }}" class="menu-item" title="Pagamentos"><i class="fa fa-money"></i> <span
-        class="label">Pagamentos</span></a>
-    <a href="{{ url_for('training') }}" class="menu-item" title="Treinamento"><i class="fa fa-graduation-cap"></i>
-      <span class="label">Treinamento</span></a>
+    <a href="{{ url_for('index') }}" class="menu-item" title="Início"><i class="fa fa-home"></i> <span class="label">Início</span></a>
+    <a href="{{ url_for('upload') }}" class="menu-item" title="Ponza Lab"><i class="fa fa-flask"></i> <span class="label">Ponza Lab</span></a>
+    <a href="{{ url_for('questionnaire_results') }}" class="menu-item" title="Questionários SRQ-20"><i class="fa fa-clipboard"></i><span class="label">SRQ-20</span></a>
+    <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-check-square-o"></i><span class="label">Autoavaliações</span></a>
+    <a href="{{ url_for('quote_index') }}" class="menu-item" title="Cotações"><i class="fa fa-calculator"></i><span class="label">Cotações</span></a>
+    <a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-user"></i> <span class="label">Pacientes</span></a>
+    <a href="{{ url_for('products') }}" class="menu-item" title="Estoque"><i class="fa fa-cubes"></i> <span class="label">Estoque</span></a>
+    <a href="{{ url_for('agenda') }}" class="menu-item" title="Agenda"><i class="fa fa-calendar-check-o"></i> <span class="label">Agenda</span></a>
+    <a href="{{ url_for('purchase') }}" class="menu-item" title="Pagamentos"><i class="fa fa-money"></i> <span class="label">Pagamentos</span></a>
+    <a href="{{ url_for('training') }}" class="menu-item" title="Treinamento"><i class="fa fa-graduation-cap"></i><span class="label">Treinamento</span></a>
 
     {% if username and username|lower == 'admin' %}
-    <div style="margin:18px 0 8px 0; border-top:1px solid #1f2937;"></div>
-    <a href="{{ url_for('admin_companies') }}" class="menu-item admin" title="Admin"><i class="fa fa-shield"></i> <span
-        class="label">Admin</span></a>
+    <div style="margin:18px 0 8px; border-top:1px solid rgba(255,255,255,.09);"></div>
+    <a href="{{ url_for('admin_companies') }}" class="menu-item admin" title="Admin"><i class="fa fa-shield"></i> <span class="label">Admin</span></a>
     {% endif %}
 
-    <a href="{{ url_for('logout') }}" class="menu-item logout" title="Sair"><i class="fa fa-sign-out"></i> <span
-        class="label">Sair</span></a>
+    <a href="{{ url_for('logout') }}" class="menu-item logout" title="Sair"><i class="fa fa-sign-out"></i> <span class="label">Sair</span></a>
   </div>
 
-  <div class="content">
-    <div class="page-head">
-      <div class="page-title">
-        <h1>Agenda</h1>
-        <p class="page-subtitle">Arraste no calendário para selecionar horários e criar uma consulta.</p>
-      </div>
-      <div class="page-actions">
-        <button onclick="openModal()" class="btn">Agendar Consulta</button>
-      </div>
+  <main class="content">
+    <div class="shell">
+      <section class="hero">
+        <div class="hero-title-row">
+          <div>
+            <h1>Agenda</h1>
+            <p>Selecione médico, visualize horários e agende consultas em poucos cliques.</p>
+          </div>
+          <div id="nowChip" class="now-chip">Carregando data e hora...</div>
+        </div>
+
+        <div class="controls">
+          <div class="panel">
+            <div class="filter-row">
+              <span class="filter-label"><i class="fa fa-filter"></i> Médico</span>
+              <select id="doctorFilter" class="input-like">
+                <option value="">Todos</option>
+              </select>
+              <button class="btn" onclick="openModal()"><i class="fa fa-plus"></i> Nova consulta</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="kpi-grid">
+              <article class="kpi">
+                <div class="label">Consultas</div>
+                <div class="value" id="kpiTotal">0</div>
+              </article>
+              <article class="kpi">
+                <div class="label">Hoje</div>
+                <div class="value" id="kpiToday">0</div>
+              </article>
+              <article class="kpi">
+                <div class="label">Com horário</div>
+                <div class="value" id="kpiTimed">0</div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="board">
+        <div id="calendar"></div>
+      </section>
     </div>
+  </main>
 
-    <!-- Filter doctor -->
-    <div class="topbar">
-      <div class="filter-group">
-        <label for="doctorFilter" style="color:var(--text-dim);font-size:14px;">Filtrar médico:</label>
-        <select id="doctorFilter" class="input-like">
-          <option value="">Todos</option>
-        </select>
-      </div>
-    </div>
-
-    <div id="calendar"></div>
-  </div>
-
-  <!-- MODAL -->
-  <div id="eventModal">
+  <div id="eventModal" aria-hidden="true">
     <div class="modal-card">
-      <button class="close-x" onclick="closeModal()">×</button>
-      <h3 style="margin-top:6px;margin-bottom:18px">Agendar Consulta</h3>
+      <button class="close-x" onclick="closeModal()" aria-label="Fechar">×</button>
+      <h3 class="modal-title">Agendar Consulta</h3>
+      <p class="modal-subtitle">Informe os dados e selecione um horário disponível.</p>
 
-      <!-- Doctor -->
-      <select id="doctor" class="scheduling" required>
-        <option value="">Selecione o médico</option>
-      </select>
+      <div class="form-grid">
+        <div class="field full">
+          <label for="doctor">Médico</label>
+          <select id="doctor" required>
+            <option value="">Selecione o médico</option>
+          </select>
+        </div>
 
-      <!-- Obs/Patient name -->
-      <input type="text" id="title" class="scheduling" placeholder="Observação / Nome do Paciente" required>
+        <div class="field full">
+          <label for="title">Observação / Nome do Paciente</label>
+          <input type="text" id="title" placeholder="Ex.: Retorno da Maria" required>
+        </div>
 
-      <!-- Date -->
-      <input type="text" id="date" class="scheduling" placeholder="Data (dd/mm/aaaa)" oninput="formatDateInput(this)"
-        required>
+        <div class="field">
+          <label for="date">Data (dd/mm/aaaa)</label>
+          <input type="text" id="date" placeholder="dd/mm/aaaa" oninput="formatDateInput(this)" required>
+        </div>
 
-      <!-- Time (opcional) -->
-      <input type="time" id="time" class="scheduling" placeholder="Horário (opcional)">
+        <div class="field">
+          <label for="time">Horário manual (opcional)</label>
+          <input type="time" id="time" placeholder="Horário (opcional)">
+        </div>
 
-      <!-- Slots available -->
-      <select id="slot" class="scheduling">
-        <option value="">— horários disponíveis —</option>
-      </select>
+        <div class="field full">
+          <label for="slot">Horários disponíveis</label>
+          <select id="slot">
+            <option value="">- horários disponíveis -</option>
+          </select>
+        </div>
+      </div>
 
-      <button onclick="submitEvent()" class="btn" style="width:100%">Salvar</button>
+      <div class="modal-actions">
+        <button class="btn secondary" onclick="closeModal()"><i class="fa fa-times"></i> Cancelar</button>
+        <button class="btn" onclick="submitEvent()"><i class="fa fa-check"></i> Salvar consulta</button>
+      </div>
     </div>
   </div>
+
+  <div id="toast" class="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/locales-all.global.min.js"></script>
 
   <script>
-    const el = id => document.getElementById(id);
+    const el = (id) => document.getElementById(id);
     let calendar = null;
     let availableDays = [];
+    let toastTimer = null;
+
+    function showToast(message, type = 'info') {
+      const toast = el('toast');
+      if (!toast) return;
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+    }
 
     function formatDateBR(date) {
       const d = String(date.getDate()).padStart(2, '0');
@@ -502,6 +832,52 @@
       const h = String(date.getHours()).padStart(2, '0');
       const m = String(date.getMinutes()).padStart(2, '0');
       return `${h}:${m}`;
+    }
+
+    function updateNowChip() {
+      const chip = el('nowChip');
+      if (!chip) return;
+      const now = new Date();
+      const formatted = now.toLocaleString('pt-BR', {
+        weekday: 'long',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      chip.textContent = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+    }
+
+    function setKpis(events) {
+      const total = Array.isArray(events) ? events.length : 0;
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = String(today.getMonth() + 1).padStart(2, '0');
+      const d = String(today.getDate()).padStart(2, '0');
+      const todayPrefix = `${y}-${m}-${d}`;
+
+      let todayCount = 0;
+      let timedCount = 0;
+      (events || []).forEach((ev) => {
+        const start = String(ev.start || '');
+        if (start.startsWith(todayPrefix)) todayCount += 1;
+        if (!ev.allDay) timedCount += 1;
+      });
+
+      el('kpiTotal').textContent = String(total);
+      el('kpiToday').textContent = String(todayCount);
+      el('kpiTimed').textContent = String(timedCount);
+    }
+
+    function formatDateInput(input) {
+      let v = input.value.replace(/\D/g, '');
+      if (v.length >= 2 && v.length <= 4) {
+        v = v.replace(/^(\d{2})(\d+)/, '$1/$2');
+      } else if (v.length > 4) {
+        v = v.replace(/^(\d{2})(\d{2})(\d+)/, '$1/$2/$3');
+      }
+      input.value = v;
     }
 
     function openModal(prefill = {}) {
@@ -517,7 +893,7 @@
       titleInput.value = prefill.title || '';
       dateInput.value = prefill.date || '';
       timeInput.value = prefill.time || '';
-      slotSel.innerHTML = '<option value="">— horários disponíveis —</option>';
+      slotSel.innerHTML = '<option value="">- horários disponíveis -</option>';
 
       modal.style.display = 'flex';
       modal.setAttribute('aria-hidden', 'false');
@@ -535,22 +911,11 @@
       modal.setAttribute('aria-hidden', 'true');
     }
 
-    // Função para formatar a data em tempo real (ex: 10102025 → 10/10/2025)
-    function formatDateInput(input) {
-      let v = input.value.replace(/\D/g, '');
-      if (v.length >= 2 && v.length <= 4) {
-        v = v.replace(/^(\d{2})(\d+)/, '$1/$2');
-      } else if (v.length > 4) {
-        v = v.replace(/^(\d{2})(\d{2})(\d+)/, '$1/$2/$3');
-      }
-      input.value = v;
-    }
-
     async function updateAvailableDates() {
       const doctorId = el('doctor').value;
       const dateInput = el('date');
       const slotSel = el('slot');
-      slotSel.innerHTML = '<option value="">— horários disponíveis —</option>';
+      slotSel.innerHTML = '<option value="">- horários disponíveis -</option>';
       availableDays = [];
       if (!doctorId) {
         dateInput.disabled = true;
@@ -558,20 +923,26 @@
         return;
       }
 
-      const res = await fetch(`/api/available_days?doctor_id=${doctorId}`, { cache: 'no-store' });
-      const days = await res.json();
+      try {
+        const res = await fetch(`/api/available_days?doctor_id=${doctorId}`, { cache: 'no-store' });
+        const days = await res.json();
 
-      if (!Array.isArray(days) || days.length === 0) {
+        if (!Array.isArray(days) || days.length === 0) {
+          dateInput.disabled = true;
+          dateInput.value = '';
+          showToast('Este médico não possui disponibilidade cadastrada.', 'warn');
+          return;
+        }
+
+        dateInput.disabled = false;
+        availableDays = days;
+        if (dateInput.value && !availableDays.includes(dateInput.value)) {
+          dateInput.value = '';
+        }
+      } catch {
         dateInput.disabled = true;
         dateInput.value = '';
-        alert('Este médico não possui disponibilidade cadastrada.');
-        return;
-      }
-
-      dateInput.disabled = false;
-      availableDays = days;
-      if (dateInput.value && !availableDays.includes(dateInput.value)) {
-        dateInput.value = '';
+        showToast('Não foi possível carregar as datas disponíveis.', 'error');
       }
     }
 
@@ -580,15 +951,19 @@
       const brDate = el('date').value;
       const slotSel = el('slot');
 
-      slotSel.innerHTML = '<option value="">— horários disponíveis —</option>';
+      slotSel.innerHTML = '<option value="">- horários disponíveis -</option>';
       if (!doctorId || !brDate) return;
 
-      const res = await fetch(`/api/available_slots?doctor_id=${doctorId}&date=${encodeURIComponent(brDate)}`, { cache: 'no-store' });
-      const slots = await res.json();
+      try {
+        const res = await fetch(`/api/available_slots?doctor_id=${doctorId}&date=${encodeURIComponent(brDate)}`, { cache: 'no-store' });
+        const slots = await res.json();
 
-      slotSel.innerHTML = slots.length
-        ? '<option value="">— selecione —</option>' + slots.map(h => `<option value="${h}">${h}</option>`).join('')
-        : '<option value="">Sem horários para este dia</option>';
+        slotSel.innerHTML = slots.length
+          ? '<option value="">- selecione -</option>' + slots.map((h) => `<option value="${h}">${h}</option>`).join('')
+          : '<option value="">Sem horários para este dia</option>';
+      } catch {
+        slotSel.innerHTML = '<option value="">Erro ao carregar horários</option>';
+      }
     }
 
     async function submitEvent() {
@@ -599,35 +974,42 @@
       const doctorId = el('doctor').value;
 
       if (!title || !dateBR || !doctorId) {
-        alert("Preencha observação/nome, data e selecione o médico.");
+        showToast('Preencha paciente/observação, data e médico.', 'warn');
         return;
       }
 
       const parts = dateBR.split('/');
-      if (parts.length !== 3) { alert("Data inválida."); return; }
+      if (parts.length !== 3) {
+        showToast('Data inválida.', 'warn');
+        return;
+      }
+
       const [day, month, year] = parts;
       const formattedDate = `${day}/${month}/${year}`;
 
       const form = new FormData();
-      form.append("title", title);
-      form.append("date", formattedDate);
-      form.append("time", time);
-      form.append("doctor_id", doctorId);
+      form.append('title', title);
+      form.append('date', formattedDate);
+      form.append('time', time);
+      form.append('doctor_id', doctorId);
 
       try {
-        const r = await fetch("/submit_consultation", { method: "POST", body: form });
-        if (r.status === 409) { alert("Este horário já foi reservado ou está fora da disponibilidade."); return; }
+        const r = await fetch('/submit_consultation', { method: 'POST', body: form });
+        if (r.status === 409) {
+          showToast('Horário já reservado ou fora da disponibilidade.', 'warn');
+          return;
+        }
         if (!r.ok) throw new Error();
-        alert("Consulta agendada com sucesso!");
+        showToast('Consulta agendada com sucesso!', 'success');
         closeModal();
         calendar?.refetchEvents();
       } catch {
-        alert("Erro ao salvar consulta.");
+        showToast('Erro ao salvar consulta.', 'error');
       }
     }
 
     function initCalendar() {
-      const calendarEl = document.getElementById('calendar');
+      const calendarEl = el('calendar');
       calendar = new FullCalendar.Calendar(calendarEl, {
         locale: 'pt-br',
         initialView: 'timeGridWeek',
@@ -654,9 +1036,14 @@
           const doctorId = el('doctorFilter').value;
           const url = doctorId ? `/api/events?doctor_id=${doctorId}` : '/api/events';
           fetch(url, { cache: 'no-store' })
-            .then(r => r.json())
-            .then(success)
-            .catch(failure);
+            .then((r) => r.json())
+            .then((data) => {
+              setKpis(data);
+              success(data);
+            })
+            .catch((err) => {
+              failure(err);
+            });
         },
         select: (info) => {
           const dateStr = formatDateBR(info.start);
@@ -665,6 +1052,7 @@
           calendar.unselect();
         }
       });
+
       calendar.render();
     }
 
@@ -676,7 +1064,7 @@
         const list = await res.json();
         filter.innerHTML = '<option value="">Todos</option>';
         doctorSel.innerHTML = '<option value="">Selecione o médico</option>';
-        list.forEach(d => {
+        list.forEach((d) => {
           const opt1 = document.createElement('option');
           opt1.value = d.id;
           opt1.textContent = d.name;
@@ -696,13 +1084,16 @@
     function validateDateAgainstAvailability() {
       const val = el('date').value.trim();
       if (val.length === 10 && availableDays.length > 0 && !availableDays.includes(val)) {
-        alert('Data não disponível para este médico.');
+        showToast('Data não disponível para este médico.', 'warn');
         el('date').value = '';
-        el('slot').innerHTML = '<option value="">— horários disponíveis —</option>';
+        el('slot').innerHTML = '<option value="">- horários disponíveis -</option>';
       }
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      updateNowChip();
+      setInterval(updateNowChip, 30000);
+
       await loadDoctors();
       initCalendar();
 
@@ -724,6 +1115,14 @@
         if (el('slot').value) {
           el('time').value = el('slot').value;
         }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeModal();
+      });
+
+      el('eventModal').addEventListener('click', (e) => {
+        if (e.target === el('eventModal')) closeModal();
       });
     });
   </script>
