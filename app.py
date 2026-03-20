@@ -6,6 +6,7 @@ import base64
 import secrets
 from io import BytesIO
 from functools import wraps
+from contextvars import ContextVar
 from datetime import datetime, timedelta
 from collections import defaultdict
 from typing import Any, Optional, cast
@@ -65,7 +66,7 @@ FERNET = Fernet(FILE_ENC_KEY)
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'instance'))
 os.makedirs(BASE_DIR, exist_ok=True)
 db_path = os.path.join(BASE_DIR, 'web.db')
-DATABASE_URL = os.getenv('DATABASE_URL') or f'sqlite:///{db_path}'
+DATABASE_URL = (os.getenv('DATABASE_URL') or f'sqlite:///{db_path}').strip()
 
 # static dir + uploads (gerais)
 STATIC_DIR = os.path.join(app.root_path, 'static')
@@ -283,6 +284,13 @@ def ensure_user_columns():
             stmts.append("ALTER TABLE users ADD COLUMN profile_image VARCHAR(200)")
         if "company_id" not in cols:
             stmts.append("ALTER TABLE users ADD COLUMN company_id INTEGER")
+        if "auth_user_id" not in cols:
+            if dialect == "postgresql":
+                stmts.append("ALTER TABLE users ADD COLUMN auth_user_id UUID")
+            else:
+                stmts.append("ALTER TABLE users ADD COLUMN auth_user_id VARCHAR(36)")
+        if "role" not in cols:
+            stmts.append("ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'user'")
 
         pw_col = cols.get("password_hash")
         pw_len = getattr(pw_col["type"], "length", None) if pw_col else None
@@ -292,14 +300,33 @@ def ensure_user_columns():
             elif dialect in {"mysql", "mariadb"}:
                 stmts.append("ALTER TABLE users MODIFY COLUMN password_hash VARCHAR(255) NOT NULL")
 
-        if not stmts:
-            return
-
         try:
             with db.engine.begin() as conn:
                 for s in stmts:
                     app.logger.warning("[migrate] %s", s)
                     conn.execute(text(s))
+                conn.execute(text(
+                    "UPDATE users "
+                    "SET role = CASE "
+                    "  WHEN role IS NULL OR TRIM(role) = '' THEN CASE WHEN LOWER(username) = 'admin' THEN 'admin' ELSE 'user' END "
+                    "  ELSE role "
+                    "END"
+                ))
+                if dialect == "postgresql":
+                    conn.execute(text(
+                        "DO $$ BEGIN "
+                        "IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE schemaname = 'public' AND indexname = 'ix_users_auth_user_id') THEN "
+                        "  CREATE UNIQUE INDEX ix_users_auth_user_id ON users (auth_user_id) WHERE auth_user_id IS NOT NULL; "
+                        "END IF; "
+                        "END $$;"
+                    ))
+                    conn.execute(text(
+                        "DO $$ BEGIN "
+                        "IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'users_role_check') THEN "
+                        "  ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin','user')); "
+                        "END IF; "
+                        "END $$;"
+                    ))
         except SQLAlchemyError as e:
             app.logger.error("[migrate] Failed to update users table: %s", e)
 
@@ -421,6 +448,96 @@ def ensure_consult_patient_nullable():
 ensure_consult_patient_nullable()
 
 # ------------------------------------------------------------------------------
+# RLS helpers (Supabase/Postgres)
+# ------------------------------------------------------------------------------
+_request_rls_user_id: ContextVar[Optional[int]] = ContextVar("request_rls_user_id", default=None)
+_request_rls_auth_uid: ContextVar[Optional[str]] = ContextVar("request_rls_auth_uid", default=None)
+
+def ensure_rls_helper_functions():
+    with app.app_context():
+        if db.engine.dialect.name != "postgresql":
+            return
+        stmts = [
+            """
+            CREATE OR REPLACE FUNCTION public.app_user_id()
+            RETURNS integer
+            LANGUAGE sql
+            STABLE
+            SECURITY DEFINER
+            SET search_path = public
+            AS $$
+              SELECT COALESCE(
+                (SELECT u.id FROM public.users u WHERE u.auth_user_id = auth.uid() LIMIT 1),
+                NULLIF(current_setting('app.current_user_id', true), '')::integer
+              );
+            $$;
+            """,
+            """
+            CREATE OR REPLACE FUNCTION public.app_company_id()
+            RETURNS integer
+            LANGUAGE sql
+            STABLE
+            SECURITY DEFINER
+            SET search_path = public
+            AS $$
+              SELECT u.company_id
+              FROM public.users u
+              WHERE u.id = public.app_user_id()
+              LIMIT 1;
+            $$;
+            """,
+            """
+            CREATE OR REPLACE FUNCTION public.is_admin()
+            RETURNS boolean
+            LANGUAGE sql
+            STABLE
+            SECURITY DEFINER
+            SET search_path = public
+            AS $$
+              SELECT EXISTS (
+                SELECT 1
+                FROM public.users u
+                WHERE u.id = public.app_user_id()
+                  AND (LOWER(COALESCE(u.role, 'user')) = 'admin' OR LOWER(COALESCE(u.username, '')) = 'admin')
+              );
+            $$;
+            """
+        ]
+        try:
+            with db.engine.begin() as conn:
+                for stmt in stmts:
+                    conn.execute(text(stmt))
+        except SQLAlchemyError as e:
+            app.logger.warning("[migrate] Failed to ensure RLS helper functions: %s", e)
+
+def apply_rls_context(*, user_id: Optional[int], auth_uid: Optional[str] = None) -> None:
+    uid = int(user_id) if user_id is not None else None
+    sub = (auth_uid or "").strip() or None
+    _request_rls_user_id.set(uid)
+    _request_rls_auth_uid.set(sub)
+
+    if db.engine.dialect.name != "postgresql":
+        return
+
+    try:
+        db.session.execute(
+            text("SELECT set_config('app.current_user_id', :uid, false)"),
+            {"uid": str(uid) if uid is not None else ""}
+        )
+        db.session.execute(
+            text("SELECT set_config('request.jwt.claim.sub', :sub, false)"),
+            {"sub": sub or ""}
+        )
+        db.session.execute(
+            text("SELECT set_config('request.jwt.claim.role', :role, false)"),
+            {"role": "authenticated" if uid is not None else "anon"}
+        )
+    except SQLAlchemyError as e:
+        app.logger.warning("Falha ao aplicar contexto de RLS no Postgres: %s", e)
+
+ensure_rls_helper_functions()
+
+# ------------------------------------------------------------------------------
 # Auth helpers
 # ------------------------------------------------------------------------------
 def get_logged_user():
@@ -444,6 +561,17 @@ def get_logged_user():
         except Exception as e2:
             app.logger.error("Erro persistente ao carregar usuário da sessão: %s", e2)
             return None
+
+@app.before_request
+def attach_request_rls_context():
+    uid = parse_int(session.get("user_id"))
+    auth_uid = session.get("auth_user_id")
+    apply_rls_context(user_id=uid, auth_uid=auth_uid if isinstance(auth_uid, str) else None)
+
+@app.teardown_request
+def clear_request_rls_context(_exc):
+    _request_rls_user_id.set(None)
+    _request_rls_auth_uid.set(None)
 
 def login_required(f):
     @wraps(f)
@@ -478,7 +606,11 @@ def quotes_section_required(f):
     return wrapper
 
 def is_admin(user: Optional[User]) -> bool:
-    return bool(user and (user.username or "").lower() == "admin")
+    if not user:
+        return False
+    role = (getattr(user, "role", "") or "").strip().lower()
+    username = (getattr(user, "username", "") or "").strip().lower()
+    return role == "admin" or username == "admin"
 
 def profile_image_url(user: Optional[User]) -> str:
     default_path = url_for("static", filename="images/user-icon.png")
@@ -738,7 +870,8 @@ def register():
         username=username,
         email=email,
         password_hash=generate_password_hash(password),
-        company_id=company.id if company else None
+        company_id=company.id if company else None,
+        role="user"
     )
     try:
         db.session.add(user)
@@ -778,6 +911,12 @@ def login():
         else:
             session['user_id']  = user.id
             session['username'] = user.username
+            session['auth_user_id'] = getattr(user, "auth_user_id", None)
+            session['role'] = getattr(user, "role", "user")
+            apply_rls_context(
+                user_id=user.id,
+                auth_uid=getattr(user, "auth_user_id", None)
+            )
             return redirect(url_for('index'))
 
     return render_template('login.html', error=error)
@@ -786,6 +925,9 @@ def login():
 def logout():
     session.pop('user_id', None)
     session.pop('username', None)
+    session.pop('auth_user_id', None)
+    session.pop('role', None)
+    apply_rls_context(user_id=None, auth_uid=None)
     return redirect(url_for('login'))
 
 @app.route('/account')
@@ -1088,7 +1230,7 @@ def delete_doctor(doctor_id):
 def availability():
     # ONly admin
     user = get_logged_user()
-    if not user or user.username.lower() != 'admin':
+    if not user or not is_admin(user):
         return jsonify({"ok": False, "error": "unauthorized"}), 401
 
     raw_doctor_id = request.args.get('doctor_id')  # Optional[str]
@@ -1170,7 +1312,7 @@ DA_DID_COL  = cast(Any, DoctorDateAvailability.doctor_id)
 def availability_dates():
     # apenas admin
     user = get_logged_user()
-    if not user or user.username.lower() != 'admin':
+    if not user or not is_admin(user):
         return jsonify({"ok": False, "error": "unauthorized"}), 401
 
     raw_doctor_id = request.args.get('doctor_id') or (request.get_json(silent=True) or {}).get('doctor_id')
@@ -1347,7 +1489,7 @@ def api_available_slots():
 @login_required
 def admin_availability_page():
     user = get_logged_user()
-    if not user or user.username.lower() != 'admin':
+    if not user or not is_admin(user):
         flash('Acesso negado.', 'danger')
         return redirect(url_for('login'))
     docs = Doctor.query.order_by(Doctor.name).all()
@@ -1370,7 +1512,7 @@ def allowed_file(filename):
 @login_required
 def admin_companies():
     user = get_logged_user()
-    if not user or user.username.lower() != 'admin':
+    if not user or not is_admin(user):
         flash('Acesso negado.', 'danger')
         return redirect(url_for('login'))
 
@@ -1421,7 +1563,7 @@ def read_secure_file_bytes(file_id: int) -> tuple[bytes, SecureFile]:
 @login_required
 def delete_company(company_id):
     user = get_logged_user()
-    if not user or user.username.lower() != 'admin':
+    if not user or not is_admin(user):
         flash('Acesso negado.', 'danger')
         return redirect(url_for('login'))
 
@@ -1442,7 +1584,7 @@ def delete_company(company_id):
 @login_required
 def admin_pdfs():
     user = get_logged_user()
-    if not user or user.username.lower() != 'admin':
+    if not user or not is_admin(user):
         flash('Acesso negado.', 'danger')
         return redirect(url_for('login'))
 
@@ -1456,7 +1598,7 @@ def admin_pdfs():
 @login_required
 def upload_pdf():
     user = get_logged_user()
-    if not user or user.username.lower() != 'admin':
+    if not user or not is_admin(user):
         flash('Acesso negado.', 'danger')
         return redirect(url_for('admin_pdfs'))
 
@@ -1495,7 +1637,7 @@ def upload_pdf():
 @app.get('/pdfs/view/<int:file_id>')
 def view_pdf(file_id):
     user = get_logged_user()
-    if not user or user.username.lower() != 'admin':
+    if not user or not is_admin(user):
         abort(403)
     pdf = PdfFile.query.get_or_404(file_id)
     if not pdf.secure_file_id:
@@ -1505,7 +1647,7 @@ def view_pdf(file_id):
 @app.get('/pdfs/download/<int:file_id>')
 def download_pdf_admin(file_id):
     user = get_logged_user()
-    if not user or user.username.lower() != 'admin':
+    if not user or not is_admin(user):
         abort(403)
     pdf = PdfFile.query.get_or_404(file_id)
     if not pdf.secure_file_id:
@@ -1542,7 +1684,7 @@ def download_pdf_signed(token):
 @login_required
 def delete_pdf(pdf_id):
     user = get_logged_user()
-    if not user or user.username.lower() != 'admin':
+    if not user or not is_admin(user):
         flash('Acesso negado.', 'danger')
         return redirect(url_for('login'))
 
@@ -1574,7 +1716,7 @@ def list_users():
     user = get_logged_user()
     if not user:
         return redirect(url_for('login'))
-    if user.username.lower() != 'admin':
+    if not is_admin(user):
         flash('Acesso negado.', 'danger')
         return redirect(url_for('index'))
     users = User.query.order_by(User.id).all()
@@ -2203,6 +2345,7 @@ def quote_index():
 @quotes_section_required
 def respond_quote(quote_id, supplier_id):
     quote = Quote.query.get_or_404(quote_id)
+    apply_rls_context(user_id=quote.user_id)
     supplier_ids = quote.suppliers.split(",") if quote.suppliers else []
     if str(supplier_id) not in supplier_ids:
         return "Cotação inválida ou fornecedor não autorizado.", 403
@@ -2456,6 +2599,7 @@ def submit_patient_consultation():
     owner_user_id = doctor.user_id
     if owner_user_id is None:
         return "Perfil de médico indisponível para agendamento.", 409
+    apply_rls_context(user_id=owner_user_id)
 
     # 1) Buscar blocos explícitos para a DATA escolhida
     blocks = DoctorDateAvailability.query.filter_by(doctor_id=doctor_id, day=day).all()
@@ -2584,7 +2728,7 @@ def oauth2callback():
     }
 
     u = get_logged_user()
-    if u and u.username.lower() == 'admin':
+    if is_admin(u):
         admin_creds_path = os.path.join(BASE_DIR, 'admin_google_creds.json')
         with open(admin_creds_path, 'w') as f:
             f.write(creds.to_json())
@@ -2821,6 +2965,10 @@ def submit_quiz():
     doctor_id = doctor_user.id if doctor_user else None
     if doctor_id is None:
         return jsonify(status='error', error='doctor_id ausente'), 400
+    apply_rls_context(
+        user_id=doctor_id,
+        auth_uid=getattr(doctor_user, "auth_user_id", None) if doctor_user else None
+    )
 
     patient_id = None
     patient_doctor_id = None
@@ -3076,6 +3224,8 @@ def submit_srq20():
         return jsonify({"ok": False, "error": "Invalid JSON"}), 400
 
     admin_id = request.args.get('admin', type=int)
+    if admin_id is not None:
+        apply_rls_context(user_id=admin_id)
 
     name = payload.get('nome') or payload.get('name')  # optional
     age = str(payload.get('idade') or '').strip() or None

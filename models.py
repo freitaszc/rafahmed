@@ -10,6 +10,8 @@ class User(db.Model):
     id              = db.Column(db.Integer, primary_key=True)
     username        = db.Column(db.String(80),  nullable=False, unique=True, index=True)
     email           = db.Column(db.String(120), nullable=False, unique=True, index=True)
+    auth_user_id    = db.Column(db.String(36), unique=True, index=True, nullable=True)
+    role            = db.Column(db.String(20), nullable=False, default='user')
     password_hash   = db.Column(db.String(255), nullable=False)
     name            = db.Column(db.String(120))
     birthdate       = db.Column(db.Date)
@@ -23,9 +25,12 @@ class User(db.Model):
 
     def __init__(self, username: str, email: str, password_hash: str,
                  name: Optional[str] = None, birthdate: Optional[date] = None,
-                 profile_image: Optional[str] = None, company_id: Optional[int] = None):
+                 profile_image: Optional[str] = None, company_id: Optional[int] = None,
+                 auth_user_id: Optional[str] = None, role: str = 'user'):
         self.username      = username
         self.email         = email
+        self.auth_user_id  = auth_user_id
+        self.role          = role
         self.password_hash = password_hash
         self.name          = name
         self.birthdate     = birthdate

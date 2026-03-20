@@ -442,6 +442,18 @@
       backdrop-filter: blur(3px);
     }
 
+    #eventDetailsModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 5, 10, .72);
+      justify-content: center;
+      align-items: center;
+      z-index: 1200;
+      padding: 20px;
+      backdrop-filter: blur(3px);
+    }
+
     .modal-card {
       width: min(720px, 100%);
       border-radius: 18px;
@@ -545,6 +557,35 @@
       gap: 10px;
       justify-content: flex-end;
       flex-wrap: wrap;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .detail-item {
+      border: 1px solid rgba(161, 185, 220, .2);
+      background: rgba(8, 14, 25, .45);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
+    .detail-item .label {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-bottom: 4px;
+    }
+
+    .detail-item .value {
+      font-size: 14px;
+      color: #f6f8ff;
+      word-break: break-word;
     }
 
     .toast {
@@ -810,6 +851,34 @@
     </div>
   </div>
 
+  <div id="eventDetailsModal" aria-hidden="true">
+    <div class="modal-card">
+      <button class="close-x" onclick="closeEventDetailsModal()" aria-label="Fechar">×</button>
+      <h3 class="modal-title">Detalhes da Consulta</h3>
+      <p class="modal-subtitle">Revise os dados e, se necessário, exclua esta consulta.</p>
+
+      <div class="details-grid">
+        <div class="detail-item">
+          <span class="label">Título</span>
+          <span class="value" id="detailTitle">-</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Médico</span>
+          <span class="value" id="detailDoctor">-</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Data e hora</span>
+          <span class="value" id="detailStart">-</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn secondary" onclick="closeEventDetailsModal()"><i class="fa fa-times"></i> Fechar</button>
+        <button class="btn" id="deleteConsultBtn" onclick="deleteSelectedConsult()"><i class="fa fa-trash"></i> Excluir consulta</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
@@ -822,6 +891,7 @@
     let selectedDateBR = '';
     let pendingPrefillDateBR = '';
     let pendingPrefillTime = '';
+    let selectedConsultId = null;
     let toastTimer = null;
 
     function showToast(message, type = 'info') {
@@ -845,6 +915,20 @@
       const h = String(date.getHours()).padStart(2, '0');
       const m = String(date.getMinutes()).padStart(2, '0');
       return `${h}:${m}`;
+    }
+
+    function formatDateTimeBR(dateInput) {
+      if (!dateInput) return '-';
+      const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+      if (Number.isNaN(date.getTime())) return '-';
+      return date.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
     }
 
     function updateNowChip() {
@@ -902,6 +986,7 @@
     }
 
     async function openModal(prefill = {}) {
+      closeEventDetailsModal();
       const modal = el('eventModal');
       const doctorSel = el('doctor');
       const slotSel = el('slot');
@@ -931,6 +1016,63 @@
       const modal = el('eventModal');
       modal.style.display = 'none';
       modal.setAttribute('aria-hidden', 'true');
+    }
+
+    function openEventDetailsModal(eventObj) {
+      const modal = el('eventDetailsModal');
+      const deleteBtn = el('deleteConsultBtn');
+      if (!modal || !eventObj) return;
+
+      closeModal();
+      selectedConsultId = eventObj.id ? String(eventObj.id) : null;
+
+      el('detailTitle').textContent = eventObj.title || 'Consulta';
+      el('detailDoctor').textContent = eventObj.extendedProps?.doctorName || '-';
+      el('detailStart').textContent = formatDateTimeBR(eventObj.start);
+
+      deleteBtn.disabled = !selectedConsultId;
+      deleteBtn.style.opacity = selectedConsultId ? '1' : '.6';
+      deleteBtn.style.cursor = selectedConsultId ? 'pointer' : 'not-allowed';
+
+      modal.style.display = 'flex';
+      modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeEventDetailsModal() {
+      const modal = el('eventDetailsModal');
+      if (!modal) return;
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+      selectedConsultId = null;
+    }
+
+    async function deleteSelectedConsult() {
+      if (!selectedConsultId) {
+        showToast('Consulta inválida para exclusão.', 'warn');
+        return;
+      }
+
+      const confirmed = window.confirm('Deseja realmente excluir esta consulta?');
+      if (!confirmed) return;
+
+      try {
+        const r = await fetch(`/delete_consult/${encodeURIComponent(selectedConsultId)}`, {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const payload = await r.json().catch(() => ({}));
+        if (!r.ok || payload?.ok === false) {
+          const errMsg = payload?.error || 'Não foi possível excluir a consulta.';
+          showToast(errMsg, 'error');
+          return;
+        }
+
+        showToast('Consulta excluída com sucesso.', 'success');
+        closeEventDetailsModal();
+        calendar?.refetchEvents();
+      } catch {
+        showToast('Erro ao excluir consulta.', 'error');
+      }
     }
 
     async function updateAvailableDates() {
@@ -1116,6 +1258,10 @@
           const timeStr = info.allDay ? '' : formatTime24(info.start);
           openModal({ date: dateStr, time: timeStr, doctorId: el('doctorFilter').value });
           calendar.unselect();
+        },
+        eventClick: (info) => {
+          info.jsEvent?.preventDefault();
+          openEventDetailsModal(info.event);
         }
       });
 
@@ -1174,11 +1320,18 @@
       });
 
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeModal();
+        if (e.key === 'Escape') {
+          closeModal();
+          closeEventDetailsModal();
+        }
       });
 
       el('eventModal').addEventListener('click', (e) => {
         if (e.target === el('eventModal')) closeModal();
+      });
+
+      el('eventDetailsModal').addEventListener('click', (e) => {
+        if (e.target === el('eventDetailsModal')) closeEventDetailsModal();
       });
     });
   </script>
