@@ -23,7 +23,12 @@
             --red: #dd1b35;
             --red-dark: #b81429;
             --input-bg: #0f1a2a;
-            --input-bd: #283447
+            --input-bd: #283447;
+            --green: #16a34a;
+            --amber: #d97706;
+            --blue: #2563eb;
+            --error: #ef4444;
+            --ghost: #1e293b
         }
 
         * {
@@ -130,19 +135,32 @@
 
         .content {
             flex-grow: 1;
-            padding: 40px;
+            padding: 34px;
             min-width: 0
         }
 
         h2 {
-            font-size: 28px;
+            font-size: 30px;
             font-weight: 800;
             text-align: center;
-            margin: 0 0 20px
+            margin: 0 0 8px
+        }
+
+        h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 800
+        }
+
+        .page-subtitle {
+            text-align: center;
+            margin: 0 0 18px;
+            color: #a8bedf;
+            font-size: 14px
         }
 
         .section-box {
-            margin: 28px 0;
+            margin: 16px 0;
             padding: 20px;
             border-radius: 16px;
             background: linear-gradient(145deg, var(--bg-elev), var(--bg-elev-2));
@@ -153,15 +171,123 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            margin: 0 0 12px;
+            margin: 0 0 14px;
             padding-bottom: 8px;
             border-bottom: 1px solid var(--line)
         }
 
-        .inline {
+        .spacer {
+            flex: 1 1 auto
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px
+        }
+
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 12px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid rgba(255, 255, 255, .05);
+            color: #c7d8f0;
+            font-size: 13px;
+            font-weight: 700
+        }
+
+        .step-item .step-num {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: rgba(221, 27, 53, .24);
+            color: #ffd1d8;
+            font-size: 12px
+        }
+
+        .status-row {
             display: flex;
             gap: 10px;
             flex-wrap: wrap
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 999px;
+            padding: 7px 12px;
+            border: 1px solid transparent
+        }
+
+        .badge.neutral {
+            background: rgba(148, 163, 184, .14);
+            color: #cbd5e1;
+            border-color: rgba(148, 163, 184, .3)
+        }
+
+        .badge.success {
+            background: rgba(22, 163, 74, .14);
+            color: #a7f3d0;
+            border-color: rgba(22, 163, 74, .35)
+        }
+
+        .badge.warn {
+            background: rgba(217, 119, 6, .16);
+            color: #fcd34d;
+            border-color: rgba(217, 119, 6, .35)
+        }
+
+        .badge.error {
+            background: rgba(239, 68, 68, .14);
+            color: #fecaca;
+            border-color: rgba(239, 68, 68, .35)
+        }
+
+        .control-grid,
+        .toolbar-grid,
+        .generator-grid {
+            display: grid;
+            gap: 12px
+        }
+
+        .control-grid {
+            grid-template-columns: minmax(240px, 340px) 1fr
+        }
+
+        .toolbar-grid {
+            grid-template-columns: minmax(220px, 300px) 1fr
+        }
+
+        .generator-grid {
+            grid-template-columns: repeat(4, minmax(120px, 1fr))
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px
+        }
+
+        .field label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #b6c6df
+        }
+
+        .inline {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center
         }
 
         select,
@@ -183,28 +309,75 @@
             box-shadow: 0 0 0 3px rgba(221, 27, 53, .12)
         }
 
+        .search-input {
+            width: 250px;
+            max-width: 100%
+        }
+
         .menu-button {
             font-weight: 800;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
-            padding: 10px 16px;
+            padding: 10px 14px;
             border-radius: 28px;
             border: none;
             background: linear-gradient(135deg, var(--red), var(--red-dark));
             color: #fff;
             box-shadow: 0 10px 28px rgba(221, 27, 53, .35);
-            transition: .25s;
+            transition: .2s;
             font-family: 'Montserrat', sans-serif
         }
 
         .menu-button:hover {
-            transform: translateY(-2px) scale(1.03)
+            transform: translateY(-1px)
+        }
+
+        .menu-button.secondary {
+            background: linear-gradient(135deg, #334155, #1f2937);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, .45)
+        }
+
+        .menu-button.ghost {
+            background: var(--ghost);
+            box-shadow: none;
+            border: 1px solid #334155
+        }
+
+        .menu-button.danger {
+            background: linear-gradient(135deg, #b91c1c, #991b1b);
+            box-shadow: 0 8px 24px rgba(153, 27, 27, .35)
+        }
+
+        .menu-button:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+            transform: none
+        }
+
+        .chip-btn {
+            padding: 9px 12px;
+            font-size: 12px
+        }
+
+        .tiny-button {
+            padding: 7px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            border: 1px solid #334155;
+            background: #111b2e;
+            color: #d8e4f5;
+            cursor: pointer;
+            font-weight: 700
+        }
+
+        .tiny-button:hover {
+            border-color: #4b6384
         }
 
         .catalog-table {
             width: 100%;
             border-collapse: collapse;
-            background: linear-gradient(145deg, var(--bg-elev), #223049);
+            background: linear-gradient(145deg, var(--bg-elev), #1f2b41);
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 20px 60px rgba(0, 0, 0, .45)
@@ -212,28 +385,189 @@
 
         .catalog-table th,
         .catalog-table td {
-            padding: 12px 14px;
+            padding: 11px 12px;
             border-bottom: 1px solid var(--line);
-            text-align: center
+            text-align: center;
+            font-size: 13px
         }
 
         .catalog-table th {
             background: #121c2b;
             color: #cfe0ff;
-            font-weight: 800
+            font-weight: 800;
+            letter-spacing: .02em
+        }
+
+        .catalog-table tbody tr:hover {
+            background: rgba(255, 255, 255, .02)
+        }
+
+        .table-wrap {
+            overflow-x: auto
+        }
+
+        .muted-line {
+            margin: 10px 2px 0;
+            color: #95a8c4;
+            font-size: 12px
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(130px, 1fr));
+            gap: 10px;
+            margin: 0 0 12px
+        }
+
+        .summary-card {
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid rgba(255, 255, 255, .06);
+            text-align: center
+        }
+
+        .summary-card .value {
+            font-size: 25px;
+            line-height: 1;
+            font-weight: 800;
+            color: #dbeafe
+        }
+
+        .summary-card .label {
+            margin-top: 5px;
+            font-size: 11px;
+            color: #9db0ce;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .03em
+        }
+
+        .row-actions {
+            display: flex;
+            justify-content: center;
+            gap: 8px
+        }
+
+        .icon-btn {
+            border: none;
+            border-radius: 8px;
+            width: 30px;
+            height: 30px;
+            display: grid;
+            place-items: center;
+            background: #1c2940;
+            color: #d7e6ff;
+            cursor: pointer;
+            font-size: 13px
+        }
+
+        .icon-btn:hover {
+            background: #2b3c59
+        }
+
+        .icon-btn.remove:hover {
+            background: rgba(185, 28, 28, .36);
+            color: #fecaca
+        }
+
+        tr.invalid td input {
+            border-color: var(--error) !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, .15) !important
+        }
+
+        .empty-state {
+            margin-top: 10px;
+            border: 1px dashed #334155;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 13px
+        }
+
+        .weekdays {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap
+        }
+
+        .weekday-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 10px;
+            border-radius: 999px;
+            border: 1px solid #334155;
+            background: #0f1a2a;
+            color: #d2e2f9;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none
+        }
+
+        .weekday-chip input {
+            margin: 0
         }
 
         .del {
             background: none;
             border: none;
-            font-weight: 900;
             color: #93a4bd;
-            font-size: 18px;
+            font-size: 17px;
             cursor: pointer
         }
 
         .del:hover {
-            color: var(--red)
+            color: #fecaca
+        }
+
+        .toast {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 2000;
+            min-width: 250px;
+            max-width: 420px;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, .4);
+            opacity: 0;
+            transform: translateY(8px);
+            pointer-events: none;
+            transition: .2s
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0)
+        }
+
+        .toast.info {
+            background: #0f305f;
+            border: 1px solid #1d4ed8;
+            color: #dbeafe
+        }
+
+        .toast.success {
+            background: #123b24;
+            border: 1px solid #16a34a;
+            color: #dcfce7
+        }
+
+        .toast.warn {
+            background: #4a2b06;
+            border: 1px solid #d97706;
+            color: #fef3c7
+        }
+
+        .toast.error {
+            background: #4b1111;
+            border: 1px solid #ef4444;
+            color: #fee2e2
         }
 
         .modal {
@@ -252,7 +586,7 @@
             padding: 22px;
             border-radius: 16px;
             width: 90%;
-            max-width: 420px;
+            max-width: 430px;
             position: relative;
             border: 1px solid rgba(255, 255, 255, .06);
             box-shadow: 0 24px 60px rgba(0, 0, 0, .5)
@@ -260,7 +594,7 @@
 
         .close-x {
             position: absolute;
-            top: 10px;
+            top: 8px;
             right: 10px;
             background: none;
             border: none;
@@ -268,6 +602,67 @@
             font-weight: bold;
             color: #93a4bd;
             cursor: pointer
+        }
+
+        .modal-title {
+            font-size: 22px;
+            margin: 8px 0 12px;
+            text-align: center
+        }
+
+        .confirm-message {
+            color: #c6d4ea;
+            font-size: 14px;
+            line-height: 1.45;
+            margin: 0 0 16px
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            flex-wrap: wrap
+        }
+
+        @media (max-width: 1120px) {
+            .content {
+                padding: 20px
+            }
+
+            .control-grid,
+            .toolbar-grid {
+                grid-template-columns: 1fr
+            }
+
+            .search-input {
+                width: 100%
+            }
+        }
+
+        @media (max-width: 900px) {
+            .generator-grid {
+                grid-template-columns: repeat(2, minmax(120px, 1fr))
+            }
+        }
+
+        @media (max-width: 680px) {
+            .content {
+                padding: 16px
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr
+            }
+
+            .generator-grid {
+                grid-template-columns: 1fr
+            }
+
+            .catalog-table th,
+            .catalog-table td {
+                padding: 9px 8px;
+                font-size: 12px
+            }
         }
     </style>
 </head>
@@ -314,59 +709,194 @@
 
     <div class="content">
         <h2>Disponibilidade dos Médicos</h2>
+        <p class="page-subtitle">Fluxo em 4 passos para cadastrar horários por data com menos cliques e mais segurança.
+        </p>
 
-        <!-- ===== Topo: Médicos cadastrados ===== -->
+        <div id="toast" class="toast info" role="status" aria-live="polite"></div>
+
+        <div class="section-box">
+            <div class="steps">
+                <div class="step-item"><span class="step-num">1</span><span>Selecione o médico</span></div>
+                <div class="step-item"><span class="step-num">2</span><span>Monte os blocos rapidamente</span></div>
+                <div class="step-item"><span class="step-num">3</span><span>Revise conflitos</span></div>
+                <div class="step-item"><span class="step-num">4</span><span>Salve as alterações</span></div>
+            </div>
+            <div class="status-row">
+                <span id="statusBadge" class="badge warn">Nenhum médico selecionado</span>
+                <span id="dirtyBadge" class="badge neutral">Sem alterações pendentes</span>
+            </div>
+        </div>
+
         <div class="section-box">
             <div class="section-header">
                 <h3>Médicos Cadastrados</h3>
                 <div class="spacer"></div>
+                <input type="text" id="doctorSearch" class="search-input" placeholder="Buscar médico pelo nome">
                 <button class="menu-button" onclick="openDoctorModal()">Novo Médico</button>
             </div>
-
-            <table class="catalog-table" id="doctorsTable" aria-label="Médicos">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th style="width:70px">Remover</th>
-                    </tr>
-                </thead>
-                <tbody id="doctorsTbody"><!-- preenchido via JS --></tbody>
-            </table>
+            <div class="table-wrap">
+                <table class="catalog-table" id="doctorsTable" aria-label="Médicos">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th style="width:120px">Selecionar</th>
+                            <th style="width:90px">Remover</th>
+                        </tr>
+                    </thead>
+                    <tbody id="doctorsTbody"></tbody>
+                </table>
+            </div>
+            <p class="muted-line" id="doctorCount">0 médicos cadastrados</p>
         </div>
 
-        <!-- Seleção e edição de disponibilidade -->
         <div class="section-box">
             <div class="section-header">
-                <h3>Gerencie a Disponibilidade de Médicos</h3>
+                <h3>1) Selecione o médico e edite os blocos</h3>
             </div>
-            <div class="inline">
-                <select id="doctorSelect" onchange="loadAvailability()">
-                    <option value="">— Escolha um médico —</option>
-                    {% for d in doctors %}<option value="{{ d.id }}">{{ d.name }}</option>{% endfor %}
-                </select>
-                <button class="menu-button" onclick="addRow()">Adicionar Bloco</button>
-                <button class="menu-button" onclick="saveAvailability()">Salvar</button>
+            <div class="control-grid">
+                <div class="field">
+                    <label for="doctorSelect">Médico</label>
+                    <select id="doctorSelect">
+                        <option value="">— Escolha um médico —</option>
+                        {% for d in doctors %}<option value="{{ d.id }}">{{ d.name }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Ações rápidas</label>
+                    <div class="inline">
+                        <button id="btnAddRow" class="menu-button" data-editor-control>Adicionar bloco manual</button>
+                        <button id="btnDuplicateLast" class="menu-button secondary"
+                            data-editor-control>Duplicar último</button>
+                        <button id="btnSortRows" class="menu-button secondary" data-editor-control>Ordenar</button>
+                        <button id="btnClearRows" class="menu-button ghost" data-editor-control>Limpar tudo</button>
+                    </div>
+                </div>
+            </div>
+            <p class="muted-line" id="editorHint">Selecione um médico para habilitar o editor de disponibilidade.</p>
+        </div>
+
+        <div class="section-box">
+            <div class="section-header">
+                <h3>2) Atalhos por data</h3>
+            </div>
+            <div class="toolbar-grid">
+                <div class="field">
+                    <label for="quickDay">Data alvo</label>
+                    <input type="text" id="quickDay" placeholder="dd/mm/aaaa" data-editor-control>
+                </div>
+                <div class="field">
+                    <label>Modelos de horários</label>
+                    <div class="inline">
+                        <button class="menu-button secondary chip-btn" data-editor-control data-preset="morning">Manhã
+                            08:00-12:00</button>
+                        <button class="menu-button secondary chip-btn" data-editor-control data-preset="afternoon">Tarde
+                            13:00-17:00</button>
+                        <button class="menu-button secondary chip-btn" data-editor-control data-preset="full">Integral
+                            08:00-17:00</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-box">
+            <div class="section-header">
+                <h3>3) Geração em lote por período</h3>
+            </div>
+            <div class="generator-grid">
+                <div class="field">
+                    <label for="rangeStart">Data inicial</label>
+                    <input type="text" id="rangeStart" placeholder="dd/mm/aaaa" data-editor-control>
+                </div>
+                <div class="field">
+                    <label for="rangeEnd">Data final</label>
+                    <input type="text" id="rangeEnd" placeholder="dd/mm/aaaa" data-editor-control>
+                </div>
+                <div class="field">
+                    <label for="rangeStartTime">Início</label>
+                    <input type="time" id="rangeStartTime" value="08:00" data-editor-control>
+                </div>
+                <div class="field">
+                    <label for="rangeEndTime">Fim</label>
+                    <input type="time" id="rangeEndTime" value="17:00" data-editor-control>
+                </div>
+            </div>
+            <div class="generator-grid" style="margin-top:10px">
+                <div class="field">
+                    <label for="rangeSlot">Slot (min)</label>
+                    <input type="number" id="rangeSlot" min="5" step="5" value="30" data-editor-control>
+                </div>
+                <div class="field" style="grid-column: span 3;">
+                    <label>Dias da semana</label>
+                    <div class="weekdays">
+                        <label class="weekday-chip"><input type="checkbox" class="weekday" value="1" checked
+                                data-editor-control>Seg</label>
+                        <label class="weekday-chip"><input type="checkbox" class="weekday" value="2" checked
+                                data-editor-control>Ter</label>
+                        <label class="weekday-chip"><input type="checkbox" class="weekday" value="3" checked
+                                data-editor-control>Qua</label>
+                        <label class="weekday-chip"><input type="checkbox" class="weekday" value="4" checked
+                                data-editor-control>Qui</label>
+                        <label class="weekday-chip"><input type="checkbox" class="weekday" value="5" checked
+                                data-editor-control>Sex</label>
+                        <label class="weekday-chip"><input type="checkbox" class="weekday" value="6"
+                                data-editor-control>Sáb</label>
+                        <label class="weekday-chip"><input type="checkbox" class="weekday" value="0"
+                                data-editor-control>Dom</label>
+                    </div>
+                </div>
+            </div>
+            <div class="inline" style="margin-top:12px">
+                <button id="btnGenerateRange" class="menu-button secondary" data-editor-control>Gerar blocos do
+                    período</button>
+            </div>
+            <p class="muted-line">Blocos idênticos já existentes não serão duplicados automaticamente.</p>
+        </div>
+
+        <div class="section-box">
+            <div class="section-header">
+                <h3>4) Revisar e salvar</h3>
+                <div class="spacer"></div>
+                <button id="btnSave" class="menu-button" data-editor-control>Salvar disponibilidade</button>
             </div>
 
-            <div class="section-header"></div>
-            <table class="catalog-table" id="tbl">
-                <thead>
-                    <tr>
-                        <th>Data (dd/mm/aaaa)</th>
-                        <th>Início</th>
-                        <th>Fim</th>
-                        <th>Slot (min)</th>
-                        <th>Remover</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody"></tbody>
-            </table>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="value" id="sumBlocks">0</div>
+                    <div class="label">Blocos</div>
+                </div>
+                <div class="summary-card">
+                    <div class="value" id="sumDays">0</div>
+                    <div class="label">Datas diferentes</div>
+                </div>
+                <div class="summary-card">
+                    <div class="value" id="sumSlots">0</div>
+                    <div class="label">Slots estimados</div>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table class="catalog-table" id="tbl">
+                    <thead>
+                        <tr>
+                            <th style="width:50px">#</th>
+                            <th>Data (dd/mm/aaaa)</th>
+                            <th>Início</th>
+                            <th>Fim</th>
+                            <th>Slot (min)</th>
+                            <th style="width:120px">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody"></tbody>
+                </table>
+            </div>
+            <div id="emptyState" class="empty-state">Nenhum bloco na tabela. Selecione um médico e clique em "Adicionar
+                bloco manual".</div>
         </div>
-        <!-- Modal Cadastrar Médico -->
+
         <div id="doctorModal" class="modal" aria-hidden="true">
             <div class="modal-card">
                 <button class="close-x" onclick="closeDoctorModal()">×</button>
-                <h2 style="text-align:center;margin:8px 0 14px">Cadastrar Médico</h2>
+                <h2 class="modal-title">Cadastrar Médico</h2>
                 <form id="doctorForm" onsubmit="submitDoctor(event)">
                     <input type="text" id="docName" placeholder="Nome completo" required
                         style="width:100%;margin-bottom:10px">
@@ -375,167 +905,812 @@
             </div>
         </div>
 
+        <div id="confirmModal" class="modal" aria-hidden="true">
+            <div class="modal-card">
+                <button class="close-x" onclick="resolveConfirm(false)">×</button>
+                <h2 class="modal-title" id="confirmTitle">Confirmar ação</h2>
+                <p id="confirmMessage" class="confirm-message"></p>
+                <div class="modal-actions">
+                    <button class="menu-button ghost" onclick="resolveConfirm(false)">Cancelar</button>
+                    <button id="confirmOkBtn" class="menu-button danger" onclick="resolveConfirm(true)">Confirmar</button>
+                </div>
+            </div>
+        </div>
+
         <script>
-            // Sidebar
+            const state = {
+                activeDoctorId: '',
+                savedSignature: '[]',
+                toastTimer: null,
+                confirmResolver: null,
+                loadingAvailability: false
+            };
+
+            const PRESETS = {
+                morning: { start: '08:00', end: '12:00', slot: 30, label: 'Manhã' },
+                afternoon: { start: '13:00', end: '17:00', slot: 30, label: 'Tarde' },
+                full: { start: '08:00', end: '17:00', slot: 30, label: 'Integral' }
+            };
+
+            const el = (id) => document.getElementById(id);
+            const tbody = el('tbody');
+
             function toggleSidebar() {
                 const sb = document.querySelector('.sidebar');
                 sb.classList.toggle('is-collapsed');
                 localStorage.setItem('sidebarCollapsed', sb.classList.contains('is-collapsed') ? '1' : '0');
             }
-            document.addEventListener('DOMContentLoaded', () => {
+
+            function restoreSidebarState() {
                 if (localStorage.getItem('sidebarCollapsed') === '1') {
                     document.querySelector('.sidebar')?.classList.add('is-collapsed');
                 }
-                loadDoctors(); // carrega lista de médicos na tabela e select
-            });
-
-            // Helpers
-            const el = id => document.getElementById(id);
-            const tbody = el('tbody');
-
-            // Datepicker
-            function initDatePicker(input, initial) {
-                flatpickr.localize(flatpickr.l10ns.pt);
-                flatpickr(input, { dateFormat: "d/m/Y", locale: "pt", disableMobile: true, defaultDate: initial || null });
             }
 
-            // Tabela de disponibilidade (por data)
-            function addRow(v = { day: '', start: '08:00', end: '17:00', slot: 30 }) {
+            function initDatePicker(input, initial) {
+                if (!input) return;
+                flatpickr(input, {
+                    dateFormat: 'd/m/Y',
+                    locale: 'pt',
+                    disableMobile: true,
+                    defaultDate: initial || null,
+                    allowInput: true
+                });
+                if (initial) input.value = initial;
+            }
+
+            function pad(n) {
+                return String(n).padStart(2, '0');
+            }
+
+            function parseBRDate(raw) {
+                if (!raw) return null;
+                const m = String(raw).trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+                if (!m) return null;
+                const day = Number(m[1]);
+                const month = Number(m[2]) - 1;
+                const year = Number(m[3]);
+                const d = new Date(year, month, day, 12, 0, 0, 0);
+                if (d.getFullYear() !== year || d.getMonth() !== month || d.getDate() !== day) return null;
+                return d;
+            }
+
+            function formatBRDate(d) {
+                return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+            }
+
+            function normalizeDay(raw) {
+                const dt = parseBRDate(raw);
+                return dt ? formatBRDate(dt) : '';
+            }
+
+            function toMinutes(hm) {
+                const m = String(hm || '').match(/^(\d{2}):(\d{2})$/);
+                if (!m) return null;
+                const h = Number(m[1]);
+                const min = Number(m[2]);
+                if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+                return h * 60 + min;
+            }
+
+            function normalizeSlot(raw) {
+                let n = Number.parseInt(raw, 10);
+                if (!Number.isFinite(n) || n <= 0) n = 30;
+                if (n < 5) n = 5;
+                return Math.round(n / 5) * 5;
+            }
+
+            function compareBlocks(a, b) {
+                const da = parseBRDate(a.day);
+                const db = parseBRDate(b.day);
+                const ta = da ? da.getTime() : Number.MAX_SAFE_INTEGER;
+                const tb = db ? db.getTime() : Number.MAX_SAFE_INTEGER;
+                if (ta !== tb) return ta - tb;
+                return (toMinutes(a.start) || 0) - (toMinutes(b.start) || 0);
+            }
+
+            function getRows() {
+                return Array.from(tbody.querySelectorAll('tr.av-row'));
+            }
+
+            function extractRowData(tr) {
+                return {
+                    day: tr.querySelector('.day')?.value.trim() || '',
+                    start: tr.querySelector('.start')?.value || '',
+                    end: tr.querySelector('.end')?.value || '',
+                    slot: normalizeSlot(tr.querySelector('.slot')?.value || 30),
+                    tr
+                };
+            }
+
+            function buildSignatureFromRows() {
+                const blocks = getRows()
+                    .map(extractRowData)
+                    .filter(b => normalizeDay(b.day))
+                    .map(b => ({
+                        day: normalizeDay(b.day),
+                        start: b.start,
+                        end: b.end,
+                        slot: normalizeSlot(b.slot)
+                    }))
+                    .sort(compareBlocks);
+                return JSON.stringify(blocks);
+            }
+
+            function hasUnsavedChanges() {
+                return buildSignatureFromRows() !== state.savedSignature;
+            }
+
+            function updateDirtyBadge() {
+                const b = el('dirtyBadge');
+                if (state.loadingAvailability) {
+                    b.className = 'badge neutral';
+                    b.textContent = 'Carregando disponibilidade...';
+                    return;
+                }
+                if (!state.activeDoctorId) {
+                    b.className = 'badge neutral';
+                    b.textContent = 'Sem alterações pendentes';
+                    return;
+                }
+                if (hasUnsavedChanges()) {
+                    b.className = 'badge error';
+                    b.textContent = 'Alterações não salvas';
+                } else {
+                    b.className = 'badge success';
+                    b.textContent = 'Alterações salvas';
+                }
+            }
+
+            function updateStatusBadge() {
+                const b = el('statusBadge');
+                const sel = el('doctorSelect');
+                const name = sel?.selectedOptions?.[0]?.textContent?.trim() || '';
+                if (!state.activeDoctorId || !name) {
+                    b.className = 'badge warn';
+                    b.textContent = 'Nenhum médico selecionado';
+                    return;
+                }
+                b.className = 'badge success';
+                b.textContent = `Médico ativo: ${name}`;
+            }
+
+            function updateSummary() {
+                const rows = getRows();
+                const uniqueDays = new Set();
+                let blocks = 0;
+                let slots = 0;
+
+                rows.forEach((tr, idx) => {
+                    const ix = tr.querySelector('.row-index');
+                    if (ix) ix.textContent = String(idx + 1);
+
+                    const data = extractRowData(tr);
+                    const day = normalizeDay(data.day);
+                    if (!day) return;
+                    blocks += 1;
+                    uniqueDays.add(day);
+
+                    const startM = toMinutes(data.start);
+                    const endM = toMinutes(data.end);
+                    const slot = normalizeSlot(data.slot);
+                    if (startM !== null && endM !== null && endM > startM && slot > 0) {
+                        slots += Math.floor((endM - startM) / slot);
+                    }
+                });
+
+                el('sumBlocks').textContent = String(blocks);
+                el('sumDays').textContent = String(uniqueDays.size);
+                el('sumSlots').textContent = String(slots);
+                el('emptyState').style.display = rows.length ? 'none' : 'block';
+                updateDirtyBadge();
+                updateStatusBadge();
+            }
+
+            function showToast(message, type = 'info') {
+                const toast = el('toast');
+                toast.className = `toast ${type} show`;
+                toast.textContent = message;
+                clearTimeout(state.toastTimer);
+                state.toastTimer = setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3300);
+            }
+
+            function askConfirm({ title, message, okText = 'Confirmar', danger = false }) {
+                const modal = el('confirmModal');
+                el('confirmTitle').textContent = title || 'Confirmar ação';
+                el('confirmMessage').textContent = message || '';
+                const okBtn = el('confirmOkBtn');
+                okBtn.textContent = okText;
+                okBtn.className = `menu-button ${danger ? 'danger' : ''}`.trim();
+                modal.style.display = 'flex';
+                return new Promise(resolve => {
+                    state.confirmResolver = resolve;
+                });
+            }
+
+            function resolveConfirm(answer) {
+                const modal = el('confirmModal');
+                modal.style.display = 'none';
+                if (typeof state.confirmResolver === 'function') {
+                    state.confirmResolver(Boolean(answer));
+                }
+                state.confirmResolver = null;
+            }
+
+            function setEditorEnabled(enabled) {
+                document.querySelectorAll('[data-editor-control]').forEach(node => {
+                    node.disabled = !enabled;
+                });
+                el('editorHint').textContent = enabled
+                    ? 'Use os atalhos para preencher e clique em salvar ao final.'
+                    : 'Selecione um médico para habilitar o editor de disponibilidade.';
+            }
+
+            function clearRowErrors() {
+                getRows().forEach(tr => tr.classList.remove('invalid'));
+            }
+
+            function markRowInvalid(tr) {
+                tr.classList.add('invalid');
+            }
+
+            function addRow(values = {}, options = {}) {
+                const opts = {
+                    markDirty: true,
+                    focusDate: false,
+                    silent: false,
+                    ...options
+                };
+                const v = {
+                    day: values.day || '',
+                    start: values.start || '08:00',
+                    end: values.end || '17:00',
+                    slot: normalizeSlot(values.slot || 30)
+                };
+
                 const tr = document.createElement('tr');
+                tr.className = 'av-row';
                 tr.innerHTML = `
-                    <td><input type="text" class="day" placeholder="dd/mm/aaaa" style="min-width:140px"></td>
-                    <td><input type="time" value="${v.start}"></td>
-                    <td><input type="time" value="${v.end}"></td>
-                    <td><input type="number" min="5" step="5" value="${v.slot}" style="width:110px"></td>
-                    <td><button class="del" onclick="this.closest('tr').remove()">×</button></td>`;
+                    <td class="row-index"></td>
+                    <td><input type="text" class="day" placeholder="dd/mm/aaaa" data-editor-control></td>
+                    <td><input type="time" class="start" value="${v.start}" data-editor-control></td>
+                    <td><input type="time" class="end" value="${v.end}" data-editor-control></td>
+                    <td><input type="number" class="slot" min="5" step="5" value="${v.slot}" data-editor-control></td>
+                    <td class="row-actions">
+                        <button type="button" class="icon-btn duplicate" title="Duplicar bloco"><i class="fa fa-copy"></i></button>
+                        <button type="button" class="icon-btn remove" title="Remover bloco"><i class="fa fa-trash"></i></button>
+                    </td>`;
+
                 tbody.appendChild(tr);
+
                 const dayInput = tr.querySelector('.day');
                 initDatePicker(dayInput, v.day || null);
-                if (v.day) { dayInput.value = v.day; }
-            }
+                if (v.day) dayInput.value = normalizeDay(v.day) || v.day;
 
-            async function loadAvailability() {
-                tbody.innerHTML = '';
-                const doctorId = el('doctorSelect').value;
-                if (!doctorId) return;
-                const r = await fetch(`{{ url_for('availability_dates') }}?doctor_id=${doctorId}&_=${Date.now()}`, { cache: 'no-store' });
-                const data = await r.json();
-                (data || []).forEach(b => addRow(b));
-                if (!data || data.length === 0) { addRow(); }
-            }
-
-            function rowsToBlocks() {
-                const blocks = [];
-                tbody.querySelectorAll('tr').forEach(tr => {
-                    const tds = tr.querySelectorAll('td');
-                    const day = tds[0].querySelector('input.day').value.trim();
-                    const start = tds[1].querySelector('input').value;
-                    const end = tds[2].querySelector('input').value;
-                    const slot = parseInt(tds[3].querySelector('input').value, 10);
-                    if (day && start && end) { blocks.push({ day, start, end, slot }); }
+                tr.querySelector('.slot').addEventListener('blur', (ev) => {
+                    ev.target.value = normalizeSlot(ev.target.value);
+                    tr.classList.remove('invalid');
+                    updateSummary();
                 });
-                return blocks;
+
+                ['input', 'change'].forEach(evt => {
+                    tr.querySelectorAll('input').forEach(inp => {
+                        inp.addEventListener(evt, () => {
+                            tr.classList.remove('invalid');
+                            updateSummary();
+                        });
+                    });
+                });
+
+                dayInput.addEventListener('blur', () => {
+                    const normalized = normalizeDay(dayInput.value);
+                    if (normalized) dayInput.value = normalized;
+                    updateSummary();
+                });
+
+                tr.querySelector('.duplicate').addEventListener('click', () => {
+                    if (!ensureDoctorSelected()) return;
+                    const d = extractRowData(tr);
+                    addRow({ day: normalizeDay(d.day) || d.day, start: d.start, end: d.end, slot: d.slot }, { focusDate: false });
+                    sortRows(false);
+                    showToast('Bloco duplicado.', 'info');
+                });
+
+                tr.querySelector('.remove').addEventListener('click', () => {
+                    tr.remove();
+                    if (state.activeDoctorId && !getRows().length) {
+                        addRow({}, { markDirty: true, silent: true });
+                    }
+                    updateSummary();
+                });
+
+                setEditorEnabled(Boolean(state.activeDoctorId));
+                if (!opts.silent) updateSummary();
+                if (opts.focusDate) dayInput.focus();
+            }
+
+            function sortRows(showFeedback = true) {
+                const rows = getRows();
+                if (rows.length < 2) return;
+                rows.sort((a, b) => compareBlocks(extractRowData(a), extractRowData(b)));
+                rows.forEach(r => tbody.appendChild(r));
+                updateSummary();
+                if (showFeedback) showToast('Blocos ordenados por data e início.', 'info');
+            }
+
+            function ensureDoctorSelected() {
+                if (el('doctorSelect').value) return true;
+                showToast('Selecione um médico primeiro.', 'warn');
+                return false;
+            }
+
+            async function clearRows() {
+                if (!ensureDoctorSelected()) return;
+                const ok = await askConfirm({
+                    title: 'Limpar tabela?',
+                    message: 'Essa ação remove os blocos da tabela atual. Você pode salvar depois para confirmar no sistema.',
+                    okText: 'Limpar tabela',
+                    danger: true
+                });
+                if (!ok) return;
+                tbody.innerHTML = '';
+                addRow({}, { markDirty: true, silent: true });
+                updateSummary();
+                showToast('Tabela limpa.', 'warn');
+            }
+
+            function duplicateLastRow() {
+                if (!ensureDoctorSelected()) return;
+                const rows = getRows();
+                if (!rows.length) {
+                    addRow({}, { focusDate: true });
+                    return;
+                }
+                const d = extractRowData(rows[rows.length - 1]);
+                addRow({ day: normalizeDay(d.day) || d.day, start: d.start, end: d.end, slot: d.slot });
+                sortRows(false);
+                showToast('Último bloco duplicado.', 'info');
+            }
+
+            function addPresetBlock(presetKey) {
+                if (!ensureDoctorSelected()) return;
+                const preset = PRESETS[presetKey];
+                if (!preset) return;
+                const dayInput = el('quickDay');
+                const day = normalizeDay(dayInput.value) || formatBRDate(new Date());
+                dayInput.value = day;
+                addRow({ day, start: preset.start, end: preset.end, slot: preset.slot });
+                sortRows(false);
+                showToast(`Bloco ${preset.label.toLowerCase()} adicionado para ${day}.`, 'success');
+            }
+
+            function generateRangeBlocks() {
+                if (!ensureDoctorSelected()) return;
+
+                const startDate = parseBRDate(el('rangeStart').value);
+                const endDate = parseBRDate(el('rangeEnd').value);
+                const startTime = el('rangeStartTime').value;
+                const endTime = el('rangeEndTime').value;
+                const slot = normalizeSlot(el('rangeSlot').value);
+                el('rangeSlot').value = slot;
+
+                if (!startDate || !endDate) {
+                    showToast('Informe data inicial e final válidas.', 'warn');
+                    return;
+                }
+                if (endDate < startDate) {
+                    showToast('A data final deve ser maior ou igual à inicial.', 'warn');
+                    return;
+                }
+                const startM = toMinutes(startTime);
+                const endM = toMinutes(endTime);
+                if (startM === null || endM === null || endM <= startM) {
+                    showToast('Período de horário inválido (fim deve ser maior que início).', 'warn');
+                    return;
+                }
+
+                const selectedWeekdays = Array.from(document.querySelectorAll('.weekday:checked'))
+                    .map(c => Number(c.value));
+                if (!selectedWeekdays.length) {
+                    showToast('Selecione ao menos um dia da semana.', 'warn');
+                    return;
+                }
+
+                const existing = new Set(
+                    getRows()
+                        .map(extractRowData)
+                        .map(r => `${normalizeDay(r.day)}|${r.start}|${r.end}|${normalizeSlot(r.slot)}`)
+                );
+
+                const cursor = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 12, 0, 0, 0);
+                const endRef = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 12, 0, 0, 0);
+                let added = 0;
+                let guard = 0;
+
+                while (cursor <= endRef && guard < 600) {
+                    const weekday = cursor.getDay();
+                    if (selectedWeekdays.includes(weekday)) {
+                        const day = formatBRDate(cursor);
+                        const key = `${day}|${startTime}|${endTime}|${slot}`;
+                        if (!existing.has(key)) {
+                            addRow({ day, start: startTime, end: endTime, slot }, { silent: true });
+                            existing.add(key);
+                            added += 1;
+                        }
+                    }
+                    cursor.setDate(cursor.getDate() + 1);
+                    guard += 1;
+                }
+
+                if (!added) {
+                    showToast('Nenhum bloco novo foi gerado (já existiam blocos iguais).', 'info');
+                    return;
+                }
+                sortRows(false);
+                showToast(`${added} bloco(s) adicionados no período.`, 'success');
+            }
+
+            function validateBlocksForSave() {
+                clearRowErrors();
+                const blocks = [];
+                const rows = getRows();
+                for (let i = 0; i < rows.length; i += 1) {
+                    const tr = rows[i];
+                    const data = extractRowData(tr);
+                    if (!data.day) continue;
+
+                    const day = normalizeDay(data.day);
+                    if (!day) {
+                        markRowInvalid(tr);
+                        return { ok: false, error: `Linha ${i + 1}: data inválida.` };
+                    }
+
+                    const startM = toMinutes(data.start);
+                    const endM = toMinutes(data.end);
+                    if (startM === null || endM === null) {
+                        markRowInvalid(tr);
+                        return { ok: false, error: `Linha ${i + 1}: horário inválido.` };
+                    }
+                    if (endM <= startM) {
+                        markRowInvalid(tr);
+                        return { ok: false, error: `Linha ${i + 1}: fim deve ser maior que início.` };
+                    }
+
+                    const slot = normalizeSlot(data.slot);
+                    tr.querySelector('.slot').value = slot;
+                    blocks.push({
+                        day,
+                        start: data.start,
+                        end: data.end,
+                        slot,
+                        startM,
+                        endM,
+                        tr
+                    });
+                }
+
+                if (!blocks.length) {
+                    return { ok: false, error: 'Adicione ao menos um bloco com data para salvar.' };
+                }
+
+                const byDay = {};
+                blocks.forEach(b => {
+                    byDay[b.day] = byDay[b.day] || [];
+                    byDay[b.day].push(b);
+                });
+                for (const day of Object.keys(byDay)) {
+                    const arr = byDay[day].sort((a, b) => a.startM - b.startM);
+                    for (let i = 1; i < arr.length; i += 1) {
+                        const prev = arr[i - 1];
+                        const curr = arr[i];
+                        if (curr.startM < prev.endM) {
+                            markRowInvalid(prev.tr);
+                            markRowInvalid(curr.tr);
+                            return { ok: false, error: `Conflito de horário em ${day}. Ajuste os blocos sobrepostos.` };
+                        }
+                    }
+                }
+
+                return {
+                    ok: true,
+                    blocks: blocks.map(({ day, start, end, slot }) => ({ day, start, end, slot }))
+                };
             }
 
             async function saveAvailability() {
+                if (!ensureDoctorSelected()) return;
                 const doctorId = el('doctorSelect').value;
-                if (!doctorId) { alert('Selecione um médico.'); return; }
-                const blocks = rowsToBlocks();
-                if (blocks.length === 0) { alert('Adicione ao menos um bloco.'); return; }
-                const r = await fetch(`{{ url_for('availability_dates') }}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
-                    body: JSON.stringify({ doctor_id: doctorId, blocks })
-                });
-                const resp = await r.json();
-                if (resp && resp.ok) { alert('Disponibilidade salva!'); loadAvailability(); }
-                else { alert(resp?.error || 'Erro ao salvar.'); }
+                const check = validateBlocksForSave();
+                if (!check.ok) {
+                    showToast(check.error, 'error');
+                    return;
+                }
+
+                const btn = el('btnSave');
+                btn.disabled = true;
+                btn.textContent = 'Salvando...';
+
+                try {
+                    const r = await fetch(`{{ url_for('availability_dates') }}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+                        body: JSON.stringify({ doctor_id: doctorId, blocks: check.blocks })
+                    });
+                    const resp = await r.json();
+                    if (!r.ok || !resp?.ok) {
+                        throw new Error(resp?.error || 'Erro ao salvar disponibilidade.');
+                    }
+                    state.savedSignature = buildSignatureFromRows();
+                    updateSummary();
+                    showToast('Disponibilidade salva com sucesso.', 'success');
+                    await loadAvailability(doctorId, { silentSuccess: true });
+                } catch (err) {
+                    showToast(err.message || 'Erro ao salvar disponibilidade.', 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Salvar disponibilidade';
+                }
             }
 
-            // Modal médico
-            function openDoctorModal() { el('doctorModal').style.display = 'flex'; }
-            function closeDoctorModal() { el('doctorModal').style.display = 'none'; }
+            async function loadAvailability(doctorId, options = {}) {
+                const opts = { silentSuccess: false, ...options };
+                state.loadingAvailability = true;
+                updateSummary();
 
-            // UI: adiciona médico ao select e à tabela
+                tbody.innerHTML = '';
+                state.activeDoctorId = doctorId ? String(doctorId) : '';
+                setEditorEnabled(Boolean(state.activeDoctorId));
+                if (!doctorId) {
+                    state.savedSignature = '[]';
+                    state.loadingAvailability = false;
+                    updateSummary();
+                    return;
+                }
+
+                try {
+                    const r = await fetch(`{{ url_for('availability_dates') }}?doctor_id=${doctorId}&_=${Date.now()}`, { cache: 'no-store' });
+                    const data = await r.json();
+                    if (!Array.isArray(data)) throw new Error('Formato inválido da resposta.');
+                    data.forEach(b => addRow(b, { markDirty: false, silent: true }));
+                    if (!data.length) addRow({}, { markDirty: false, silent: true });
+                    state.savedSignature = buildSignatureFromRows();
+                    sortRows(false);
+                    if (!opts.silentSuccess) showToast('Disponibilidade carregada.', 'info');
+                } catch (err) {
+                    addRow({}, { markDirty: false, silent: true });
+                    showToast(err.message || 'Não foi possível carregar disponibilidade.', 'error');
+                } finally {
+                    state.loadingAvailability = false;
+                    updateSummary();
+                }
+            }
+
+            async function onDoctorChange() {
+                const nextId = el('doctorSelect').value;
+                if (state.activeDoctorId && nextId !== state.activeDoctorId && hasUnsavedChanges()) {
+                    const keep = await askConfirm({
+                        title: 'Descartar alterações?',
+                        message: 'Existem alterações não salvas para o médico atual. Trocar agora vai descartar essas mudanças locais.',
+                        okText: 'Descartar e trocar',
+                        danger: true
+                    });
+                    if (!keep) {
+                        el('doctorSelect').value = state.activeDoctorId;
+                        return;
+                    }
+                }
+                await loadAvailability(nextId);
+            }
+
             function appendDoctorToUI(doctor) {
-                // select
-                const sel = el('doctorSelect');
+                const tr = document.createElement('tr');
+                tr.className = 'doctor-row';
+                tr.id = `docrow-${doctor.id}`;
+                tr.dataset.name = (doctor.name || '').toLowerCase();
+                tr.innerHTML = `
+                    <td>${doctor.name}</td>
+                    <td><button type="button" class="tiny-button use-doctor">Usar</button></td>
+                    <td><button type="button" class="del remove-doctor" title="Excluir médico"><i class="fa fa-trash"></i></button></td>`;
+
+                tr.querySelector('.use-doctor').addEventListener('click', async () => {
+                    el('doctorSelect').value = String(doctor.id);
+                    await onDoctorChange();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+                tr.querySelector('.remove-doctor').addEventListener('click', () => deleteDoctor(doctor.id, doctor.name));
+                el('doctorsTbody').appendChild(tr);
+
                 const opt = document.createElement('option');
                 opt.value = doctor.id;
                 opt.textContent = doctor.name;
-                sel.appendChild(opt);
-
-                // tabela
-                const tr = document.createElement('tr');
-                tr.id = `docrow-${doctor.id}`;
-                tr.innerHTML = `
-                    <td>${doctor.name}</td>
-                    <td><button class="del" title="Excluir médico">×</button></td>`;
-                tr.querySelector('button.del').addEventListener('click', () => deleteDoctor(doctor.id, doctor.name));
-                el('doctorsTbody').appendChild(tr);
+                el('doctorSelect').appendChild(opt);
             }
 
-            // Carrega todos os médicos da API
-            async function loadDoctors() {
-                const res = await fetch('{{ url_for("api_doctors") }}', { cache: 'no-store' });
-                const list = await res.json();
+            function renderDoctors(list) {
                 const tbd = el('doctorsTbody');
                 const sel = el('doctorSelect');
+                const wanted = sel.value || state.activeDoctorId;
+
                 tbd.innerHTML = '';
                 sel.innerHTML = '<option value="">— Escolha um médico —</option>';
-                list.forEach(d => appendDoctorToUI(d));
+
+                list.forEach(appendDoctorToUI);
+
+                if (!list.length) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = '<td colspan="3">Nenhum médico cadastrado.</td>';
+                    tbd.appendChild(tr);
+                }
+
+                if (wanted && list.some(d => String(d.id) === String(wanted))) {
+                    sel.value = String(wanted);
+                } else {
+                    sel.value = '';
+                }
+
+                const total = list.length;
+                el('doctorCount').textContent = `${total} médico(s) cadastrado(s)`;
+                filterDoctors();
             }
 
-            // Cadastrar médico
+            async function loadDoctors() {
+                try {
+                    const res = await fetch('{{ url_for("api_doctors") }}', { cache: 'no-store' });
+                    const list = await res.json();
+                    if (!Array.isArray(list)) throw new Error('Lista de médicos inválida.');
+                    list.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
+                    renderDoctors(list);
+
+                    if (state.activeDoctorId && !list.some(d => String(d.id) === String(state.activeDoctorId))) {
+                        state.activeDoctorId = '';
+                        tbody.innerHTML = '';
+                        state.savedSignature = '[]';
+                        setEditorEnabled(false);
+                        updateSummary();
+                    }
+                } catch (err) {
+                    showToast(err.message || 'Erro ao carregar médicos.', 'error');
+                }
+            }
+
+            function filterDoctors() {
+                const query = (el('doctorSearch').value || '').trim().toLowerCase();
+                const rows = Array.from(el('doctorsTbody').querySelectorAll('tr.doctor-row'));
+                let visible = 0;
+                rows.forEach(row => {
+                    const show = !query || row.dataset.name.includes(query);
+                    row.style.display = show ? '' : 'none';
+                    if (show) visible += 1;
+                });
+
+                if (!rows.length) {
+                    el('doctorCount').textContent = '0 médico(s) cadastrado(s)';
+                    return;
+                }
+                el('doctorCount').textContent = query
+                    ? `${visible} de ${rows.length} médico(s)`
+                    : `${rows.length} médico(s) cadastrado(s)`;
+            }
+
+            function openDoctorModal() {
+                el('doctorModal').style.display = 'flex';
+                el('docName').focus();
+            }
+
+            function closeDoctorModal() {
+                el('doctorModal').style.display = 'none';
+                el('doctorForm').reset();
+            }
+
             async function submitDoctor(ev) {
                 ev.preventDefault();
                 const name = el('docName').value.trim();
-                if (!name) return;
-
-                const r = await fetch(`{{ url_for('add_doctor_route') }}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name })
-                });
-
-                const data = await r.json();
-                if (data && data.ok && data.doctor) {
-                    appendDoctorToUI(data.doctor);
-                    el('doctorSelect').value = data.doctor.id;
-                    closeDoctorModal();
-                    el('doctorForm').reset();
-                    loadAvailability();
-                } else {
-                    alert(data?.error || 'Erro ao cadastrar médico.');
-                }
-            }
-
-            // Deletar médico
-            async function deleteDoctor(doctorId, doctorName) {
-                if (!confirm(`Excluir o médico "${doctorName}"? Esta ação removerá também as disponibilidades e consultas dele.`)) {
+                if (!name) {
+                    showToast('Informe o nome do médico.', 'warn');
                     return;
                 }
-                const id = Number(doctorId);
-                if (!Number.isInteger(id) || id <= 0) { alert('ID inválido.'); return; }
-                const url = `{{ url_for('delete_doctor', doctor_id=0) }}`.replace(/0$/, String(id));
-                const r = await fetch(url, { method: 'POST', headers: { 'Accept': 'application/json' } });
-                const ctype = r.headers.get('content-type') || '';
-                const resp = ctype.includes('application/json') ? await r.json() : null;
-                if (!r.ok || (resp && !resp.ok)) { alert(resp?.error || 'Não foi possível excluir.'); return; }
 
-                // remove da tabela
-                const row = document.getElementById(`docrow-${doctorId}`);
-                row?.parentNode?.removeChild(row);
-
-                // remove do select
-                const sel = el('doctorSelect');
-                [...sel.options].forEach(o => { if (o.value == String(doctorId)) o.remove(); });
-
-                // limpa disponibilidade se estava selecionado
-                if (sel.value == String(doctorId)) { sel.value = ''; tbody.innerHTML = ''; }
+                try {
+                    const r = await fetch(`{{ url_for('add_doctor_route') }}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name })
+                    });
+                    const data = await r.json();
+                    if (!r.ok || !data?.ok || !data?.doctor) {
+                        throw new Error(data?.error || 'Erro ao cadastrar médico.');
+                    }
+                    closeDoctorModal();
+                    await loadDoctors();
+                    el('doctorSelect').value = String(data.doctor.id);
+                    await loadAvailability(data.doctor.id, { silentSuccess: true });
+                    showToast('Médico cadastrado e selecionado.', 'success');
+                } catch (err) {
+                    showToast(err.message || 'Erro ao cadastrar médico.', 'error');
+                }
             }
-        </script>
 
+            async function deleteDoctor(doctorId, doctorName) {
+                const ok = await askConfirm({
+                    title: 'Excluir médico?',
+                    message: `Excluir "${doctorName}" também removerá disponibilidades e consultas vinculadas.`,
+                    okText: 'Excluir médico',
+                    danger: true
+                });
+                if (!ok) return;
+
+                const id = Number(doctorId);
+                if (!Number.isInteger(id) || id <= 0) {
+                    showToast('ID de médico inválido.', 'error');
+                    return;
+                }
+
+                try {
+                    const url = `{{ url_for('delete_doctor', doctor_id=0) }}`.replace(/0$/, String(id));
+                    const r = await fetch(url, { method: 'POST', headers: { 'Accept': 'application/json' } });
+                    const ctype = r.headers.get('content-type') || '';
+                    const resp = ctype.includes('application/json') ? await r.json() : {};
+                    if (!r.ok || !resp?.ok) {
+                        throw new Error(resp?.error || 'Não foi possível excluir.');
+                    }
+                    const wasActive = String(state.activeDoctorId) === String(id);
+                    await loadDoctors();
+                    if (wasActive) await loadAvailability('');
+                    showToast('Médico excluído com sucesso.', 'success');
+                } catch (err) {
+                    showToast(err.message || 'Erro ao excluir médico.', 'error');
+                }
+            }
+
+            function addInitialRowsIfNeeded() {
+                if (state.activeDoctorId && !getRows().length) {
+                    addRow({}, { markDirty: false, silent: true });
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', async () => {
+                restoreSidebarState();
+                flatpickr.localize(flatpickr.l10ns.pt);
+
+                const today = new Date();
+                const plus30 = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30, 12, 0, 0, 0);
+                initDatePicker(el('quickDay'), formatBRDate(today));
+                initDatePicker(el('rangeStart'), formatBRDate(today));
+                initDatePicker(el('rangeEnd'), formatBRDate(plus30));
+
+                el('doctorSelect').addEventListener('change', onDoctorChange);
+                el('doctorSearch').addEventListener('input', filterDoctors);
+                el('btnAddRow').addEventListener('click', () => {
+                    if (!ensureDoctorSelected()) return;
+                    addRow({}, { focusDate: true });
+                });
+                el('btnDuplicateLast').addEventListener('click', duplicateLastRow);
+                el('btnSortRows').addEventListener('click', () => sortRows(true));
+                el('btnClearRows').addEventListener('click', clearRows);
+                el('btnSave').addEventListener('click', saveAvailability);
+                el('btnGenerateRange').addEventListener('click', generateRangeBlocks);
+                document.querySelectorAll('[data-preset]').forEach(btn => {
+                    btn.addEventListener('click', () => addPresetBlock(btn.dataset.preset));
+                });
+
+                ['doctorModal', 'confirmModal'].forEach(id => {
+                    el(id).addEventListener('click', (ev) => {
+                        if (ev.target.id === id) {
+                            if (id === 'doctorModal') closeDoctorModal();
+                            if (id === 'confirmModal') resolveConfirm(false);
+                        }
+                    });
+                });
+
+                setEditorEnabled(false);
+                updateSummary();
+                await loadDoctors();
+                addInitialRowsIfNeeded();
+                updateSummary();
+            });
+        </script>
     </div>
 </body>
 
