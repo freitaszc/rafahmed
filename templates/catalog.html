@@ -281,8 +281,6 @@
 
   <a href="{{ url_for('index') }}" class="menu-item" title="Início"><i class="fa fa-home"></i> <span
       class="label">Início</span></a>
-  <a href="{{ url_for('upload') }}" class="menu-item" title="Ponza Lab"><i class="fa fa-flask"></i> <span
-      class="label">Ponza Lab</span></a>
   <a href="{{ url_for('questionnaire_results') }}" class="menu-item" title="Questionários SRQ-20"><i
       class="fa fa-clipboard"></i><span class="label">SRQ-20</span></a>
   <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-check-square-o"></i>
@@ -353,7 +351,7 @@
         </td>
         <td>
           <form method="post" action="{{ url_for('delete_patient', patient_id=patient.id) }}"
-            onsubmit="return confirm('Deseja realmente remover este paciente?')" style="margin:0;">
+            onsubmit="return openDeletePatientModal(event, this)" style="margin:0;">
             <button type="submit" title="Remover Paciente"
               style="background:none;border:none;font-size:18px;color:#93a4bd;cursor:pointer">×</button>
           </form>
@@ -362,6 +360,25 @@
       {% endfor %}
     </tbody>
   </table>
+</div>
+
+<!-- Modal Confirmacao Exclusao Paciente -->
+<div id="deletePatientModal" class="modal"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);justify-content:center;align-items:center;z-index:1100">
+  <div class="card"
+    style="background:linear-gradient(145deg,#0f172a,#0b1222);color:var(--text);padding:24px;border-radius:16px;width:90%;max-width:520px;position:relative;border:1px solid rgba(255,255,255,.06);box-shadow:0 24px 60px rgba(0,0,0,.5);text-align:left;font-family:'Montserrat',sans-serif">
+    <button class="close" onclick="closeDeletePatientModal()"
+      style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:22px;font-weight:bold;color:#93a4bd;cursor:pointer">×</button>
+    <h3 style="margin:0 0 12px">Remover paciente</h3>
+    <p style="margin:0 0 18px;color:#cbd5e1;line-height:1.5">
+      Ao confirmar, o paciente será excluído e as consultas vinculadas a ele também serão removidas.
+    </p>
+    <div style="display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap">
+      <button type="button" class="btn" onclick="closeDeletePatientModal()"
+        style="background:#344155">Cancelar</button>
+      <button type="button" class="btn" onclick="confirmDeletePatientModal()">Confirmar exclusão</button>
+    </div>
+  </div>
 </div>
 
 <!-- Modal Paciente -->
@@ -411,10 +428,29 @@
 </div>
 
 <script>
+  let pendingDeleteForm = null;
+
   function openPatientModal() { document.getElementById("patientModal").style.display = "flex" }
   function closePatientModal() { document.getElementById("patientModal").style.display = "none" }
   function openConsultationModal(patientId = '') { const el = document.getElementById("consultationModal"); el.style.display = "flex"; document.getElementById("patient_consultation").value = patientId; }
   function closeConsultationModal() { document.getElementById("consultationModal").style.display = "none" }
+  function openDeletePatientModal(event, form) {
+    if (event) event.preventDefault();
+    pendingDeleteForm = form;
+    document.getElementById("deletePatientModal").style.display = "flex";
+    return false;
+  }
+  function closeDeletePatientModal() {
+    pendingDeleteForm = null;
+    document.getElementById("deletePatientModal").style.display = "none";
+  }
+  function confirmDeletePatientModal() {
+    if (!pendingDeleteForm) return;
+    const form = pendingDeleteForm;
+    pendingDeleteForm = null;
+    document.getElementById("deletePatientModal").style.display = "none";
+    form.submit();
+  }
   function submitPatient() {
     const data = { name: val("name"), age: val("age"), cpf: val("cpf"), gender: val("gender"), phone: val("phone"), prescription: val("prescription") };
     fetch("/api/add_patient", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(r => r.json()).then(res => {

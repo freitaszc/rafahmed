@@ -147,7 +147,7 @@ class Patient(db.Model):
 class Consult(db.Model):
     __tablename__ = 'consults'
     id         = db.Column(db.Integer, primary_key=True)
-    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False)
+    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=True)
     doctor_id  = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=False)
     owner_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
     notes      = db.Column(db.Text)
@@ -157,7 +157,7 @@ class Consult(db.Model):
 
     owner = db.relationship('User', backref='owned_consults', foreign_keys=[owner_user_id])
 
-    def __init__(self, patient_id: int, doctor_id: int, date, time=None,
+    def __init__(self, patient_id: Optional[int], doctor_id: int, date, time=None,
                  notes: Optional[str] = None, owner_user_id: Optional[int] = None):
         self.patient_id = patient_id
         self.doctor_id  = doctor_id

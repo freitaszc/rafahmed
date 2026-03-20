@@ -247,6 +247,10 @@ def delete_patient_record(patient_id: int) -> None:
     p = db.session.get(Patient, patient_id)
     if not p:
         return
+    # Remove dependências para evitar violação de FK em consults.patient_id
+    Consult.query.filter_by(patient_id=patient_id).delete(synchronize_session=False)
+    # Mantém histórico de autoavaliação, apenas desvinculando do paciente removido
+    QuizResult.query.filter_by(patient_id=patient_id).update({"patient_id": None}, synchronize_session=False)
     db.session.delete(p)
     db.session.commit()
 
@@ -254,7 +258,7 @@ def delete_patient_record(patient_id: int) -> None:
 # CONSULTS
 # ---------------------------------------------------------------------
 
-def add_consult(patient_id, doctor_id, notes, date=None, time=None, owner_user_id=None):
+def add_consult(patient_id: Optional[int], doctor_id, notes, date=None, time=None, owner_user_id=None):
     if date is None:
         date = datetime.utcnow().date()
     consult = Consult(

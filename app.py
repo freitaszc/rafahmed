@@ -4,8 +4,6 @@ import re
 import json
 import base64
 import secrets
-import tempfile
-import time as pytime
 from io import BytesIO
 from functools import wraps
 from datetime import datetime, timedelta
@@ -26,14 +24,13 @@ from werkzeug.utils import secure_filename
 
 from flask_migrate import Migrate
 from sqlalchemy import text, inspect, desc, and_, or_
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError, OperationalError
 
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import Flow
 
-from prescription import analyze_pdf
-from whatsapp import send_pdf_whatsapp, send_quote_whatsapp, send_pix_receipt_admin
+from whatsapp import send_quote_whatsapp, send_pix_receipt_admin
 from mercado_pago import generate_payment_link
 from email_utils import send_email_quote
 
@@ -78,6 +75,10 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_pre_ping": True,
+    "pool_recycle": 1800,
+}
 # Use stable secret key if provided; otherwise generate one (sessions/tokens persist across restarts if set)
 app.secret_key = os.getenv("APP_SECRET_KEY") or secrets.token_hex(32)
 
@@ -389,6 +390,36 @@ def ensure_medical_ownership_columns():
 
 ensure_medical_ownership_columns()
 
+def ensure_consult_patient_nullable():
+    with app.app_context():
+        try:
+            insp = inspect(db.engine)
+            if not insp.has_table("consults"):
+                return
+            cols = {c["name"]: c for c in insp.get_columns("consults")}
+            patient_col = cols.get("patient_id")
+            if not patient_col or patient_col.get("nullable", True):
+                return
+
+            dialect = db.engine.dialect.name
+            stmt = None
+            if dialect == "postgresql":
+                stmt = "ALTER TABLE consults ALTER COLUMN patient_id DROP NOT NULL"
+            elif dialect in {"mysql", "mariadb"}:
+                stmt = "ALTER TABLE consults MODIFY COLUMN patient_id INTEGER NULL"
+            elif dialect == "sqlite":
+                app.logger.warning("[migrate] consults.patient_id is NOT NULL (SQLite requires manual migration).")
+                return
+
+            if stmt:
+                with db.engine.begin() as conn:
+                    app.logger.warning("[migrate] %s", stmt)
+                    conn.execute(text(stmt))
+        except SQLAlchemyError as e:
+            app.logger.error("[migrate] Failed to update consults.patient_id nullability: %s", e)
+
+ensure_consult_patient_nullable()
+
 # ------------------------------------------------------------------------------
 # Auth helpers
 # ------------------------------------------------------------------------------
@@ -396,7 +427,23 @@ def get_logged_user():
     uid = session.get('user_id')
     if not uid:
         return None
-    return db.session.get(User, uid)
+    try:
+        return db.session.get(User, uid)
+    except OperationalError as e:
+        app.logger.warning("Falha de conexão ao carregar usuário da sessão; tentando reconectar: %s", e)
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        try:
+            db.session.remove()
+        except Exception:
+            pass
+        try:
+            return db.session.get(User, uid)
+        except Exception as e2:
+            app.logger.error("Erro persistente ao carregar usuário da sessão: %s", e2)
+            return None
 
 def login_required(f):
     @wraps(f)
@@ -889,174 +936,8 @@ def upload():
     user = get_logged_user()
     if not user:
         return redirect(url_for('login'))
-    owner_profile = get_user_public_doctor_profile(user=user, create_if_missing=True)
-    owner_profile_id = owner_profile.id if owner_profile else None
-
-    if not is_package_available(user.id):
-        flash('Seu pacote de análises acabou. Por favor, adquira mais para continuar.', 'warning')
-        return redirect(url_for('purchase'))
-
-    if request.method == 'POST':
-        using_manual = 'manual_entry' in request.form
-        patient = None
-
-        if using_manual:
-            manual_text = (request.form.get('lab_results') or '').strip()
-
-            result = analyze_pdf(manual_text, manual=True)
-            if not isinstance(result, (list, tuple)) or len(result) != 8:
-                flash('Erro ao processar análise manual.', 'danger')
-                return render_template('upload.html')
-
-            diagnostic, prescription, name, gender, age, cpf, phone, doctor_name = result
-
-            if not cpf:
-                cpf = f"no_cpf_{int(pytime.time())}"
-
-            patient = add_patient(
-                name=name,
-                age=int(age) if str(age).isdigit() else None,
-                cpf=cpf,
-                gender=gender or None,
-                phone=phone or None,
-                doctor_id=owner_profile_id,
-                owner_user_id=user.id,
-                prescription=prescription
-            )
-        else:
-            pdf_file = request.files.get('pdf_file')
-            if not pdf_file or not pdf_file.filename:
-                return render_template('upload.html', error='Por favor, selecione um arquivo PDF.')
-
-            raw_pdf = pdf_file.read()
-            filename = secure_filename(pdf_file.filename or "doc.pdf")
-
-            orig_sf = save_secure_file(
-                owner_user_id=user.id,
-                kind="original_pdf",
-                filename=filename,
-                mime_type=pdf_file.mimetype or "application/pdf",
-                raw_bytes=raw_pdf,
-            )
-
-            # analyze using a temp file
-            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=True) as tmp:
-                tmp.write(raw_pdf)
-                tmp.flush()
-                result = analyze_pdf(tmp.name)
-
-            if not isinstance(result, (list, tuple)) or len(result) != 8:
-                flash('Erro ao processar o PDF.', 'danger')
-                return render_template('upload.html')
-
-            diagnostic, prescription, name, gender, age, cpf, phone, doctor_name = result
-
-            patient = add_patient(
-                name=name,
-                age=int(age) if str(age).isdigit() else None,
-                cpf=cpf or None,
-                gender=gender or None,
-                phone=phone or None,
-                doctor_id=owner_profile_id,
-                owner_user_id=user.id,
-                prescription=prescription
-            )
-
-        # tenta criar evento no Google Calendar (não bloqueia fluxo)
-        if session.get("credentials"):
-            start_dt = datetime.now()
-            end_dt   = start_dt + timedelta(hours=1)
-            notes    = f"Diagnóstico:\n{diagnostic}\n\nPrescrição:\n{prescription}"
-            try:
-                create_user_event(
-                    summary=f"Consulta - {name}",
-                    start_datetime=start_dt.strftime('%Y-%m-%dT%H:%M:%S'),
-                    end_datetime=end_dt.strftime('%Y-%m-%dT%H:%M:%S'),
-                    description=notes
-                )
-            except Exception as e:
-                app.logger.warning(f"Erro ao criar evento no Google Calendar: {e}")
-        else:
-            app.logger.info("Google Calendar não autenticado; pulando criação do evento.")
-
-        session['diagnostic_text']   = diagnostic
-        session['prescription_text'] = prescription
-        session['doctor_name']       = doctor_name
-        session['patient_info']      = (
-            f"Paciente: {name}\n"
-            f"Idade: {age}\n"
-            f"CPF: {cpf}\n"
-            f"Sexo: {gender}\n"
-            f"Telefone: {phone}"
-        )
-
-        html = render_template(
-            "result_pdf.html",
-            diagnostic_text=diagnostic,
-            prescription_text=prescription,
-            doctor_name=doctor_name,
-            patient_info=session['patient_info'],
-            logo_path=url_for('static', filename='images/logo.png', _external=False)
-        )
-        static_base = os.path.join(app.root_path, 'static')
-        try:
-            pdf_bytes = render_html_pdf_bytes(html, static_base)
-        except RuntimeError as e:
-            app.logger.error("Falha ao gerar PDF com WeasyPrint: %s", e)
-            flash("PDF indisponível neste servidor no momento.", "warning")
-            return render_template(
-                'result.html',
-                patient=patient,
-                diagnostic_text=diagnostic,
-                prescription_text=prescription
-            )
-
-        # Save analyzed report securely
-        cpf_clean = (cpf or "").replace(".", "").replace("-", "").strip()
-        safe_name = f"result_{cpf_clean or 'no_cpf'}.pdf"
-        an_sf = save_secure_file(
-            owner_user_id=user.id,
-            kind="analyzed_pdf",
-            filename=safe_name,
-            mime_type="application/pdf",
-            raw_bytes=pdf_bytes,
-        )
-
-        # Links to send (signed, 1h TTL when used)
-        analyzed_link = url_for('file_download_signed', token=generate_file_token(an_sf.id), _external=True)
-
-        original_link = None
-        if not using_manual:
-            original_link = url_for('file_download_signed', token=generate_file_token(orig_sf.id), _external=True)
-        if AUTO_WHATSAPP_ENABLED:
-            try:
-                send_pdf_whatsapp(
-                    doctor_name=doctor_name,
-                    patient_name=name,
-                    analyzed_pdf_link=analyzed_link,
-                    original_pdf_link=original_link
-                )
-            except Exception as e:
-                app.logger.error(f"Erro ao enviar PDF no WhatsApp: {e}")
-        else:
-            app.logger.info("Envio automático por WhatsApp desativado; pulando envio ao prescritor.")
-
-        # consumo do pacote
-        try:
-            info = get_package_info(user.id)
-            usage = (info.get('used') or 0) + 1
-            update_package_usage(user.id, usage)
-        except Exception as e:
-            app.logger.error(f"Erro ao atualizar uso de pacote: {e}")
-
-        return render_template(
-            'result.html',
-            patient=patient,
-            diagnostic_text=diagnostic,
-            prescription_text=prescription
-        )
-
-    return render_template('upload.html')
+    flash('Módulo Ponza Lab removido.', 'info')
+    return redirect(url_for('index'))
 
 
 # ------------------------------------------------------------------------------
@@ -1915,7 +1796,13 @@ def delete_patient(patient_id):
     if not can_manage_patient(user, patient):
         abort(403)
 
-    delete_patient_record(patient_id)
+    try:
+        delete_patient_record(patient_id)
+        flash('Paciente removido com sucesso.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error("Erro ao remover paciente %s: %s", patient_id, e)
+        flash('Não foi possível remover o paciente.', 'danger')
     return redirect(url_for('catalog'))
 
 @app.route('/toggle_patient_status/<int:patient_id>/<new_status>', methods=['POST'])
@@ -2444,6 +2331,44 @@ def api_doctors():
     docs = q.order_by(Doctor.name).all()
     return jsonify([{"id": d.id, "name": d.name} for d in docs])
 
+@app.get('/api/patients')
+@login_required
+def api_patients():
+    user = get_logged_user()
+    if not user:
+        return jsonify([]), 403
+
+    requested_doctor_id = request.args.get('doctor_id', type=int)
+    q = Patient.query
+
+    if is_admin(user):
+        if requested_doctor_id:
+            q = q.filter_by(doctor_id=requested_doctor_id)
+    else:
+        doctor_profile_ids = [d.id for d in Doctor.query.filter_by(user_id=user.id).all()]
+        allowed_conditions = [
+            Patient.owner_user_id == user.id,
+            and_(Patient.owner_user_id.is_(None), Patient.doctor_id == user.id),  # legado
+        ]
+        if doctor_profile_ids:
+            allowed_conditions.append(
+                and_(Patient.owner_user_id.is_(None), Patient.doctor_id.in_(doctor_profile_ids))
+            )
+        q = q.filter(or_(*allowed_conditions))
+
+        if requested_doctor_id:
+            doctor_obj = db.session.get(Doctor, requested_doctor_id)
+            is_legacy_allowed = requested_doctor_id == user.id
+            if not is_legacy_allowed and (not doctor_obj or doctor_obj.user_id != user.id):
+                return jsonify([])
+            q = q.filter_by(doctor_id=requested_doctor_id)
+
+    patients = q.order_by(Patient.name.asc()).all()
+    return jsonify([
+        {"id": p.id, "name": p.name, "doctor_id": p.doctor_id}
+        for p in patients
+    ])
+
 @app.route('/api/add_consult', methods=['POST'])
 def api_add_consult():
     user = get_logged_user()
@@ -2775,7 +2700,8 @@ def create_admin_event(summary: str, start_datetime: str, end_datetime: str, des
 def submit_consultation():
     """
     Agendamento interno (ex.: agenda/admin) — valida contra DoctorDateAvailability
-    e grava a consulta. Cria o paciente se não foi informado.
+    e grava a consulta. Vínculo com paciente é opcional.
+    Horário é obrigatório e deve vir dos slots disponíveis.
     """
     user = get_logged_user()
     if not user:
@@ -2784,10 +2710,10 @@ def submit_consultation():
     patient_id = request.form.get('patient_id', type=int)
     doctor_id  = request.form.get('doctor_id', type=int)
     date_str   = (request.form.get('date') or '').strip()   # dd/mm/aaaa
-    time_str   = (request.form.get('time') or '').strip()   # HH:MM (opcional)
+    time_str   = (request.form.get('time') or '').strip()   # HH:MM
     notes      = (request.form.get('title') or '').strip()
 
-    if not doctor_id or not date_str or not notes:
+    if not doctor_id or not date_str or not time_str:
         return "Missing fields", 400
 
     doctor = db.session.get(Doctor, doctor_id)
@@ -2802,56 +2728,43 @@ def submit_consultation():
     except ValueError:
         return "Invalid date (use dd/mm/aaaa)", 400
 
-    # Hora (opcional)
-    t = None
-    if time_str:
-        try:
-            t = datetime.strptime(time_str, '%H:%M').time()
-        except ValueError:
-            return "Invalid time (use HH:MM)", 400
+    # Hora obrigatória
+    try:
+        t = datetime.strptime(time_str, '%H:%M').time()
+    except ValueError:
+        return "Invalid time (use HH:MM)", 400
 
-    # Se houver horário, validar contra blocos da DATA (não mais por weekday)
-    if t:
-        blocks = DoctorDateAvailability.query.filter_by(doctor_id=doctor_id, day=day).all()
-        if not blocks:
-            return "No availability for this date", 409
+    # Validar horário contra blocos da DATA (não mais por weekday)
+    blocks = DoctorDateAvailability.query.filter_by(doctor_id=doctor_id, day=day).all()
+    if not blocks:
+        return "No availability for this date", 409
 
-        # slots já ocupados nesse dia
-        taken = {
-            c.time.strftime('%H:%M')
-            for c in Consult.query.filter_by(doctor_id=doctor_id, date=day)
-                                  .filter(Consult.time.is_not(None)).all() #type:ignore
-        }
+    # slots já ocupados nesse dia
+    taken = {
+        c.time.strftime('%H:%M')
+        for c in Consult.query.filter_by(doctor_id=doctor_id, date=day)
+                              .filter(Consult.time.is_not(None)).all() #type:ignore
+    }
 
-        # construir set de horários livres com base nos blocos
-        free = set()
-        for b in blocks:
-            cur  = datetime.combine(day, b.start_time)
-            end  = datetime.combine(day, b.end_time)
-            step = timedelta(minutes=b.slot_minutes or 30)
-            while cur <= end - step + timedelta(seconds=1):
-                free.add(cur.strftime('%H:%M'))
-                cur += step
+    # construir set de horários livres com base nos blocos
+    free = set()
+    for b in blocks:
+        cur  = datetime.combine(day, b.start_time)
+        end  = datetime.combine(day, b.end_time)
+        step = timedelta(minutes=b.slot_minutes or 30)
+        while cur <= end - step + timedelta(seconds=1):
+            free.add(cur.strftime('%H:%M'))
+            cur += step
 
-        if time_str not in free:
-            return "Selected time is outside availability", 409
-        if time_str in taken:
-            return "Slot already taken", 409
+    if time_str not in free:
+        return "Selected time is outside availability", 409
+    if time_str in taken:
+        return "Slot already taken", 409
 
     owner_user_id = user.id
 
-    # Criar paciente se não veio ID
-    if not patient_id:
-        p = Patient(
-            name=notes or "Paciente",
-            status='Ativo',
-            doctor_id=doctor_id,
-            owner_user_id=user.id
-        )
-        db.session.add(p)
-        db.session.flush()
-        patient_id = p.id
-    else:
+    # Paciente é opcional; só valida quando vier informado.
+    if patient_id:
         p = db.session.get(Patient, patient_id)
         if not p:
             return "Patient not found", 404
@@ -2862,7 +2775,7 @@ def submit_consultation():
             p.doctor_id = doctor_id
 
     c = Consult(
-        patient_id=patient_id,
+        patient_id=patient_id or None,
         doctor_id=doctor_id,
         owner_user_id=owner_user_id,
         date=day,

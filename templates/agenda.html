@@ -533,6 +533,12 @@
       box-shadow: 0 0 0 4px var(--ring);
     }
 
+    .calendar-picked {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #c2d0e6;
+    }
+
     .modal-actions {
       margin-top: 13px;
       display: flex;
@@ -692,7 +698,6 @@
     <img src="{{ url_for('static', filename='images/logocompleta.svg') }}" class="sidebar-logo" alt="Logo RafahMed">
 
     <a href="{{ url_for('index') }}" class="menu-item" title="Início"><i class="fa fa-home"></i> <span class="label">Início</span></a>
-    <a href="{{ url_for('upload') }}" class="menu-item" title="Ponza Lab"><i class="fa fa-flask"></i> <span class="label">Ponza Lab</span></a>
     <a href="{{ url_for('questionnaire_results') }}" class="menu-item" title="Questionários SRQ-20"><i class="fa fa-clipboard"></i><span class="label">SRQ-20</span></a>
     <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-check-square-o"></i><span class="label">Autoavaliações</span></a>
 <a href="{{ url_for('catalog') }}" class="menu-item" title="Pacientes"><i class="fa fa-user"></i> <span class="label">Pacientes</span></a>
@@ -771,25 +776,29 @@
         </div>
 
         <div class="field full">
-          <label for="title">Observação / Nome do Paciente</label>
-          <input type="text" id="title" placeholder="Ex.: Retorno da Maria" required>
+          <label for="patient">Paciente (opcional)</label>
+          <select id="patient">
+            <option value="">Sem paciente vinculado</option>
+          </select>
         </div>
 
-        <div class="field">
-          <label for="date">Data (dd/mm/aaaa)</label>
-          <input type="text" id="date" placeholder="dd/mm/aaaa" oninput="formatDateInput(this)" required
-            data-date-mask="true">
+        <div class="field full">
+          <label for="title">Observação da consulta</label>
+          <input type="text" id="title" placeholder="Ex.: Retorno em 15 dias">
         </div>
 
-        <div class="field">
-          <label for="time">Horário manual (opcional)</label>
-          <input type="time" id="time" placeholder="Horário (opcional)">
+        <div class="field full">
+          <label for="date">Datas disponíveis</label>
+          <select id="date" required>
+            <option value="">Selecione um médico primeiro</option>
+          </select>
+          <div id="calendarPicked" class="calendar-picked">Selecione um médico para carregar as datas.</div>
         </div>
 
         <div class="field full">
           <label for="slot">Horários disponíveis</label>
-          <select id="slot">
-            <option value="">- horários disponíveis -</option>
+          <select id="slot" required>
+            <option value="">Selecione uma data primeiro</option>
           </select>
         </div>
       </div>
@@ -805,12 +814,14 @@
 
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/locales-all.global.min.js"></script>
-  <script src="{{ url_for('static', filename='js/date-mask.js') }}" defer></script>
 
   <script>
     const el = (id) => document.getElementById(id);
     let calendar = null;
     let availableDays = [];
+    let selectedDateBR = '';
+    let pendingPrefillDateBR = '';
+    let pendingPrefillTime = '';
     let toastTimer = null;
 
     function showToast(message, type = 'info') {
@@ -872,39 +883,48 @@
       el('kpiTimed').textContent = String(timedCount);
     }
 
-    function formatDateInput(input) {
-      let v = input.value.replace(/\D/g, '');
-      if (v.length >= 2 && v.length <= 4) {
-        v = v.replace(/^(\d{2})(\d+)/, '$1/$2');
-      } else if (v.length > 4) {
-        v = v.replace(/^(\d{2})(\d{2})(\d+)/, '$1/$2/$3');
+    function updateSelectedDateLabel() {
+      const label = el('calendarPicked');
+      if (!label) return;
+      if (!el('doctor').value) {
+        label.textContent = 'Selecione um médico para carregar as datas.';
+        return;
       }
-      input.value = v;
+      label.textContent = selectedDateBR
+        ? `Data selecionada: ${selectedDateBR}`
+        : 'Selecione uma data na lista.';
     }
 
-    function openModal(prefill = {}) {
+    function setSelectedDate(brDate) {
+      selectedDateBR = brDate || '';
+      el('date').value = selectedDateBR;
+      updateSelectedDateLabel();
+    }
+
+    async function openModal(prefill = {}) {
       const modal = el('eventModal');
       const doctorSel = el('doctor');
-      const dateInput = el('date');
-      const timeInput = el('time');
       const slotSel = el('slot');
       const titleInput = el('title');
+      const patientSel = el('patient');
+      const dateSel = el('date');
 
       const filterDoctor = el('doctorFilter').value;
       doctorSel.value = prefill.doctorId || filterDoctor || '';
       titleInput.value = prefill.title || '';
-      dateInput.value = prefill.date || '';
-      timeInput.value = prefill.time || '';
+      patientSel.innerHTML = '<option value="">Sem paciente vinculado</option>';
+      dateSel.innerHTML = '<option value="">Selecione um médico primeiro</option>';
+      pendingPrefillDateBR = prefill.date || '';
+      pendingPrefillTime = prefill.time || '';
+      setSelectedDate('');
       slotSel.innerHTML = '<option value="">- horários disponíveis -</option>';
+      slotSel.disabled = true;
 
       modal.style.display = 'flex';
       modal.setAttribute('aria-hidden', 'false');
 
-      updateAvailableDates().then(() => {
-        if (dateInput.value) {
-          updateSlots();
-        }
-      });
+      await loadPatientsForDoctor();
+      await updateAvailableDates();
     }
 
     function closeModal() {
@@ -915,13 +935,16 @@
 
     async function updateAvailableDates() {
       const doctorId = el('doctor').value;
-      const dateInput = el('date');
+      const dateSel = el('date');
       const slotSel = el('slot');
+
+      dateSel.innerHTML = '<option value="">Selecione um médico primeiro</option>';
       slotSel.innerHTML = '<option value="">- horários disponíveis -</option>';
+      slotSel.disabled = true;
       availableDays = [];
+      setSelectedDate('');
       if (!doctorId) {
-        dateInput.disabled = true;
-        dateInput.value = '';
+        updateSelectedDateLabel();
         return;
       }
 
@@ -930,53 +953,91 @@
         const days = await res.json();
 
         if (!Array.isArray(days) || days.length === 0) {
-          dateInput.disabled = true;
-          dateInput.value = '';
+          dateSel.innerHTML = '<option value="">Sem datas para este médico</option>';
+          updateSelectedDateLabel();
           showToast('Este médico não possui disponibilidade cadastrada.', 'warn');
           return;
         }
 
-        dateInput.disabled = false;
         availableDays = days;
-        if (dateInput.value && !availableDays.includes(dateInput.value)) {
-          dateInput.value = '';
-        }
+        dateSel.innerHTML = '<option value="">- selecione uma data -</option>' + days.map((d) => `<option value="${d}">${d}</option>`).join('');
+
+        const preferred = pendingPrefillDateBR && availableDays.includes(pendingPrefillDateBR)
+          ? pendingPrefillDateBR
+          : availableDays[0];
+        setSelectedDate(preferred);
+        await updateSlots(pendingPrefillTime || '');
       } catch {
-        dateInput.disabled = true;
-        dateInput.value = '';
+        dateSel.innerHTML = '<option value="">Erro ao carregar datas</option>';
+        setSelectedDate('');
+        updateSelectedDateLabel();
         showToast('Não foi possível carregar as datas disponíveis.', 'error');
       }
     }
 
-    async function updateSlots() {
+    async function updateSlots(preferredTime = '') {
       const doctorId = el('doctor').value;
       const brDate = el('date').value;
       const slotSel = el('slot');
 
       slotSel.innerHTML = '<option value="">- horários disponíveis -</option>';
+      slotSel.disabled = true;
       if (!doctorId || !brDate) return;
 
       try {
         const res = await fetch(`/api/available_slots?doctor_id=${doctorId}&date=${encodeURIComponent(brDate)}`, { cache: 'no-store' });
         const slots = await res.json();
-
-        slotSel.innerHTML = slots.length
-          ? '<option value="">- selecione -</option>' + slots.map((h) => `<option value="${h}">${h}</option>`).join('')
-          : '<option value="">Sem horários para este dia</option>';
+        if (Array.isArray(slots) && slots.length) {
+          slotSel.innerHTML = '<option value="">- selecione um horário -</option>' + slots.map((h) => `<option value="${h}">${h}</option>`).join('');
+          slotSel.disabled = false;
+          if (preferredTime && slots.includes(preferredTime)) {
+            slotSel.value = preferredTime;
+          }
+        } else {
+          slotSel.innerHTML = '<option value="">Sem horários para este dia</option>';
+        }
       } catch {
         slotSel.innerHTML = '<option value="">Erro ao carregar horários</option>';
+      } finally {
+        pendingPrefillTime = '';
+      }
+    }
+
+    async function loadPatientsForDoctor(selectedPatientId = '') {
+      const doctorId = el('doctor').value;
+      const patientSel = el('patient');
+      patientSel.innerHTML = '<option value="">Sem paciente vinculado</option>';
+      if (!doctorId) return;
+
+      try {
+        const res = await fetch(`/api/patients?doctor_id=${doctorId}`, { cache: 'no-store' });
+        const list = await res.json();
+        if (!Array.isArray(list)) return;
+
+        list.forEach((p) => {
+          const opt = document.createElement('option');
+          opt.value = String(p.id);
+          opt.textContent = p.name || `Paciente #${p.id}`;
+          patientSel.appendChild(opt);
+        });
+
+        if (selectedPatientId) {
+          patientSel.value = String(selectedPatientId);
+        }
+      } catch {
+        patientSel.innerHTML = '<option value="">Sem paciente vinculado</option>';
       }
     }
 
     async function submitEvent() {
       const title = el('title').value.trim();
-      const dateBR = el('date').value;
-      const slotVal = el('slot').value;
-      const time = el('time').value || slotVal || '';
+      const dateBR = selectedDateBR;
+      const time = el('slot').value;
       const doctorId = el('doctor').value;
+      const patientId = el('patient').value;
 
-      if (!title || !dateBR || !doctorId) {
-        showToast('Preencha paciente/observação, data e médico.', 'warn');
+      if (!dateBR || !doctorId || !time) {
+        showToast('Preencha médico, data e horário.', 'warn');
         return;
       }
 
@@ -994,6 +1055,9 @@
       form.append('date', formattedDate);
       form.append('time', time);
       form.append('doctor_id', doctorId);
+      if (patientId) {
+        form.append('patient_id', patientId);
+      }
 
       try {
         const r = await fetch('/submit_consultation', { method: 'POST', body: form });
@@ -1083,16 +1147,8 @@
       }
     }
 
-    function validateDateAgainstAvailability() {
-      const val = el('date').value.trim();
-      if (val.length === 10 && availableDays.length > 0 && !availableDays.includes(val)) {
-        showToast('Data não disponível para este médico.', 'warn');
-        el('date').value = '';
-        el('slot').innerHTML = '<option value="">- horários disponíveis -</option>';
-      }
-    }
-
     document.addEventListener('DOMContentLoaded', async () => {
+      updateSelectedDateLabel();
       updateNowChip();
       setInterval(updateNowChip, 30000);
 
@@ -1108,15 +1164,13 @@
         }
       });
 
-      el('doctor').addEventListener('change', updateAvailableDates);
-      el('date').addEventListener('change', () => {
-        validateDateAgainstAvailability();
-        updateSlots();
+      el('doctor').addEventListener('change', () => {
+        loadPatientsForDoctor();
+        updateAvailableDates();
       });
-      el('slot').addEventListener('change', () => {
-        if (el('slot').value) {
-          el('time').value = el('slot').value;
-        }
+      el('date').addEventListener('change', () => {
+        setSelectedDate(el('date').value);
+        updateSlots();
       });
 
       document.addEventListener('keydown', (e) => {

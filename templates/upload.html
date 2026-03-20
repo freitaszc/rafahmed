@@ -345,8 +345,6 @@
 
     <a href="{{ url_for('index') }}" class="menu-item" title="Início"><i class="fa fa-home"></i> <span
         class="label">Início</span></a>
-    <a href="{{ url_for('upload') }}" class="menu-item" title="Ponza Lab"><i class="fa fa-flask"></i> <span
-        class="label">Ponza Lab</span></a>
     <a href="{{ url_for('questionnaire_results') }}" class="menu-item" title="Questionários SRQ-20"><i
         class="fa fa-clipboard"></i><span class="label">SRQ-20</span></a>
     <a href="{{ url_for('quiz_results') }}" class="menu-item" title="Autoavaliações"><i class="fa fa-check-square-o"></i>
@@ -375,8 +373,7 @@
   <!-- Conteúdo -->
   <div class="content">
     <img src="{{ url_for('static', filename='images/PonzaLab.svg') }}" alt="Logo Ponza Lab" class="logo-img">
-    <p class="subtitle">Envie um PDF de exames para análise automática; o sistema gera diagnóstico e prescrição para
-      consulta no painel.</p>
+    <p class="subtitle">Insira os resultados manualmente para análise automática, sem upload de arquivo.</p>
 
     {% if error %}
     <div class="alert alert-error">{{ error }}</div>
@@ -388,30 +385,8 @@
     </div>
     {% endif %}
 
-    <div class="row-actions">
-      <button type="button" class="btn" onclick="showSection('upload')">Upload PDF</button>
-      <button type="button" class="btn" onclick="showSection('manual')">Inserir Manualmente</button>
-    </div>
-
-    <!-- UPLOAD PDF (FIX: input dentro do form) -->
-    <div id="upload-section" class="panel">
-      <form id="upload-form" method="post" enctype="multipart/form-data" onsubmit="return validateUpload()">
-        <input type="file" name="pdf_file" id="pdf_file" accept="application/pdf" class="visually-hidden" />
-
-        <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Selecione ou arraste um PDF">
-          <p id="drop-text">Selecione ou arraste um PDF aqui</p>
-        </div>
-
-        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-          <button type="submit" class="btn">Enviar</button>
-          <a href="{{ url_for('doctors') }}" class="btn">Cadastrar Prescritor</a>
-        </div>
-      </form>
-    </div>
-
-
     <!-- MANUAL (padronizado + Montserrat) -->
-    <div id="manual-section" class="panel narrow" style="display:none;">
+    <div id="manual-section" class="panel narrow">
       <form method="post" style="text-align:center">
         <input type="hidden" name="manual_entry" value="1" />
 
@@ -448,66 +423,6 @@
       </form>
     </div>
   </div>
-
-  <script>
-    const dropZone = document.getElementById('drop-zone');
-    const fileInput = document.getElementById('pdf_file');
-    const dropText = document.getElementById('drop-text');
-
-    // Evita que o navegador tente abrir o arquivo ao soltar fora da dropzone
-    ['dragover', 'drop'].forEach(evtName => {
-      window.addEventListener(evtName, e => {
-        e.preventDefault();
-      });
-    });
-
-    dropZone.addEventListener('click', () => fileInput.click());
-    dropZone.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
-    });
-
-    fileInput.addEventListener('change', () => {
-      dropText.textContent = fileInput.files.length > 0 ? fileInput.files[0].name : "Selecione ou arraste um PDF aqui";
-    });
-
-    dropZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropZone.classList.add('dragover');
-    });
-
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-
-    dropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropZone.classList.remove('dragover');
-      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        const file = e.dataTransfer.files[0];
-        if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-          // Atribui o arquivo ao input do form
-          fileInput.files = e.dataTransfer.files;
-          dropText.textContent = file.name;
-        } else {
-          alert('Por favor, envie um arquivo PDF.');
-        }
-      }
-    });
-
-    function validateUpload() {
-      if (!fileInput || fileInput.files.length === 0) {
-        alert("Selecione um PDF antes de enviar.");
-        return false;
-      }
-      return true;
-    }
-
-    function showSection(section) {
-      const upload = document.getElementById('upload-section');
-      const manual = document.getElementById('manual-section');
-      if (section === 'upload') { upload.style.display = 'block'; manual.style.display = 'none'; }
-      else { upload.style.display = 'none'; manual.style.display = 'block'; }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  </script>
 </body>
 
 </html>
