@@ -96,13 +96,17 @@ class QuoteResponse(db.Model):
 
 class Doctor(db.Model):
     __tablename__ = 'doctors'
-    id    = db.Column(db.Integer, primary_key=True)
-    name  = db.Column(db.String(120), nullable=False)
-    phone = db.Column(db.String(20), nullable=True)
+    id      = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
+    name    = db.Column(db.String(120), nullable=False)
+    phone   = db.Column(db.String(20), nullable=True)
 
-    def __init__(self, name: str, phone: Optional[str] = None):
-        self.name  = name
+    owner = db.relationship('User', backref='doctor_profiles', foreign_keys=[user_id])
+
+    def __init__(self, name: str, phone: Optional[str] = None, user_id: Optional[int] = None):
+        self.name = name
         self.phone = phone
+        self.user_id = user_id
 
 
 class Patient(db.Model):
@@ -114,17 +118,20 @@ class Patient(db.Model):
     gender       = db.Column(db.String(20), nullable=True)
     phone        = db.Column(db.String(20), nullable=True)
     doctor_id    = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=True)
+    owner_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
     prescription = db.Column(db.Text, nullable=True)
     status       = db.Column(db.String(20), default='Ativo', nullable=False)
     created_at   = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     doctor       = db.relationship('Doctor', backref='patients')
+    owner        = db.relationship('User', backref='owned_patients', foreign_keys=[owner_user_id])
     # One-to-one via QuizResult.patient_id
     quiz_result  = db.relationship('QuizResult', back_populates='patient', uselist=False)
 
     def __init__(self, name: str, age: Optional[int] = None, cpf: Optional[str] = None,
                  gender: Optional[str] = None, phone: Optional[str] = None,
-                 doctor_id: Optional[int] = None, prescription: Optional[str] = None,
+                 doctor_id: Optional[int] = None, owner_user_id: Optional[int] = None,
+                 prescription: Optional[str] = None,
                  status: str = 'Ativo'):
         self.name         = name
         self.age          = age
@@ -132,6 +139,7 @@ class Patient(db.Model):
         self.gender       = gender
         self.phone        = phone
         self.doctor_id    = doctor_id
+        self.owner_user_id = owner_user_id
         self.prescription = prescription
         self.status       = status
 
@@ -141,17 +149,22 @@ class Consult(db.Model):
     id         = db.Column(db.Integer, primary_key=True)
     patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False)
     doctor_id  = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=False)
+    owner_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
     notes      = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     date       = db.Column(db.Date, nullable=False)
     time       = db.Column(db.Time, nullable=True)
 
-    def __init__(self, patient_id: int, doctor_id: int, date, time=None, notes: Optional[str] = None):
+    owner = db.relationship('User', backref='owned_consults', foreign_keys=[owner_user_id])
+
+    def __init__(self, patient_id: int, doctor_id: int, date, time=None,
+                 notes: Optional[str] = None, owner_user_id: Optional[int] = None):
         self.patient_id = patient_id
         self.doctor_id  = doctor_id
         self.date       = date
         self.time       = time
         self.notes      = notes
+        self.owner_user_id = owner_user_id
 
 
 class QuizResult(db.Model):
