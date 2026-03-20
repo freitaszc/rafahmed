@@ -58,7 +58,7 @@ def main():
 
             try:
                 company_id = int(input("\nDigite o ID da empresa para vincular o usuário: ").strip())
-                company = Company.query.get(company_id)
+                company = db.session.get(Company, company_id)
                 if not company:
                     print("❌ Empresa não encontrada.")
                     return
