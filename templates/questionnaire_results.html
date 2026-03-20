@@ -420,6 +420,10 @@
         {% else %}
         <p style="text-align:center;color:var(--muted)">Nenhum resultado de SRQ-20 encontrado.</p>
         {% endif %}
+
+        <div class="actions" style="margin-top:22px;">
+            <a href="{{ url_for('download_questionnaire_results_report') }}" class="btn">Baixar PDF</a>
+        </div>
     </div>
 </body>
 

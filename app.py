@@ -452,6 +452,7 @@ ensure_consult_patient_nullable()
 # ------------------------------------------------------------------------------
 _request_rls_user_id: ContextVar[Optional[int]] = ContextVar("request_rls_user_id", default=None)
 _request_rls_auth_uid: ContextVar[Optional[str]] = ContextVar("request_rls_auth_uid", default=None)
+_request_rls_signature: ContextVar[Optional[tuple[Optional[int], Optional[str], str]]] = ContextVar("request_rls_signature", default=None)
 
 def ensure_rls_helper_functions():
     with app.app_context():
@@ -510,32 +511,67 @@ def ensure_rls_helper_functions():
         except SQLAlchemyError as e:
             app.logger.warning("[migrate] Failed to ensure RLS helper functions: %s", e)
 
-def apply_rls_context(*, user_id: Optional[int], auth_uid: Optional[str] = None) -> None:
+def ensure_rls_runtime_indexes():
+    with app.app_context():
+        if db.engine.dialect.name != "postgresql":
+            return
+
+        stmts = [
+            "CREATE INDEX IF NOT EXISTS ix_users_company_id ON users (company_id)",
+            "CREATE INDEX IF NOT EXISTS ix_suppliers_user_id ON suppliers (user_id)",
+            "CREATE INDEX IF NOT EXISTS ix_quote_responses_quote_id ON quote_responses (quote_id)",
+            "CREATE INDEX IF NOT EXISTS ix_quote_responses_supplier_id ON quote_responses (supplier_id)",
+            "CREATE INDEX IF NOT EXISTS ix_patients_doctor_id ON patients (doctor_id)",
+            "CREATE INDEX IF NOT EXISTS ix_patients_doctor_owner ON patients (doctor_id, owner_user_id)",
+            "CREATE INDEX IF NOT EXISTS ix_consults_doctor_id ON consults (doctor_id)",
+            "CREATE INDEX IF NOT EXISTS ix_consults_date ON consults (date)",
+            "CREATE INDEX IF NOT EXISTS ix_consults_doctor_date_time ON consults (doctor_id, date, time)",
+            "CREATE INDEX IF NOT EXISTS ix_doctor_availability_doctor_id ON doctor_availability (doctor_id)",
+            "CREATE INDEX IF NOT EXISTS ix_doctor_date_availability_doctor_day ON doctor_date_availability (doctor_id, day)",
+            "CREATE INDEX IF NOT EXISTS ix_quiz_results_doctor_id ON quiz_results (doctor_id)",
+            "CREATE INDEX IF NOT EXISTS ix_secure_files_owner_user_id ON secure_files (owner_user_id)",
+        ]
+        try:
+            with db.engine.begin() as conn:
+                for stmt in stmts:
+                    conn.execute(text(stmt))
+        except SQLAlchemyError as e:
+            app.logger.warning("[migrate] Failed to ensure RLS runtime indexes: %s", e)
+
+def apply_rls_context(*, user_id: Optional[int], auth_uid: Optional[str] = None, force: bool = False) -> None:
     uid = int(user_id) if user_id is not None else None
     sub = (auth_uid or "").strip() or None
+    role = "authenticated" if uid is not None else "anon"
+    signature = (uid, sub, role)
     _request_rls_user_id.set(uid)
     _request_rls_auth_uid.set(sub)
 
     if db.engine.dialect.name != "postgresql":
         return
 
+    if not force and _request_rls_signature.get() == signature:
+        return
+
     try:
         db.session.execute(
-            text("SELECT set_config('app.current_user_id', :uid, false)"),
-            {"uid": str(uid) if uid is not None else ""}
+            text(
+                "SELECT "
+                "set_config('app.current_user_id', :uid, false), "
+                "set_config('request.jwt.claim.sub', :sub, false), "
+                "set_config('request.jwt.claim.role', :role, false)"
+            ),
+            {
+                "uid": str(uid) if uid is not None else "",
+                "sub": sub or "",
+                "role": role,
+            }
         )
-        db.session.execute(
-            text("SELECT set_config('request.jwt.claim.sub', :sub, false)"),
-            {"sub": sub or ""}
-        )
-        db.session.execute(
-            text("SELECT set_config('request.jwt.claim.role', :role, false)"),
-            {"role": "authenticated" if uid is not None else "anon"}
-        )
+        _request_rls_signature.set(signature)
     except SQLAlchemyError as e:
         app.logger.warning("Falha ao aplicar contexto de RLS no Postgres: %s", e)
 
 ensure_rls_helper_functions()
+ensure_rls_runtime_indexes()
 
 # ------------------------------------------------------------------------------
 # Auth helpers
@@ -564,6 +600,8 @@ def get_logged_user():
 
 @app.before_request
 def attach_request_rls_context():
+    if request.endpoint == "static" or request.method == "OPTIONS":
+        return
     uid = parse_int(session.get("user_id"))
     auth_uid = session.get("auth_user_id")
     apply_rls_context(user_id=uid, auth_uid=auth_uid if isinstance(auth_uid, str) else None)
@@ -572,6 +610,7 @@ def attach_request_rls_context():
 def clear_request_rls_context(_exc):
     _request_rls_user_id.set(None)
     _request_rls_auth_uid.set(None)
+    _request_rls_signature.set(None)
 
 def login_required(f):
     @wraps(f)
@@ -693,6 +732,14 @@ def parse_int(value: Any) -> Optional[int]:
         return int(value)
     except (TypeError, ValueError):
         return None
+
+def clip_text(value: Any, max_len: int, *, strip: bool = True) -> str:
+    if value is None:
+        return ""
+    text_value = str(value)
+    if strip:
+        text_value = text_value.strip()
+    return text_value[:max_len]
 
 def render_html_pdf_bytes(html: str, base_url: str) -> bytes:
     """
@@ -915,7 +962,8 @@ def login():
             session['role'] = getattr(user, "role", "user")
             apply_rls_context(
                 user_id=user.id,
-                auth_uid=getattr(user, "auth_user_id", None)
+                auth_uid=getattr(user, "auth_user_id", None),
+                force=True
             )
             return redirect(url_for('index'))
 
@@ -927,7 +975,7 @@ def logout():
     session.pop('username', None)
     session.pop('auth_user_id', None)
     session.pop('role', None)
-    apply_rls_context(user_id=None, auth_uid=None)
+    apply_rls_context(user_id=None, auth_uid=None, force=True)
     return redirect(url_for('login'))
 
 @app.route('/account')
@@ -1830,6 +1878,39 @@ def catalog():
 
     return render_template('catalog.html', patients=patients)
 
+@app.route('/download_patients_report')
+@login_required
+def download_patients_report():
+    user = get_logged_user()
+    if not user:
+        return redirect(url_for('login'))
+
+    patients = get_patients_by_doctor(user.id)
+
+    generated_at = datetime.utcnow().strftime("%d/%m/%Y %H:%M")
+    professional_name = (user.name or user.username or f"Usuário {user.id}").strip()
+    html = render_template(
+        "patients_report_pdf.html",
+        patients=patients,
+        generated_at=generated_at,
+        professional_name=professional_name,
+        logo_path=os.path.join(app.root_path, 'static', 'images', 'logo.png'),
+    )
+    static_base = os.path.join(app.root_path, 'static')
+    try:
+        pdf_bytes: bytes = render_html_pdf_bytes(html, static_base)
+    except RuntimeError as e:
+        app.logger.error("Falha ao gerar PDF de relatório de pacientes: %s", e)
+        abort(503, description="Serviço de PDF indisponível.")
+
+    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    return send_file(
+        BytesIO(pdf_bytes),
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"relatorio_pacientes_{timestamp}.pdf",
+    )
+
 @app.route('/edit_patient/<int:patient_id>', methods=['GET', 'POST'])
 @login_required
 def edit_patient(patient_id):
@@ -1976,12 +2057,12 @@ def api_add_patient():
         return jsonify(success=False, error='Unauthorized'), 403
 
     data = request.get_json() or {}
-    name         = data.get("name", "").strip()
+    name         = clip_text(data.get("name", ""), 120)
     age_raw      = data.get("age", "")
-    cpf          = data.get("cpf", "").strip()
-    gender       = data.get("gender", "").strip()
-    phone        = data.get("phone", "").strip()
-    prescription = data.get("prescription", "").strip()
+    cpf          = clip_text(data.get("cpf", ""), 20)
+    gender       = clip_text(data.get("gender", ""), 20)
+    phone        = clip_text(data.get("phone", ""), 20)
+    prescription = clip_text(data.get("prescription", ""), 2000)
 
     if not (name and age_raw):
         return jsonify(success=False, error='Preencha todos os campos obrigatórios'), 400
@@ -1990,6 +2071,7 @@ def api_add_patient():
         age = int(age_raw)
     except ValueError:
         return jsonify(success=False, error='Idade inválida'), 400
+    age = max(0, min(age, 120))
 
     owner_profile = get_user_public_doctor_profile(user=user, create_if_missing=True)
     if not owner_profile:
@@ -2942,12 +3024,36 @@ def quiz():
 def submit_quiz():
     data = request.get_json() or {}
 
-    name = data.get('nome', 'Anônimo')
-    age_raw = data.get('idade', '0')
-    try:
-        age = int(age_raw)
-    except ValueError:
-        age = 0
+    name = clip_text(data.get('nome', 'Anônimo'), 120) or 'Anônimo'
+    age_raw = clip_text(data.get('idade', '0'), 3)
+    age = parse_int(age_raw) or 0
+    age = max(0, min(age, 120))
+
+    consentimento = clip_text(data.get('consentimento'), 64) or None
+    nivel_hierarquico = clip_text(data.get('nivel_hierarquico'), 64) or None
+    setor = clip_text(data.get('setor'), 128) or None
+    nervosismo = clip_text(data.get('nervosismo'), 50) or None
+    preocupacao = clip_text(data.get('preocupacao'), 50) or None
+    interesse = clip_text(data.get('interesse'), 50) or None
+    depressao_raw = clip_text(data.get('depressao_raw'), 50) or None
+    estresse_raw = clip_text(data.get('estresse_raw'), 64) or None
+    hora_extra = clip_text(data.get('hora_extra'), 50) or None
+    sono = clip_text(data.get('sono'), 50) or None
+    atividade_fisica = clip_text(data.get('atividade_fisica'), 50) or None
+    pronto_socorro = clip_text(data.get('pronto_socorro'), 10) or None
+    relacionamentos = clip_text(data.get('relacionamentos'), 50) or None
+    hobbies = clip_text(data.get('hobbies'), 50) or None
+    ansiedade = clip_text(data.get('ansiedade'), 20) or None
+    depressao = clip_text(data.get('depressao'), 20) or None
+    estresse = clip_text(data.get('estresse'), 20) or None
+    qualidade = clip_text(data.get('qualidade'), 20) or None
+    risco = clip_text(data.get('risco'), 20) or None
+    ansiedade_cor = clip_text(data.get('ansiedade_cor'), 7) or None
+    depressao_cor = clip_text(data.get('depressao_cor'), 7) or None
+    estresse_cor = clip_text(data.get('estresse_cor'), 7) or None
+    qualidade_cor = clip_text(data.get('qualidade_cor'), 7) or None
+    risco_cor = clip_text(data.get('risco_cor'), 7) or None
+    recomendacao = clip_text(data.get('recomendacao'), 255) or None
 
     admin_raw = (request.args.get('admin') or "").strip()
     doctor_user = None
@@ -2980,7 +3086,7 @@ def submit_quiz():
         patient = add_patient(
             name=name, age=age, cpf=None, gender=None, phone=None,
             doctor_id=patient_doctor_id, owner_user_id=doctor_id,
-            prescription=f"Autoavaliação: {data.get('risco')}"
+            prescription=f"Autoavaliação: {risco or ''}"
         )
         patient_id = patient.id
     except Exception:
@@ -2991,7 +3097,7 @@ def submit_quiz():
     if isinstance(fatores, list):
         fatores = json.dumps(fatores)
     elif isinstance(fatores, str):
-        fatores = json.dumps([fatores])
+        fatores = json.dumps([clip_text(fatores, 255)])
     else:
         fatores = json.dumps([])
 
@@ -3002,36 +3108,37 @@ def submit_quiz():
         motivacao = motivacao
     else:
         motivacao = ""
+    motivacao = clip_text(motivacao, 255)
 
     qr = add_quiz_result(
         name=name, age=age, date=datetime.utcnow(),
-        consentimento=data.get('consentimento'),
-        nivel_hierarquico=data.get('nivel_hierarquico'),
-        setor=data.get('setor'),
-        nervosismo=data.get('nervosismo'),
-        preocupacao=data.get('preocupacao'),
-        interesse=data.get('interesse'),
-        depressao_raw=data.get('depressao_raw'),
-        estresse_raw=data.get('estresse_raw'),
-        hora_extra=data.get('hora_extra'),
-        sono=data.get('sono'),
-        atividade_fisica=data.get('atividade_fisica'),
+        consentimento=consentimento,
+        nivel_hierarquico=nivel_hierarquico,
+        setor=setor,
+        nervosismo=nervosismo,
+        preocupacao=preocupacao,
+        interesse=interesse,
+        depressao_raw=depressao_raw,
+        estresse_raw=estresse_raw,
+        hora_extra=hora_extra,
+        sono=sono,
+        atividade_fisica=atividade_fisica,
         fatores=fatores,
         motivacao=motivacao,
-        pronto_socorro=data.get('pronto_socorro'),
-        relacionamentos=data.get('relacionamentos'),
-        hobbies=data.get('hobbies'),
-        ansiedade=data.get('ansiedade'),
-        depressao=data.get('depressao'),
-        estresse=data.get('estresse'),
-        qualidade=data.get('qualidade'),
-        risco=data.get('risco'),
-        ansiedade_cor=data.get('ansiedade_cor'),
-        depressao_cor=data.get('depressao_cor'),
-        estresse_cor=data.get('estresse_cor'),
-        qualidade_cor=data.get('qualidade_cor'),
-        risco_cor=data.get('risco_cor'),
-        recomendacao=data.get('recomendacao'),
+        pronto_socorro=pronto_socorro,
+        relacionamentos=relacionamentos,
+        hobbies=hobbies,
+        ansiedade=ansiedade,
+        depressao=depressao,
+        estresse=estresse,
+        qualidade=qualidade,
+        risco=risco,
+        ansiedade_cor=ansiedade_cor,
+        depressao_cor=depressao_cor,
+        estresse_cor=estresse_cor,
+        qualidade_cor=qualidade_cor,
+        risco_cor=risco_cor,
+        recomendacao=recomendacao,
         doctor_id=doctor_id,
         patient_id=patient_id
     )
@@ -3059,6 +3166,31 @@ def selfevaluation():
     values = list(counts.values())
 
     return render_template('selfevaluation.html', labels=labels, values=values)
+
+def _quiz_questions_map():
+    return {
+        "nome":             "Qual seu nome?",
+        "idade":            "Qual sua idade?",
+        "nervosismo":       "Nas últimas 2 semanas, com que frequência você se sentiu nervoso(a), ansioso(a) ou muito tenso(a)?",
+        "preocupacao":      "Nas últimas 2 semanas, com que frequência você teve dificuldade para controlar suas preocupações?",
+        "interesse":        "Nas últimas 2 semanas, você teve pouco interesse ou prazer em fazer as coisas?",
+        "depressao_raw":    "Nas últimas 2 semanas, você se sentiu desanimado(a), deprimido(a) ou sem esperança?",
+        "estresse_raw":     "Considerando as últimas 2 semanas, o quanto você sentiu que estava estressado(a)?",
+        "hora_extra":       "Considerando uma semana de trabalho normal, quantos dias você normalmente precisa trabalhar a mais do que a sua carga horária habitual e/ou fazer hora extra?",
+        "sono":             "Como você classificaria sua qualidade do sono nas últimas 2 semanas?",
+        "atividade_fisica": "Com que frequência você pratica atividade física?",
+        "fatores":          "Quando você pensa na sua saúde mental e qualidade de vida, quais os fatores que mais impactam?",
+        "motivacao":        "Em qual estágio de motivação você considera que está para tentar resolver a questão apontada?",
+        "pronto_socorro":   "Nos últimos 3 meses, quantas vezes você utilizou o pronto socorro?",
+        "relacionamentos":  "Como você avalia seu relacionamento com família e amigos?",
+        "hobbies":          "Você tem algum hobby ou atividade que lhe dá prazer?",
+        "ansiedade":        "Nível de Ansiedade",
+        "depressao":        "Nível de Depressão",
+        "estresse":         "Nível de Estresse",
+        "qualidade":        "Qualidade de Vida",
+        "risco":            "Risco Geral",
+        "recomendacao":     "Recomendação Final"
+    }
 
 @app.route("/quiz-results")
 @login_required
@@ -3094,6 +3226,40 @@ def quiz_results():
     } for r in results]
 
     return render_template("quiz_results.html", results=formatted, user=user)
+
+@app.route('/download_quiz_results_report')
+@login_required
+@feature_required('selfevaluations')
+def download_quiz_results_report():
+    user = get_logged_user()
+    if not user:
+        return redirect(url_for('login'))
+
+    results = get_quiz_results_by_doctor(user.id)
+    generated_at = datetime.utcnow().strftime("%d/%m/%Y %H:%M")
+    professional_name = (user.name or user.username or f"Usuário {user.id}").strip()
+
+    html = render_template(
+        "quiz_results_report_pdf.html",
+        results=results,
+        generated_at=generated_at,
+        professional_name=professional_name,
+        logo_path=os.path.join(app.root_path, 'static', 'images', 'logo.png'),
+    )
+    static_base = os.path.join(app.root_path, 'static')
+    try:
+        pdf_bytes: bytes = render_html_pdf_bytes(html, static_base)
+    except RuntimeError as e:
+        app.logger.error("Falha ao gerar PDF do relatório geral de autoavaliações: %s", e)
+        abort(503, description="Serviço de PDF indisponível.")
+
+    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    return send_file(
+        BytesIO(pdf_bytes),
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"relatorio_autoavaliacoes_{timestamp}.pdf",
+    )
 
 @app.route('/quiz-patient/<int:quiz_id>')
 @login_required
@@ -3167,31 +3333,111 @@ def quiz_patient(quiz_id):
         "recomendacao":     result.recomendacao,
     }
 
-    questions = {
-        "nome":             "Qual seu nome?",
-        "idade":            "Qual sua idade?",
-        "nervosismo":       "Nas últimas 2 semanas, com que frequência você se sentiu nervoso(a), ansioso(a) ou muito tenso(a)?",
-        "preocupacao":      "Nas últimas 2 semanas, com que frequência você teve dificuldade para controlar suas preocupações?",
-        "interesse":        "Nas últimas 2 semanas, você teve pouco interesse ou prazer em fazer as coisas?",
-        "depressao_raw":    "Nas últimas 2 semanas, você se sentiu desanimado(a), deprimido(a) ou sem esperança?",
-        "estresse_raw":     "Considerando as últimas 2 semanas, o quanto você sentiu que estava estressado(a)?",
-        "hora_extra":       "Considerando uma semana de trabalho normal, quantos dias você normalmente precisa trabalhar a mais do que a sua carga horária habitual e/ou fazer hora extra?",
-        "sono":             "Como você classificaria sua qualidade do sono nas últimas 2 semanas?",
-        "atividade_fisica": "Com que frequência você pratica atividade física?",
-        "fatores":          "Quando você pensa na sua saúde mental e qualidade de vida, quais os fatores que mais impactam?",
-        "motivacao":        "Em qual estágio de motivação você considera que está para tentar resolver a questão apontada?",
-        "pronto_socorro":   "Nos últimos 3 meses, quantas vezes você utilizou o pronto socorro?",
-        "relacionamentos":  "Como você avalia seu relacionamento com família e amigos?",
-        "hobbies":          "Você tem algum hobby ou atividade que lhe dá prazer?",
-        "ansiedade":        "Nível de Ansiedade",
-        "depressao":        "Nível de Depressão",
-        "estresse":         "Nível de Estresse",
-        "qualidade":        "Qualidade de Vida",
-        "risco":            "Risco Geral",
-        "recomendacao":     "Recomendação Final"
+    questions = _quiz_questions_map()
+
+    return render_template('quiz_patient.html', patient=patient, questions=questions, quiz_id=result.id)
+
+@app.route('/quiz-patient/<int:quiz_id>/download')
+@login_required
+@feature_required('selfevaluations')
+def download_quiz_patient_report(quiz_id):
+    user = get_logged_user()
+    if not user:
+        return redirect(url_for('login'))
+
+    result = QuizResult.query.get_or_404(quiz_id)
+    if result.doctor_id != user.id:
+        abort(403)
+
+    fatores_val = result.fatores
+    if isinstance(fatores_val, str):
+        try:
+            fatores_list = json.loads(fatores_val)
+            if not isinstance(fatores_list, list):
+                fatores_list = [str(fatores_list)]
+        except Exception:
+            fatores_list = [fatores_val]
+    elif isinstance(fatores_val, list):
+        fatores_list = fatores_val
+    else:
+        fatores_list = [str(fatores_val)]
+    fatores_texto = ', '.join([str(x) for x in fatores_list if str(x).strip()])
+
+    motivacao_val = result.motivacao
+    if isinstance(motivacao_val, str):
+        if motivacao_val.startswith("[") and motivacao_val.endswith("]"):
+            try:
+                motivacao_list = json.loads(motivacao_val)
+            except Exception:
+                motivacao_list = [motivacao_val]
+        else:
+            motivacao_list = [s.strip() for s in motivacao_val.split(';') if s.strip()]
+    elif isinstance(motivacao_val, list):
+        motivacao_list = motivacao_val
+    else:
+        motivacao_list = [str(motivacao_val)]
+    motivacao_texto = ', '.join([str(x) for x in motivacao_list if str(x).strip()])
+
+    patient = {
+        "nome":             result.name,
+        "idade":            result.age,
+        "data":             result.date.strftime('%d/%m/%Y'),
+        "consentimento":     getattr(result, "consentimento", None),
+        "nivel_hierarquico": getattr(result, "nivel_hierarquico", None),
+        "setor":             getattr(result, "setor", None),
+        "nervosismo":       result.nervosismo,
+        "preocupacao":      result.preocupacao,
+        "interesse":        result.interesse,
+        "depressao_raw":    result.depressao_raw,
+        "estresse_raw":     result.estresse_raw,
+        "hora_extra":       result.hora_extra,
+        "sono":             result.sono,
+        "atividade_fisica": result.atividade_fisica,
+        "fatores":          fatores_texto,
+        "motivacao":        motivacao_texto,
+        "pronto_socorro":   result.pronto_socorro,
+        "relacionamentos":  result.relacionamentos,
+        "hobbies":          result.hobbies,
+        "ansiedade":        result.ansiedade,
+        "depressao":        result.depressao,
+        "estresse":         result.estresse,
+        "qualidade":        result.qualidade,
+        "risco":            result.risco,
+        "recomendacao":     result.recomendacao,
     }
 
-    return render_template('quiz_patient.html', patient=patient, questions=questions)
+    questions = _quiz_questions_map()
+    ordered_keys = [k for k in questions.keys() if k not in ("nome", "idade")]
+    rows = [
+        {
+            "campo": key,
+            "pergunta": questions[key],
+            "resposta": patient.get(key) if patient.get(key) not in (None, "") else "Não informado",
+        }
+        for key in ordered_keys
+    ]
+
+    html = render_template(
+        "quiz_patient_report_pdf.html",
+        result_id=result.id,
+        patient=patient,
+        rows=rows,
+        logo_path=os.path.join(app.root_path, 'static', 'images', 'logo.png'),
+    )
+    static_base = os.path.join(app.root_path, 'static')
+    try:
+        pdf_bytes: bytes = render_html_pdf_bytes(html, static_base)
+    except RuntimeError as e:
+        app.logger.error("Falha ao gerar PDF da autoavaliação individual: %s", e)
+        abort(503, description="Serviço de PDF indisponível.")
+
+    safe_name = re.sub(r'[^A-Za-z0-9_-]+', '_', (result.name or f"paciente_{result.id}"))[:80] or f"paciente_{result.id}"
+    return send_file(
+        BytesIO(pdf_bytes),
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"autoavaliacao_{safe_name}_{result.id}.pdf",
+    )
 
 @app.route('/delete_quiz_result', methods=['POST'])
 def delete_quiz_result():
@@ -3227,14 +3473,29 @@ def submit_srq20():
     if admin_id is not None:
         apply_rls_context(user_id=admin_id)
 
-    name = payload.get('nome') or payload.get('name')  # optional
-    age = str(payload.get('idade') or '').strip() or None
-    sex = (payload.get('sexo') or '').strip() or None
+    name = clip_text(payload.get('nome') or payload.get('name'), 120) or None
+    age = clip_text(payload.get('idade'), 30) or None
+    sex = clip_text(payload.get('sexo'), 30) or None
 
     srq_total = payload.get('srq20_total')
-    srq_class = payload.get('srq20_classificacao')
+    srq_class = clip_text(payload.get('srq20_classificacao'), 120) or None
     srq_items_yes = payload.get('srq20_itens_sim') or []
     srq_q17 = payload.get('srq_q17')
+
+    sanitized_payload = dict(payload)
+    if 'nome' in sanitized_payload:
+        sanitized_payload['nome'] = clip_text(sanitized_payload.get('nome'), 120)
+    if 'name' in sanitized_payload:
+        sanitized_payload['name'] = clip_text(sanitized_payload.get('name'), 120)
+    if 'idade' in sanitized_payload:
+        sanitized_payload['idade'] = clip_text(sanitized_payload.get('idade'), 30)
+    if 'sexo' in sanitized_payload:
+        sanitized_payload['sexo'] = clip_text(sanitized_payload.get('sexo'), 30)
+    for i in range(1, 21):
+        key = f"srq_q{i}"
+        if key in sanitized_payload:
+            value = clip_text(sanitized_payload.get(key), 5)
+            sanitized_payload[key] = value if value in ("Sim", "Não") else value
 
     obj = QuestionnaireResult(
         created_at=datetime.utcnow(),
@@ -3244,9 +3505,9 @@ def submit_srq20():
         sex=sex,
         srq20_total=int(srq_total) if isinstance(srq_total, (int, float, str)) and str(srq_total).isdigit() else None,
         srq20_classification=srq_class,
-        srq20_items_yes=srq_items_yes if isinstance(srq_items_yes, list) else None,
+        srq20_items_yes=[clip_text(item, 20) for item in srq_items_yes if isinstance(item, str)] if isinstance(srq_items_yes, list) else None,
         srq_q17=srq_q17 if srq_q17 in ("Sim", "Não") else None,
-        raw_payload=payload
+        raw_payload=sanitized_payload
     )
     db.session.add(obj)
     db.session.commit()
@@ -3276,6 +3537,42 @@ def questionnaire_results():
         username=username
     )
 
+@app.route('/download_questionnaire_results_report')
+@login_required
+def download_questionnaire_results_report():
+    user = get_logged_user()
+    if not user:
+        return redirect(url_for('login'))
+
+    q = QuestionnaireResult.query
+    if not is_admin(user):
+        q = q.filter_by(admin_id=user.id)
+    results = q.order_by(QuestionnaireResult.created_at.desc()).all()
+
+    generated_at = datetime.utcnow().strftime("%d/%m/%Y %H:%M")
+    professional_name = (user.name or user.username or f"Usuário {user.id}").strip()
+    html = render_template(
+        "questionnaire_results_report_pdf.html",
+        results=results,
+        generated_at=generated_at,
+        professional_name=professional_name,
+        logo_path=os.path.join(app.root_path, 'static', 'images', 'logo.png'),
+    )
+    static_base = os.path.join(app.root_path, 'static')
+    try:
+        pdf_bytes: bytes = render_html_pdf_bytes(html, static_base)
+    except RuntimeError as e:
+        app.logger.error("Falha ao gerar PDF do relatório geral do SRQ-20: %s", e)
+        abort(503, description="Serviço de PDF indisponível.")
+
+    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    return send_file(
+        BytesIO(pdf_bytes),
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"relatorio_srq20_{timestamp}.pdf",
+    )
+
 # ---- Detalhe (privado) ----
 @app.route('/questionnaire_patient/<int:questionnaire_id>')
 @login_required
@@ -3291,6 +3588,86 @@ def questionnaire_patient(questionnaire_id):
     patient = r.to_dict()  # dictionary with PT/BR keywords
     username = getattr(user, 'username', None) if user else None
     return render_template('questionnaire_patient.html', patient=patient, user=user, username=username)
+
+@app.route('/questionnaire_patient/<int:questionnaire_id>/download')
+@login_required
+def download_questionnaire_patient_answers(questionnaire_id):
+    user = get_logged_user()
+    if not user:
+        return redirect(url_for('login'))
+
+    r = QuestionnaireResult.query.get_or_404(questionnaire_id)
+    if not is_admin(user) and r.admin_id != user.id:
+        abort(403)
+
+    srq_labels = {
+        'srq_q1': 'Você tem dores de cabeça com frequência?',
+        'srq_q2': 'Tem falta de apetite?',
+        'srq_q3': 'Dorme mal?',
+        'srq_q4': 'Assusta-se com facilidade?',
+        'srq_q5': 'Tem tremores nas mãos?',
+        'srq_q6': 'Sente-se nervoso(a), tenso(a) ou preocupado(a)?',
+        'srq_q7': 'Tem má digestão?',
+        'srq_q8': 'Tem dificuldade de pensar com clareza?',
+        'srq_q9': 'Tem se sentido triste ultimamente?',
+        'srq_q10': 'Tem chorado mais do que de costume?',
+        'srq_q11': 'Encontra dificuldade para aproveitar suas atividades diárias?',
+        'srq_q12': 'Tem dificuldades para tomar decisões?',
+        'srq_q13': 'Seu trabalho diário tem sofrido por causa do seu estado?',
+        'srq_q14': 'É incapaz de desempenhar um papel útil na sua vida?',
+        'srq_q15': 'Perdeu o interesse pelas coisas?',
+        'srq_q16': 'Sente que você é uma pessoa inútil?',
+        'srq_q17': 'Tem tido a ideia de acabar com a vida?',
+        'srq_q18': 'Sente-se cansado(a) o tempo todo?',
+        'srq_q19': 'Sente desconforto estomacal?',
+        'srq_q20': 'Cansa-se com facilidade?',
+    }
+
+    payload = r.raw_payload if isinstance(r.raw_payload, dict) else {}
+
+    answers = []
+    for i in range(1, 21):
+        key = f"srq_q{i}"
+        resposta = payload.get(key)
+        if resposta is None and key == "srq_q17":
+            resposta = r.srq_q17
+        answers.append({
+            "key": f"Q{i}",
+            "question": srq_labels[key],
+            "answer": resposta if resposta is not None else "Não informado",
+        })
+
+    items_yes = r.srq20_items_yes if isinstance(r.srq20_items_yes, list) else []
+    items_yes_labels = [srq_labels.get(code, code) for code in items_yes]
+
+    html = render_template(
+        "questionnaire_answers_pdf.html",
+        result_id=r.id,
+        data=r.created_at.strftime("%d/%m/%Y %H:%M") if r.created_at else r.br_date(),
+        nome=r.name or "",
+        idade=r.age or "",
+        sexo=r.sex or "",
+        total=r.srq20_total if r.srq20_total is not None else "—",
+        classificacao=r.srq20_classification or "—",
+        ideacao=r.srq_q17 or payload.get("srq_q17") or "Não informado",
+        itens_sim=items_yes_labels,
+        answers=answers,
+        logo_path=os.path.join(app.root_path, 'static', 'images', 'logo.png'),
+    )
+    static_base = os.path.join(app.root_path, 'static')
+    try:
+        pdf_bytes: bytes = render_html_pdf_bytes(html, static_base)
+    except RuntimeError as e:
+        app.logger.error("Falha ao gerar PDF de respostas do SRQ-20: %s", e)
+        abort(503, description="Serviço de PDF indisponível.")
+
+    safe_name = re.sub(r'[^A-Za-z0-9_-]+', '_', (r.name or f"paciente_{r.id}"))[:80] or f"paciente_{r.id}"
+    return send_file(
+        BytesIO(pdf_bytes),
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"srq20_respostas_{safe_name}_{r.id}.pdf",
+    )
 
 # ---- Deleção (privado, POST) ----
 @app.route('/delete_questionnaire_result', methods=['POST'])

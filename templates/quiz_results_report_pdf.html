@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório Geral de Autoavaliações (PDF)</title>
+    <style>
+        @page { size: A4; margin: 1.2cm 1cm; }
+        :root { --text:#111827; --muted:#4b5563; --line:#d1d5db; --soft:#f8fafc; --red:#dd1b35; }
+        body { margin:0; font-family:"DejaVu Sans", Arial, sans-serif; color:var(--text); font-size:11px; line-height:1.35; }
+        .header { display:table; width:100%; border-bottom:2px solid var(--line); padding-bottom:10px; margin-bottom:12px; }
+        .header-left,.header-right { display:table-cell; vertical-align:top; }
+        .header-right { width:170px; text-align:right; }
+        .logo { width:135px; }
+        h1 { margin:0 0 4px; font-size:18px; color:var(--red); }
+        .meta { margin:0; color:var(--muted); }
+        .summary { margin:0 0 12px; padding:9px 10px; border:1px solid var(--line); border-radius:8px; background:var(--soft); }
+        .table-wrap {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        table {
+            width: 98%;
+            margin: 0 auto;
+            border-collapse: collapse;
+            table-layout: auto;
+        }
+        th,td {
+            border:1px solid var(--line);
+            padding:5px 6px;
+            text-align:left;
+            vertical-align:top;
+            word-wrap:break-word;
+            overflow-wrap:break-word;
+            white-space:normal;
+        }
+        th { background:var(--soft); font-weight:700; }
+        .center { text-align:center; }
+        .empty { margin-top:12px; padding:10px; border:1px solid var(--line); border-radius:8px; color:var(--muted); background:var(--soft); }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="header-left">
+            <h1>Relatório Geral de Autoavaliações</h1>
+            <p class="meta">Profissional: {{ professional_name }}</p>
+            <p class="meta">Gerado em: {{ generated_at }}</p>
+        </div>
+        <div class="header-right">
+            <img src="{{ logo_path }}" alt="RafahMed" class="logo">
+        </div>
+    </div>
+
+    <div class="summary">Total de resultados: <strong>{{ results|length }}</strong></div>
+
+    {% if results %}
+    <div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th class="center">Idade</th>
+                <th>Ansiedade</th>
+                <th>Depressão</th>
+                <th>Estresse</th>
+                <th>Qualidade</th>
+                <th>Risco</th>
+                <th>Data</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in results %}
+            <tr>
+                <td style="white-space:normal; word-break:break-word; overflow-wrap:break-word;">{{ r.name or "—" }}</td>
+                <td class="center">{{ r.age if r.age is not none else "—" }}</td>
+                <td>{{ r.ansiedade or "—" }}</td>
+                <td>{{ r.depressao or "—" }}</td>
+                <td>{{ r.estresse or "—" }}</td>
+                <td>{{ r.qualidade or "—" }}</td>
+                <td>{{ r.risco or "—" }}</td>
+                <td>{{ r.date.strftime("%d/%m/%Y") if r.date else "—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <div class="empty">Nenhuma autoavaliação encontrada.</div>
+    {% endif %}
+</body>
+
+</html>

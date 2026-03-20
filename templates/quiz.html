@@ -272,6 +272,7 @@
         let currentQuestion = 0;
         const answers = {};
         const container = document.getElementById("quiz-container");
+        const TEXT_LIMITS = { nome: 120, idade: 3, setor: 128, pronto_socorro: 10 };
 
         function updateProgress() {
             const progress = ((currentQuestion + 1) / quiz.length) * 100;
@@ -312,7 +313,13 @@
 
             ${q.type === "text" ? `
               <div class="relative">
-                <input type="text" id="text-input" placeholder="Digite sua resposta..." class="input-focus">
+                <input
+                  type="text"
+                  id="text-input"
+                  placeholder="Digite sua resposta..."
+                  inputmode="${(q.key === 'idade' || q.key === 'pronto_socorro') ? 'numeric' : 'text'}"
+                  maxlength="${TEXT_LIMITS[q.key] || 120}"
+                  class="input-focus">
               </div>` : ""}
           </div>
 
@@ -378,7 +385,8 @@
             const q = quiz[currentQuestion];
 
             if (q.type === "text") {
-                const val = document.getElementById("text-input").value;
+                const maxLen = TEXT_LIMITS[q.key] || 120;
+                const val = (document.getElementById("text-input").value || "").trim().slice(0, maxLen);
                 if (!val.trim()) return showAlert("Por favor, preencha o campo.");
                 answers[q.key] = val;
 

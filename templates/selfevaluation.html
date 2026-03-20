@@ -11,6 +11,16 @@
     th { background: #f5f5f5; }
     .actions { margin-top: 14px; }
     a { color: #0a58ca; text-decoration: none; }
+    .btn {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: #0a58ca;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+    }
   </style>
 </head>
 <body>
@@ -33,6 +43,8 @@
   </table>
   <div class="actions">
     <a href="{{ url_for('quiz_results') }}">Ver resultados detalhados</a>
+    <br>
+    <a href="{{ url_for('download_quiz_results_report') }}" class="btn">Baixar PDF</a>
   </div>
 </body>
 </html>

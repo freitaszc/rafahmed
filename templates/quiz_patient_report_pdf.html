@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Autoavaliação Individual (PDF)</title>
+    <style>
+        @page { size: A4; margin: 1.2cm 1cm; }
+        :root { --text:#111827; --muted:#4b5563; --line:#d1d5db; --soft:#f8fafc; --red:#dd1b35; }
+        body { margin:0; font-family:"DejaVu Sans", Arial, sans-serif; color:var(--text); font-size:11px; line-height:1.35; }
+        .header { display:table; width:100%; border-bottom:2px solid var(--line); padding-bottom:10px; margin-bottom:12px; }
+        .header-left,.header-right { display:table-cell; vertical-align:top; }
+        .header-right { width:170px; text-align:right; }
+        .logo { width:135px; }
+        h1 { margin:0 0 4px; font-size:18px; color:var(--red); }
+        .meta { margin:0; color:var(--muted); }
+        .summary { margin:0 0 12px; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+        .summary-row { display:table; width:100%; table-layout:fixed; border-bottom:1px solid var(--line); }
+        .summary-row:last-child { border-bottom:0; }
+        .summary-cell { display:table-cell; width:50%; padding:8px 10px; vertical-align:top; }
+        .summary-label { color:var(--muted); font-size:10px; margin-bottom:2px; }
+        .summary-value { font-weight:700; }
+        table { width:100%; border-collapse:collapse; table-layout:fixed; }
+        th,td { border:1px solid var(--line); padding:6px 7px; text-align:left; vertical-align:top; word-wrap:break-word; }
+        th { background:var(--soft); font-weight:700; }
+        .col-campo { width:78px; }
+        .col-resposta { width:150px; }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="header-left">
+            <h1>Autoavaliação Individual</h1>
+            <p class="meta">Resultado #{{ result_id }} | Data: {{ patient.data or "—" }}</p>
+        </div>
+        <div class="header-right">
+            <img src="{{ logo_path }}" alt="RafahMed" class="logo">
+        </div>
+    </div>
+
+    <div class="summary">
+        <div class="summary-row">
+            <div class="summary-cell">
+                <div class="summary-label">Nome</div>
+                <div class="summary-value">{{ patient.nome or "—" }}</div>
+            </div>
+            <div class="summary-cell">
+                <div class="summary-label">Idade</div>
+                <div class="summary-value">{{ patient.idade if patient.idade is not none else "—" }}</div>
+            </div>
+        </div>
+        <div class="summary-row">
+            <div class="summary-cell">
+                <div class="summary-label">Risco Geral</div>
+                <div class="summary-value">{{ patient.risco or "—" }}</div>
+            </div>
+            <div class="summary-cell">
+                <div class="summary-label">Recomendação</div>
+                <div class="summary-value">{{ patient.recomendacao or "—" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th class="col-campo">Campo</th>
+                <th>Pergunta</th>
+                <th class="col-resposta">Resposta</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                <td>{{ row.campo }}</td>
+                <td>{{ row.pergunta }}</td>
+                <td>{{ row.resposta }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+
+</html>

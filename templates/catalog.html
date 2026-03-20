@@ -360,6 +360,10 @@
       {% endfor %}
     </tbody>
   </table>
+
+  <div class="actions" style="margin-top:22px;">
+    <a href="{{ url_for('download_patients_report') }}" class="btn" style="text-decoration:none;">Baixar PDF</a>
+  </div>
 </div>
 
 <!-- Modal Confirmacao Exclusao Paciente -->
@@ -389,17 +393,17 @@
     <button class="close" onclick="closePatientModal()"
       style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:22px;font-weight:bold;color:#93a4bd;cursor:pointer">×</button>
     <h3 style="margin:0 0 16px">Novo Paciente</h3>
-    <input class="field" type="text" id="name" placeholder="Nome" required
+    <input class="field" type="text" id="name" placeholder="Nome" required maxlength="120"
       style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)">
-    <input class="field" type="number" id="age" placeholder="Idade" required
+    <input class="field" type="number" id="age" placeholder="Idade" required min="0" max="120"
       style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)">
-    <input class="field" type="text" id="cpf" placeholder="CPF"
+    <input class="field" type="text" id="cpf" placeholder="CPF" maxlength="20"
       style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)">
-    <input class="field" type="text" id="gender" placeholder="Sexo"
+    <input class="field" type="text" id="gender" placeholder="Sexo" maxlength="20"
       style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)">
-    <input class="field" type="text" id="phone" placeholder="Telefone"
+    <input class="field" type="text" id="phone" placeholder="Telefone" maxlength="20"
       style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)">
-    <textarea class="field" id="prescription" placeholder="Prescrição (opcional)" rows="4"
+    <textarea class="field" id="prescription" placeholder="Prescrição (opcional)" rows="4" maxlength="2000"
       style="width:96%;padding:12px;margin-bottom:10px;border-radius:12px;border:2px solid #283447;background:#0f1a2a;color:var(--text)"></textarea>
     <button type="button" class="btn" onclick="submitPatient()" style="width:100%">Salvar</button>
   </div>
@@ -429,6 +433,7 @@
 
 <script>
   let pendingDeleteForm = null;
+  const FIELD_LIMITS = { name: 120, cpf: 20, gender: 20, phone: 20, prescription: 2000 };
 
   function openPatientModal() { document.getElementById("patientModal").style.display = "flex" }
   function closePatientModal() { document.getElementById("patientModal").style.display = "none" }
@@ -452,7 +457,17 @@
     form.submit();
   }
   function submitPatient() {
-    const data = { name: val("name"), age: val("age"), cpf: val("cpf"), gender: val("gender"), phone: val("phone"), prescription: val("prescription") };
+    const data = {
+      name: val("name"),
+      age: val("age"),
+      cpf: val("cpf"),
+      gender: val("gender"),
+      phone: val("phone"),
+      prescription: val("prescription")
+    };
+    for (const k of Object.keys(FIELD_LIMITS)) {
+      if (typeof data[k] === "string") data[k] = data[k].trim().slice(0, FIELD_LIMITS[k]);
+    }
     fetch("/api/add_patient", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(r => r.json()).then(res => {
       if (res.success) { alert("Paciente cadastrado com sucesso!"); closePatientModal(); location.reload(); }
       else { alert("Erro: " + (res.error || "Erro desconhecido")); }

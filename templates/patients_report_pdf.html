@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório de Pacientes (PDF)</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.2cm 1cm;
+        }
+
+        :root {
+            --text: #111827;
+            --muted: #4b5563;
+            --line: #d1d5db;
+            --soft: #f8fafc;
+            --red: #dd1b35;
+        }
+
+        body {
+            margin: 0;
+            color: var(--text);
+            font-family: "DejaVu Sans", Arial, sans-serif;
+            font-size: 11px;
+            line-height: 1.35;
+        }
+
+        .header {
+            display: table;
+            width: 100%;
+            border-bottom: 2px solid var(--line);
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+        }
+
+        .header-left,
+        .header-right {
+            display: table-cell;
+            vertical-align: top;
+        }
+
+        .header-right {
+            width: 170px;
+            text-align: right;
+        }
+
+        .logo {
+            width: 135px;
+        }
+
+        h1 {
+            margin: 0 0 4px;
+            font-size: 18px;
+            color: var(--red);
+        }
+
+        .meta {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .summary {
+            margin: 0 0 12px;
+            padding: 9px 10px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--soft);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th,
+        td {
+            border: 1px solid var(--line);
+            padding: 6px 7px;
+            text-align: left;
+            vertical-align: top;
+            word-wrap: break-word;
+        }
+
+        th {
+            background: var(--soft);
+            font-weight: 700;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .empty {
+            margin-top: 12px;
+            padding: 10px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            color: var(--muted);
+            background: var(--soft);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="header-left">
+            <h1>Relatório de Pacientes</h1>
+            <p class="meta">Profissional: {{ professional_name }}</p>
+            <p class="meta">Gerado em: {{ generated_at }}</p>
+        </div>
+        <div class="header-right">
+            <img src="{{ logo_path }}" alt="RafahMed" class="logo">
+        </div>
+    </div>
+
+    <div class="summary">
+        Total de pacientes listados: <strong>{{ patients|length }}</strong>
+    </div>
+
+    {% if patients %}
+    <table>
+        <thead>
+            <tr>
+                <th class="center" style="width:42px;">ID</th>
+                <th>Nome</th>
+                <th class="center" style="width:48px;">Idade</th>
+                <th style="width:120px;">CPF</th>
+                <th style="width:70px;">Sexo</th>
+                <th style="width:110px;">Telefone</th>
+                <th style="width:62px;">Status</th>
+                <th style="width:110px;">Cadastro</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in patients %}
+            <tr>
+                <td class="center">{{ p.id }}</td>
+                <td>{{ p.name or "—" }}</td>
+                <td class="center">{{ p.age if p.age is not none else "—" }}</td>
+                <td>{{ p.cpf or "—" }}</td>
+                <td>{{ p.gender or "—" }}</td>
+                <td>{{ p.phone or "—" }}</td>
+                <td>{{ p.status or "—" }}</td>
+                <td>{{ p.created_at.strftime("%d/%m/%Y %H:%M") if p.created_at else "—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">Nenhum paciente encontrado para este profissional.</div>
+    {% endif %}
+</body>
+
+</html>

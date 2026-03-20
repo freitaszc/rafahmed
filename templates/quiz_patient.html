@@ -206,6 +206,8 @@
     .actions {
       display: flex;
       justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
       margin-top: 24px
     }
   </style>
@@ -304,6 +306,7 @@
 
       <div class="actions">
         <a href="{{ url_for('quiz_results') }}" class="btn">Voltar aos Resultados</a>
+        <a href="{{ url_for('download_quiz_patient_report', quiz_id=quiz_id) }}" class="btn">Baixar PDF</a>
       </div>
     </div>
   </div>

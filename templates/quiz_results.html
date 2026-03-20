@@ -399,6 +399,10 @@
     <p style="text-align:center;color:var(--muted)">Nenhum resultado encontrado.</p>
     {% endif %}
     <p id="quiz-no-results" class="no-results" style="display:none;">Nenhum resultado encontrado.</p>
+
+    <div class="actions" style="margin-top:22px;">
+      <a href="{{ url_for('download_quiz_results_report') }}" class="btn">Baixar PDF</a>
+    </div>
   </div>
   <script>
     const searchInput = document.getElementById('quiz-search');

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>SRQ-20 - Respostas Individuais (PDF)</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.2cm 1cm;
+        }
+
+        :root {
+            --text: #111827;
+            --muted: #4b5563;
+            --line: #d1d5db;
+            --bg-soft: #f8fafc;
+            --red: #dd1b35;
+        }
+
+        body {
+            margin: 0;
+            font-family: "DejaVu Sans", Arial, sans-serif;
+            color: var(--text);
+            font-size: 12px;
+            line-height: 1.35;
+        }
+
+        .header {
+            display: table;
+            width: 100%;
+            border-bottom: 2px solid var(--line);
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+        }
+
+        .header-left,
+        .header-right {
+            display: table-cell;
+            vertical-align: top;
+        }
+
+        .header-right {
+            width: 180px;
+            text-align: right;
+        }
+
+        .logo {
+            width: 140px;
+        }
+
+        .title {
+            font-size: 18px;
+            margin: 0 0 4px;
+            color: var(--red);
+        }
+
+        .meta {
+            color: var(--muted);
+            margin: 0;
+        }
+
+        .summary {
+            margin: 12px 0 14px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .summary-row {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .summary-row:last-child {
+            border-bottom: 0;
+        }
+
+        .summary-cell {
+            display: table-cell;
+            padding: 8px 10px;
+            vertical-align: top;
+            width: 50%;
+        }
+
+        .summary-label {
+            color: var(--muted);
+            font-size: 11px;
+            margin-bottom: 2px;
+        }
+
+        .summary-value {
+            font-weight: 700;
+        }
+
+        .section-title {
+            margin: 14px 0 8px;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .tags {
+            background: var(--bg-soft);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 8px 10px;
+        }
+
+        .tags ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th,
+        td {
+            border: 1px solid var(--line);
+            padding: 7px 8px;
+            vertical-align: top;
+            word-wrap: break-word;
+        }
+
+        th {
+            background: var(--bg-soft);
+            text-align: left;
+            font-weight: 700;
+        }
+
+        .col-q {
+            width: 48px;
+        }
+
+        .col-r {
+            width: 120px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="header-left">
+            <h1 class="title">SRQ-20 - Respostas Individuais</h1>
+            <p class="meta">Resultado #{{ result_id }} | Data: {{ data }}</p>
+        </div>
+        <div class="header-right">
+            <img src="{{ logo_path }}" alt="RafahMed" class="logo">
+        </div>
+    </div>
+
+    <div class="summary">
+        <div class="summary-row">
+            <div class="summary-cell">
+                <div class="summary-label">Nome</div>
+                <div class="summary-value">{{ nome or "—" }}</div>
+            </div>
+            <div class="summary-cell">
+                <div class="summary-label">Idade</div>
+                <div class="summary-value">{{ idade or "—" }}</div>
+            </div>
+        </div>
+        <div class="summary-row">
+            <div class="summary-cell">
+                <div class="summary-label">Sexo</div>
+                <div class="summary-value">{{ sexo or "—" }}</div>
+            </div>
+            <div class="summary-cell">
+                <div class="summary-label">SRQ-20 Total</div>
+                <div class="summary-value">{{ total }}</div>
+            </div>
+        </div>
+        <div class="summary-row">
+            <div class="summary-cell">
+                <div class="summary-label">Classificação</div>
+                <div class="summary-value">{{ classificacao }}</div>
+            </div>
+            <div class="summary-cell">
+                <div class="summary-label">Ideação suicida (Q17)</div>
+                <div class="summary-value">{{ ideacao }}</div>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="section-title">Itens Marcados como "Sim"</h2>
+    <div class="tags">
+        {% if itens_sim %}
+        <ul>
+            {% for item in itens_sim %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        Nenhum item marcado como "Sim".
+        {% endif %}
+    </div>
+
+    <h2 class="section-title">Respostas por Questão</h2>
+    <table>
+        <thead>
+            <tr>
+                <th class="col-q">Q</th>
+                <th>Pergunta</th>
+                <th class="col-r">Resposta</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in answers %}
+            <tr>
+                <td>{{ row.key }}</td>
+                <td>{{ row.question }}</td>
+                <td>{{ row.answer }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+
+</html>

@@ -223,6 +223,8 @@
         .actions {
             display: flex;
             justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
             margin-top: 24px
         }
 
@@ -401,6 +403,8 @@
 
             <div class="actions">
                 <a href="{{ url_for('questionnaire_results') }}" class="btn">Voltar aos Resultados</a>
+                <a href="{{ url_for('download_questionnaire_patient_answers', questionnaire_id=patient.id) }}" class="btn">Baixar respostas em PDF</a>
+                <a href="{{ url_for('download_questionnaire_results_report') }}" class="btn">Baixar PDF</a>
             </div>
         </div>
     </div>

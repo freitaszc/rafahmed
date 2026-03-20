@@ -282,6 +282,7 @@
         let currentQuestion = 0;
         const answers = {};
         const container = document.getElementById("quiz-container");
+        const TEXT_LIMITS = { nome: 120, idade: 3 };
 
         function updateProgress() {
             const progress = ((currentQuestion + 1) / quiz.length) * 100;
@@ -312,9 +313,11 @@
             </label>
           </div>`).join("");
             } else if (q.type === "text" || q.type === "text_required") {
+                const maxLen = TEXT_LIMITS[q.key] || 120;
+                const inputMode = q.key === "idade" ? "numeric" : "text";
                 optionsHTML = `
           <div class="relative">
-            <input type="text" id="text-input" placeholder="Digite sua resposta..." class="input-focus">
+            <input type="text" id="text-input" inputmode="${inputMode}" maxlength="${maxLen}" placeholder="Digite sua resposta..." class="input-focus">
           </div>`;
             }
 
@@ -413,7 +416,8 @@
             if (q.type === "info") {
                 // apenas avança
             } else if (q.type === "text" || q.type === "text_required") {
-                const val = (document.getElementById("text-input").value || "").trim();
+                const maxLen = TEXT_LIMITS[q.key] || 120;
+                const val = (document.getElementById("text-input").value || "").trim().slice(0, maxLen);
 
                 if (q.type === "text_required" && !val) {
                     return showAlert("Por favor, preencha seu nome completo.");
