@@ -5,38 +5,49 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Function to guarantee good values
-def get_env_str(var_name: str, default: str = "") -> str:
-    value = os.getenv(var_name, default)
-    if value is None or value.strip() == "":
-        raise EnvironmentError(f"Variável de ambiente obrigatória ausente: {var_name}")
-    return value
+def _smtp_config():
+    smtp_server = (os.getenv("SMTP_SERVER") or "").strip()
+    smtp_port_raw = (os.getenv("SMTP_PORT") or "").strip()
+    smtp_username = (os.getenv("SMTP_USERNAME") or "").strip()
+    smtp_password = (os.getenv("SMTP_PASSWORD") or "").strip()
+    email_from = (os.getenv("EMAIL_FROM") or "").strip()
 
-def get_env_int(var_name: str, default: int) -> int:
-    value = os.getenv(var_name)
+    missing = []
+    if not smtp_server:
+        missing.append("SMTP_SERVER")
+    if not smtp_username:
+        missing.append("SMTP_USERNAME")
+    if not smtp_password:
+        missing.append("SMTP_PASSWORD")
+    if not email_from:
+        missing.append("EMAIL_FROM")
+    if missing:
+        raise EnvironmentError(f"Variáveis SMTP ausentes: {', '.join(missing)}")
+
     try:
-        return int(value) if value is not None else default
-    except ValueError:
-        raise ValueError(f"Valor inválido para {var_name}, deve ser um número inteiro.")
+        smtp_port = int(smtp_port_raw) if smtp_port_raw else 587
+    except ValueError as e:
+        raise ValueError("SMTP_PORT inválida, use número inteiro.") from e
 
-# Load variables validating securely
-SMTP_SERVER: str = get_env_str("SMTP_SERVER")
-SMTP_PORT: int = get_env_int("SMTP_PORT", 587)
-SMTP_USERNAME: str = get_env_str("SMTP_USERNAME")
-SMTP_PASSWORD: str = get_env_str("SMTP_PASSWORD")
-EMAIL_FROM: str = get_env_str("EMAIL_FROM")
+    return smtp_server, smtp_port, smtp_username, smtp_password, email_from
 
 def send_email_quote(recipient_email: str, subject: str, body: str):
+    try:
+        smtp_server, smtp_port, smtp_username, smtp_password, email_from = _smtp_config()
+    except Exception as e:
+        print(f"Config SMTP inválida: {e}")
+        return
+
     msg = MIMEText(body, "plain", "utf-8")
     msg["Subject"] = subject
-    msg["From"] = EMAIL_FROM
+    msg["From"] = email_from
     msg["To"] = recipient_email
 
     try:
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
             server.starttls()
-            server.login(SMTP_USERNAME, SMTP_PASSWORD)
-            server.sendmail(EMAIL_FROM, recipient_email, msg.as_string())
+            server.login(smtp_username, smtp_password)
+            server.sendmail(email_from, recipient_email, msg.as_string())
         print(f"E-mail enviado para {recipient_email}")
     except Exception as e:
         print(f"Erro ao enviar e-mail: {e}")
