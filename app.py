@@ -170,6 +170,8 @@ PIX_CITY = os.getenv("PIX_CITY", "Ipatinga")
 PIX_DESC = os.getenv("PIX_DESC", "Assinatura RafahMed")
 PLAN_PRICES = {"plus": 99.00, "premium": 179.00}
 ADMIN_WHATSAPP = os.getenv("ADMIN_WHATSAPP", "31985570920")
+AUTO_WHATSAPP_ENABLED = os.getenv("AUTO_WHATSAPP_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
+QUOTES_SECTION_ENABLED = os.getenv("QUOTES_SECTION_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
 
 PLAN_LEVELS = {'standard': 1, 'plus': 2, 'premium': 3}
 FEATURES = {
@@ -420,8 +422,31 @@ def feature_required(feature):
         return wrapper
     return inner
 
+def quotes_section_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not QUOTES_SECTION_ENABLED:
+            abort(404)
+        return f(*args, **kwargs)
+    return wrapper
+
 def is_admin(user: Optional[User]) -> bool:
     return bool(user and (user.username or "").lower() == "admin")
+
+def profile_image_url(user: Optional[User]) -> str:
+    default_path = url_for("static", filename="images/user-icon.png")
+    if not user:
+        return default_path
+    raw = (user.profile_image or "").strip()
+    if not raw:
+        return default_path
+    if raw.startswith("/files/"):
+        return raw
+    if raw.startswith("files/"):
+        return f"/{raw}"
+    if raw.startswith(("http://", "https://", "/")):
+        return raw
+    return url_for("static", filename=raw)
 
 @app.context_processor
 def inject_sidebar_auth_context():
@@ -473,7 +498,8 @@ def get_user_public_doctor_profile(
 app.jinja_env.globals.update(
     has_feature=has_feature,
     pdf_token=generate_file_token,
-    make_pdf_token=generate_file_token
+    make_pdf_token=generate_file_token,
+    profile_image_url=profile_image_url,
 )
 
 def parse_int(value: Any) -> Optional[int]:
@@ -494,11 +520,53 @@ def render_html_pdf_bytes(html: str, base_url: str) -> bytes:
     Importa o WeasyPrint sob demanda para não quebrar o startup do app
     quando dependências nativas não estiverem instaladas no host.
     """
+    timeout_env = parse_int(os.getenv("PDF_RENDER_TIMEOUT_SECONDS"))
+    timeout_seconds = timeout_env if timeout_env and timeout_env > 0 else 20
+
+    class _PdfRenderTimeout(Exception):
+        pass
+
+    timer_enabled = False
+    old_handler = None
+    sig = None
+
+    # Evita que uma importação/renderização travada mate o worker por timeout do Gunicorn.
     try:
-        import weasyprint  # type: ignore
-    except Exception as e:
-        raise RuntimeError("WeasyPrint não disponível no ambiente.") from e
-    return weasyprint.HTML(string=html, base_url=base_url).write_pdf()
+        import signal as sig  # type: ignore
+        if hasattr(sig, "SIGALRM") and hasattr(sig, "setitimer"):
+            try:
+                def _raise_timeout(_signum, _frame):
+                    raise _PdfRenderTimeout(f"Geração de PDF excedeu {timeout_seconds}s.")
+                old_handler = sig.signal(sig.SIGALRM, _raise_timeout)
+                sig.setitimer(sig.ITIMER_REAL, float(timeout_seconds))
+                timer_enabled = True
+            except ValueError:
+                timer_enabled = False
+    except Exception:
+        timer_enabled = False
+
+    try:
+        try:
+            import weasyprint  # type: ignore
+        except _PdfRenderTimeout as e:
+            raise RuntimeError(str(e)) from e
+        except Exception as e:
+            raise RuntimeError("WeasyPrint não disponível no ambiente.") from e
+
+        try:
+            return weasyprint.HTML(string=html, base_url=base_url).write_pdf()
+        except _PdfRenderTimeout as e:
+            raise RuntimeError(str(e)) from e
+        except Exception as e:
+            raise RuntimeError("Falha ao gerar PDF com WeasyPrint.") from e
+    finally:
+        if timer_enabled and sig is not None:
+            try:
+                sig.setitimer(sig.ITIMER_REAL, 0.0)
+                if old_handler is not None:
+                    sig.signal(sig.SIGALRM, old_handler)
+            except Exception:
+                pass
 
 # ------------------------------------------------------------------------------
 # Public pages & auth
@@ -687,13 +755,19 @@ def update_personal_info():
         return redirect(url_for('login'))
     fname = request.form.get("name", "").strip()
     sname = request.form.get("secondname", "").strip()
-    bd    = request.form.get("birthdate", "")
+    bd    = (request.form.get("birthdate", "") or "").strip()
     email = request.form.get("email", "").strip()
     user.name = f"{fname} {sname}".strip()
-    try:
-        user.birthdate = datetime.strptime(bd, "%Y-%m-%d").date()
-    except ValueError:
-        pass
+    if bd:
+        parsed_birthdate = None
+        for fmt in ("%d/%m/%Y", "%Y-%m-%d"):
+            try:
+                parsed_birthdate = datetime.strptime(bd, fmt).date()
+                break
+            except ValueError:
+                continue
+        if parsed_birthdate:
+            user.birthdate = parsed_birthdate
     user.email = email
     img = request.files.get("profile_image")
     if img and img.filename:
@@ -889,18 +963,21 @@ def upload():
             )
 
         # tenta criar evento no Google Calendar (não bloqueia fluxo)
-        start_dt = datetime.now()
-        end_dt   = start_dt + timedelta(hours=1)
-        notes    = f"Diagnóstico:\n{diagnostic}\n\nPrescrição:\n{prescription}"
-        try:
-            create_user_event(
-                summary=f"Consulta - {name}",
-                start_datetime=start_dt.strftime('%Y-%m-%dT%H:%M:%S'),
-                end_datetime=end_dt.strftime('%Y-%m-%dT%H:%M:%S'),
-                description=notes
-            )
-        except Exception as e:
-            app.logger.error(f"Erro ao criar evento no Google Calendar: {e}")
+        if session.get("credentials"):
+            start_dt = datetime.now()
+            end_dt   = start_dt + timedelta(hours=1)
+            notes    = f"Diagnóstico:\n{diagnostic}\n\nPrescrição:\n{prescription}"
+            try:
+                create_user_event(
+                    summary=f"Consulta - {name}",
+                    start_datetime=start_dt.strftime('%Y-%m-%dT%H:%M:%S'),
+                    end_datetime=end_dt.strftime('%Y-%m-%dT%H:%M:%S'),
+                    description=notes
+                )
+            except Exception as e:
+                app.logger.warning(f"Erro ao criar evento no Google Calendar: {e}")
+        else:
+            app.logger.info("Google Calendar não autenticado; pulando criação do evento.")
 
         session['diagnostic_text']   = diagnostic
         session['prescription_text'] = prescription
@@ -951,15 +1028,18 @@ def upload():
         original_link = None
         if not using_manual:
             original_link = url_for('file_download_signed', token=generate_file_token(orig_sf.id), _external=True)
-        try:
-            send_pdf_whatsapp(
-                doctor_name=doctor_name,
-                patient_name=name,
-                analyzed_pdf_link=analyzed_link,
-                original_pdf_link=original_link
-            )
-        except Exception as e:
-            app.logger.error(f"Erro ao enviar PDF no WhatsApp: {e}")
+        if AUTO_WHATSAPP_ENABLED:
+            try:
+                send_pdf_whatsapp(
+                    doctor_name=doctor_name,
+                    patient_name=name,
+                    analyzed_pdf_link=analyzed_link,
+                    original_pdf_link=original_link
+                )
+            except Exception as e:
+                app.logger.error(f"Erro ao enviar PDF no WhatsApp: {e}")
+        else:
+            app.logger.info("Envio automático por WhatsApp desativado; pulando envio ao prescritor.")
 
         # consumo do pacote
         try:
@@ -1097,15 +1177,9 @@ def delete_doctor(doctor_id):
                 .order_by(Doctor.id.asc())
                 .first()
             )
-            if not replacement:
-                replacement = Doctor(
-                    name=f"Perfil público {doc.user_id}",
-                    phone=None,
-                    user_id=doc.user_id
-                )
-                db.session.add(replacement)
-                db.session.flush()
-            replacement_id = replacement.id
+            # Não recria mais perfil automaticamente ao excluir:
+            # se não houver outro, removemos vínculos conforme regras abaixo.
+            replacement_id = replacement.id if replacement else None
 
         if replacement_id:
             Patient.query.filter_by(doctor_id=doctor_id).update({"doctor_id": replacement_id}, synchronize_session=False)
@@ -2152,6 +2226,7 @@ def delete_supplier(supplier_id):
 # ------------------------------------------------------------------------------
 @app.route('/create_quote', methods=['GET', 'POST'])
 @login_required
+@quotes_section_required
 @feature_required('quotes_auto')
 def create_quote():
     user = get_logged_user()
@@ -2178,7 +2253,7 @@ def create_quote():
             if str(s.id) not in supplier_ids:
                 continue
             response_url = url_for('respond_quote', quote_id=quote.id, supplier_id=s.id, _external=True)
-            if s.phone:
+            if s.phone and AUTO_WHATSAPP_ENABLED:
                 try:
                     send_quote_whatsapp(
                         supplier_name=s.name,
@@ -2211,13 +2286,14 @@ Equipe RafahMed
                 except Exception as e:
                     print(f"Erro ao enviar e-mail para {s.email}: {e}")
 
-        flash('Cotação criada e notificada aos fornecedores!', 'success')
+        flash('Cotação criada com sucesso!', 'success')
         return redirect(url_for('quote_index'))
 
     return render_template('create_quote.html', suppliers=suppliers)
 
 @app.route('/quote_index')
 @login_required
+@quotes_section_required
 @feature_required('quotes_auto')
 def quote_index():
     user = get_logged_user()
@@ -2237,6 +2313,7 @@ def quote_index():
     return render_template('quote_index.html', quotes=quotes, user=user)
 
 @app.route('/quote/<int:quote_id>/supplier/<int:supplier_id>', methods=['GET', 'POST'])
+@quotes_section_required
 def respond_quote(quote_id, supplier_id):
     quote = Quote.query.get_or_404(quote_id)
     supplier_ids = quote.suppliers.split(",") if quote.suppliers else []
@@ -2276,6 +2353,7 @@ def respond_quote(quote_id, supplier_id):
 
 @app.route('/quote_results/<int:quote_id>')
 @login_required
+@quotes_section_required
 @feature_required('quotes_auto')
 def quote_results(quote_id):
     user = cast(User, get_logged_user())
@@ -2335,6 +2413,7 @@ def quote_results(quote_id):
 
 @app.route('/delete_quote/<int:quote_id>', methods=['POST'])
 @login_required
+@quotes_section_required
 def delete_quote(quote_id):
     user = cast(User, get_logged_user())
     if user is None:
@@ -3242,20 +3321,23 @@ def confirm_pix():
     receipt_url = url_for('file_download_signed', token=generate_file_token(sf.id), _external=True)
 
     amount = PLAN_PRICES.get(plan, 0.0)
-    try:
-        send_pix_receipt_admin(
-            admin_phone=ADMIN_WHATSAPP,
-            user_name=user.name or user.username,
-            user_id=user.id,
-            user_email=user.email,
-            plan=plan,
-            amount=float(amount),
-            txid=txid,
-            receipt_url=receipt_url,
-            payload_text=payload or None,
-        )
-    except Exception as e:
-        app.logger.error("Erro ao encaminhar comprovante PIX ao admin: %s", e)
+    if AUTO_WHATSAPP_ENABLED:
+        try:
+            send_pix_receipt_admin(
+                admin_phone=ADMIN_WHATSAPP,
+                user_name=user.name or user.username,
+                user_id=user.id,
+                user_email=user.email,
+                plan=plan,
+                amount=float(amount),
+                txid=txid,
+                receipt_url=receipt_url,
+                payload_text=payload or None,
+            )
+        except Exception as e:
+            app.logger.error("Erro ao encaminhar comprovante PIX ao admin: %s", e)
+    else:
+        app.logger.info("Envio automático por WhatsApp desativado; comprovante PIX não será enviado por WhatsApp.")
 
     flash('Comprovante enviado. Nossa equipe vai validar o pagamento.', 'success')
     return redirect(url_for('plans'))

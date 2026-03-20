@@ -333,15 +333,6 @@
             }
         });
 
-        // Filtro local por texto (título)
-        function filterVideos(q) {
-            const items = document.querySelectorAll('[data-video-item]');
-            const needle = q.trim().toLowerCase();
-            items.forEach(el => {
-                const text = (el.getAttribute('data-title') || '').toLowerCase();
-                el.style.display = text.includes(needle) ? '' : 'none';
-            });
-        }
     </script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar-overrides.css') }}">
 </head>
@@ -387,42 +378,11 @@
     <!-- Conteúdo -->
     <div class="content">
         <h2>Treinamento / Vídeoaulas</h2>
-        <div class="actions">
-            <div class="search">
-                <i class="fa fa-search" aria-hidden="true"></i>
-                <input type="text" placeholder="Buscar vídeo por título..." oninput="filterVideos(this.value)">
-            </div>
-            <a class="btn" href="https://dashboard.mux.com/" target="_blank" rel="noopener">
-                <i class="fa fa-upload"></i> Abrir painel da Mux
-            </a>
-        </div>
-
-        {% if videos and videos|length > 0 %}
-        <div class="video-grid">
-            {% for v in videos %}
-            <div class="card" data-video-item data-title="{{ v.title }}">
-                <img class="thumb" src="https://image.mux.com/{{ v.playback_id }}/thumbnail.jpg?time=1"
-                    alt="Thumbnail de {{ v.title }}" loading="lazy">
-                <div class="card-body">
-                    <div class="title">{{ v.title }}</div>
-                    <div class="meta">
-                        {% if v.duration %}<span><i class="fa fa-clock-o"></i> {{ v.duration }} min</span>{% endif %}
-                        {% if v.created_at %}<span><i class="fa fa-calendar-o"></i> {{ v.created_at }}</span>{% endif %}
-                    </div>
-                </div>
-                <a class="watch" href="{{ url_for('watch_video', playback_id=v.playback_id) }}">
-                    <i class="fa fa-play"></i>&nbsp; Assistir
-                </a>
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
         <div class="empty">
             <div style="font-weight:800; margin-bottom:6px">
-                <i class="fa fa-info-circle"></i> Nenhum vídeo encontrado
+                <i class="fa fa-info-circle"></i> Vídeos de treinamento não estão disponibilizados no momento.
             </div>
         </div>
-        {% endif %}
     </div>
 </body>
 

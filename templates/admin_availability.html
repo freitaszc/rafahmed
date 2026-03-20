@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+    <script src="{{ url_for('static', filename='js/date-mask.js') }}" defer></script>
     <style>
         :root {
             --bg-deep: #080b12;
@@ -682,8 +683,6 @@
                 class="label">SRQ-20</span></a>
         <a href="{{ url_for('quiz_results') }}" class="menu-item"><i class="fa fa-check-square-o"></i><span
                 class="label">Autoavaliações</span></a>
-        <a href="{{ url_for('quote_index') }}" class="menu-item"><i class="fa fa-calculator"></i><span
-                class="label">Cotações</span></a>
         <a href="{{ url_for('catalog') }}" class="menu-item"><i class="fa fa-user"></i><span
                 class="label">Pacientes</span></a>
         <a href="{{ url_for('products') }}" class="menu-item"><i class="fa fa-cubes"></i><span
@@ -783,7 +782,7 @@
             <div class="toolbar-grid">
                 <div class="field">
                     <label for="quickDay">Data alvo</label>
-                    <input type="text" id="quickDay" placeholder="dd/mm/aaaa" data-editor-control>
+                    <input type="text" id="quickDay" placeholder="dd/mm/aaaa" data-editor-control data-date-mask="true">
                 </div>
                 <div class="field">
                     <label>Modelos de horários</label>
@@ -806,11 +805,11 @@
             <div class="generator-grid">
                 <div class="field">
                     <label for="rangeStart">Data inicial</label>
-                    <input type="text" id="rangeStart" placeholder="dd/mm/aaaa" data-editor-control>
+                    <input type="text" id="rangeStart" placeholder="dd/mm/aaaa" data-editor-control data-date-mask="true">
                 </div>
                 <div class="field">
                     <label for="rangeEnd">Data final</label>
-                    <input type="text" id="rangeEnd" placeholder="dd/mm/aaaa" data-editor-control>
+                    <input type="text" id="rangeEnd" placeholder="dd/mm/aaaa" data-editor-control data-date-mask="true">
                 </div>
                 <div class="field">
                     <label for="rangeStartTime">Início</label>
@@ -1175,7 +1174,7 @@
                 tr.className = 'av-row';
                 tr.innerHTML = `
                     <td class="row-index"></td>
-                    <td><input type="text" class="day" placeholder="dd/mm/aaaa" data-editor-control></td>
+                    <td><input type="text" class="day" placeholder="dd/mm/aaaa" data-editor-control data-date-mask="true"></td>
                     <td><input type="time" class="start" value="${v.start}" data-editor-control></td>
                     <td><input type="time" class="end" value="${v.end}" data-editor-control></td>
                     <td><input type="number" class="slot" min="5" step="5" value="${v.slot}" data-editor-control></td>

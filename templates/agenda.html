@@ -777,7 +777,8 @@
 
         <div class="field">
           <label for="date">Data (dd/mm/aaaa)</label>
-          <input type="text" id="date" placeholder="dd/mm/aaaa" oninput="formatDateInput(this)" required>
+          <input type="text" id="date" placeholder="dd/mm/aaaa" oninput="formatDateInput(this)" required
+            data-date-mask="true">
         </div>
 
         <div class="field">
@@ -804,6 +805,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/locales-all.global.min.js"></script>
+  <script src="{{ url_for('static', filename='js/date-mask.js') }}" defer></script>
 
   <script>
     const el = (id) => document.getElementById(id);

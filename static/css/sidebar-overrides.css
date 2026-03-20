@@ -1,0 +1,31 @@
+/* Global sidebar fixes: keep admin items reachable and keep RafahMed logo readable */
+.sidebar {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+  padding-bottom: 16px !important;
+}
+
+.sidebar .sidebar-logo {
+  display: block;
+  width: min(186px, 92%) !important;
+  max-height: 186px !important;
+  height: auto !important;
+  object-fit: contain !important;
+  margin: 8px auto 12px !important;
+}
+
+.sidebar.is-collapsed .sidebar-logo {
+  width: 0 !important;
+  max-height: 0 !important;
+  margin: 0 !important;
+}
+
+@media (max-height: 740px) {
+  .sidebar .menu-item {
+    padding-top: 9px !important;
+    padding-bottom: 9px !important;
+  }
+}
